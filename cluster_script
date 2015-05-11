@@ -1,0 +1,29 @@
+#!/bin/zsh
+
+### There where some problems with POSIX...
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+ 
+### Job name
+#BSUB -J IHT quantum transport simulation
+ 
+### Request the time in minutes
+#BSUB -W 25
+ 
+### Request memory in MB
+#BSUB -M 600
+ 
+### Request the number of compute slots
+### (12 * number of matlab instances)
+#BSUB -n 56
+
+export MKL_THREADING_LAYER="INTEL"
+#export MKL_THREADING_LAYER="SEQUENTIAL"
+export OMP_NUM_THREADS=56
+ 
+### The file that all the output is written into.
+### To follow the progress use for example 'tail -f'
+logfile="transfer.log"
+
+### Aaaaaaand go!
+exec nohup ./CNT_TFET > ${logfile} &
