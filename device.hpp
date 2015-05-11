@@ -25,25 +25,31 @@ namespace d {
     // geometry (everything in nm)
     static constexpr double l_sc  = 5;                                           // source contact length
     static constexpr double l_s   = 10;                                           // source length
-    static constexpr double l_g   = 18;                                           // gate length
+    static constexpr double l_ox  = 18;                                           // gate oxide length
+    static constexpr double l_g   = 18;                                          // gate length
     static constexpr double l_d   = 10;                                           // drain length
     static constexpr double l_dc  = 5;                                           // drain contact length
-    static constexpr double l     = l_sc + l_s + l_g + l_d + l_dc;                // device length
-    static constexpr double d_g   = 1.3;                                          // channel thickness
-    static constexpr double d_o   = 1;                                            // oxide thickness
+    static constexpr double l     = l_sc + l_s + l_ox + l_d + l_dc;                // device length
+    static constexpr double r_cnt   = 1;                                          // CNT radius
+    static constexpr double d_ox   = 1;                                            // oxide thickness
     static constexpr double lam_g = 2.0;//sqrt(eps_g*d_g*d_g/8/eps_o*log(1+2*d_o/d_g)); // scr. length in channel
     static constexpr double lam_s = 1.9;//1.0 < lam_g ? 1.0 : lam_g;                    // scr. length in source
     static constexpr double lam_d = 1.9;//1.0 < lam_g ? 1.0 : lam_g;                    // scr. length in drain
 
-    // lattice
+    // lattice in x direction
     static constexpr double dx    = 0.1;                                          // lattice constant
     static constexpr int    N_sc  = round(l_sc / dx);                             // # of points in source contact
     static constexpr int    N_s   = round(l_s / dx);                              // # of points in source
-    static constexpr int    N_g   = round(l_g / dx);                              // # of points in gate
+    static constexpr int    N_ox  = round(l_ox / dx);                              // # of points in gate
     static constexpr int    N_d   = round(l_d / dx);                              // # of points in drain
     static constexpr int    N_dc  = round(l_dc / dx);                             // # of points in drain contact
     static constexpr int    N_x   = N_sc + N_s + N_g + N_d + N_dc;                // total # of points
     static const arma::vec  x     = arma::linspace(0.5 * dx, l - 0.5 * dx, N_x);  // lattice points
+
+    // lattice in r-direction (for electrostatics)
+    static constexpr double d_ext  = 2;
+    static constexpr double R     = r_cnt + d_ox + d_ext;
+    static constexpr double dr    = 0.1;
 
     // ranges
     static const arma::span sc    = arma::span(0, N_sc - 1);                      // source contact area
@@ -152,7 +158,7 @@ namespace d {
         ret(d).fill(nsgd(2));
         ret(dc).fill(nc(1));
 
-        ret *= 16 * c::e / M_PI / M_PI / dx / d_g / d_g;
+        ret *= 4 * c::e / M_PI / M_PI / dx / r_cnt / r_cnt; // ToDo: Factor
 
         return ret;
     }

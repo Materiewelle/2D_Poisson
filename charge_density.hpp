@@ -131,7 +131,7 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
     }
 
     // scaling factor
-    static constexpr double scale = - c::e * 4 / M_PI / M_PI / d::dx / d::d_g / d::d_g;
+    static constexpr double scale = - c::e / M_PI / M_PI / d::dx / d::r_cnt / d::r_cnt; // ToDo: correct
 
     // scaling and doping
     data = (n_sv + n_sc + n_dv + n_dc) * scale + d::n0;
@@ -157,7 +157,7 @@ void charge_density::update(const wave_packet psi[4]) {
     }
 
     // scaling factor
-    static constexpr double scale = - c::e * 4 / M_PI / M_PI / d::dx / d::d_g / d::d_g;
+    static constexpr double scale = - c::e  / M_PI / M_PI / d::dx / d::r_cnt / d::r_cnt; // ToDo: correct
 
     // scaling and doping
     data = (- n[LV] - n[RV] + n[LC] + n[RC]) * scale + d::n0;
