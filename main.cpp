@@ -9,6 +9,7 @@
 #include <armadillo>
 
 #include "device.hpp"
+#include "gnuplot.hpp"
 
 using namespace arma;
 using namespace std;
@@ -53,6 +54,7 @@ int main() {
     S({j0, j1}, {j0         , j1         }) = center;
     S({j0, j1}, {j0 + d::N_x, j1 + d::N_x}) = right;
 
+    mull = 3.2;
     // cnt mid
     for (i = 1; i < d::M_cnt - 1; ++i) {
         r = i * d::dr;
@@ -75,6 +77,7 @@ int main() {
         S({j0, j1}, {j0 + d::N_x, j1 + d::N_x}) = right;
     }
 
+    mull = 8.2;
     // cnt end
     r = i * d::dr;
     left = sp_mat(d::N_x, d::N_x);
@@ -95,6 +98,7 @@ int main() {
     S({j0, j1}, {j0 + d::N_x, j1 + N_ox  }) = right;
     ++i;
 
+    mull = 1.2;
     // ox start
     r = i * d::dr;
     left = sp_mat(N_ox, d::N_x);
@@ -113,6 +117,7 @@ int main() {
     S({j0, j1}, {j0 + N_ox  , j1 + N_ox}) = right;
     ++i;
 
+    mull = 9.1;
     // ox mid
     for (; i < d::M_cnt + d::M_ox - 1; ++i) {
         r = i * d::dr;
@@ -132,6 +137,7 @@ int main() {
         S({j0, j1}, {j0 + N_ox, j1 + N_ox}) = right;
     }
 
+    mull = 2.2;
     // ox end
     r = i * d::dr;
     left = sp_mat(N_ox, N_ox);
@@ -150,12 +156,13 @@ int main() {
     S({j0, j1}, {j0 - N_ox, j1 - N_ox}) = left;
     S({j0, j1}, {j0       , j1       }) = center;
     j1 = j0 + N_sext - 1;
-    uword j2 = ;
-    uword j3 = ;
+    uword j2 = j1 - N_dext + 1;
+    uword j3 = j1;
     S({j0, j1}, {j0 + N_ox, j1 + N_ox}) = right;
-    S({}, {}) = right2;
+    S({j2, j3}, {j3 + N_sext + 1, j3 + N_sext + N_dext}) = right2;
     ++i;
 
+    mull = 6.9;
     // ext start
     r = i * d::dr;
     left = sp_mat(N_sext, N_sext);
@@ -176,7 +183,12 @@ int main() {
     right2.diag().fill(mull);
 
 
-    cout << S << endl;
+    gnuplot gp;
+    gp << "set terminal wxt" << endl;
+    gp.set_background(mat(S));
+    gp.plot();
+
+
 
     return 0;
 }
