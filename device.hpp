@@ -33,7 +33,7 @@ namespace d {
     static constexpr double l     = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;// device length
     static constexpr double r_cnt = 1;                                            // CNT radius
     static constexpr double d_ox   = 1;                                           // oxide thickness
-    static constexpr double r_ext = 5;                                            // additional thickness
+    static constexpr double r_ext = 5;                                            // extension thickness
     static constexpr double R     = r_cnt + d_ox + r_ext;                         // complete thickness
 
     // lattice in x direction
@@ -66,13 +66,9 @@ namespace d {
 
     // lattice in r-direction (for electrostatics)
     static constexpr double dr    = 0.1;                                          // lattice constant
-    static constexpr int    M_sc  = round(r_cnt / dr);                            // # of points in source contact
-    static constexpr int    M_s   = round(R / dr);                                // # of points in source
-    static constexpr int    M_sox = M_s;                                          // # of points in source oxide
-    static constexpr int    M_g   = M_sc + round(d_ox / dr);                      // # of points in gate
-    static constexpr int    M_dox = M_sox;                                        // # of points in drain oxide
-    static constexpr int    M_dc  = M_sc;                                         // # of points in drain
-    static constexpr int    M_d   = M_s;                                          // # of points in drain contact
+    static constexpr int    M_cnt = round(r_cnt / dr);                            // # of points in nanotube
+    static constexpr int    M_ox  = round(d_ox / dr);                             // # of points in oxide
+    static constexpr int    M_ext = round(r_ext / dr);                            // # of points in extension
 
     // hopping parameters central region
     static constexpr double t1    = 0.25 * E_g * (1 + sqrt(1 + 2 * c::h_bar2 / (dx*dx * 1E-18 * m_eff * E_g * c::e)));
