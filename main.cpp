@@ -7,45 +7,54 @@
 #include <xmmintrin.h>
 
 #include <armadillo>
-#include "time_evolution.hpp"
-#include "green.hpp"
+
+#include "device.hpp"
 
 using namespace arma;
 using namespace std;
 
 int main() {
-
     //flush denormal floats to zero for massive speedup
     //(i.e. set bits 15 and 6 in SSE control register MXCSR)
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-//    vec V_g, I;
-//    steady_state::transfer<true>({0, -.2, .4}, 0.8, 200, V_g, I);
+    static constexpr double dr2 = 1.0 / d::dr * d::dr;
+    static constexpr double dx2 = 1.0 / d::dx * d::dx;
 
-//    plot(make_pair(V_g, vec(log10(I))));
+    sp_mat S(d::N_x, d::N_x);
+    S.diag( 0).fill(-2.0 * (dr2 + dx2));
+    S.diag( 1).fill(dx2);
+    S.diag(-1).fill(dx2);
+    S(0, 1) *= 2;
+    S(d::N_x - 1, d::N_x - 2) *= 2;
 
-//    mat data = join_horiz(V_g, I);
-//    data.save("transferTFET1", csv_ascii);
+    sp_mat S2(d::N_x, d::N_x);
+    S2.diag().fill(2.0 * dr2);
 
-    steady_state s({0, 0, 0.4});
-    s.solve();
-    cout << "sssstroeeem:" << s.I.total(0) << endl << endl;
-    plot_ldos(s.phi, 1000);
+    S = join_horiz(S, S2);
 
+    for (int i = 1; i < d::M_sc - 1; ++i) {
+        double r = i * d::dr;
 
-//    const int n = 30;
-//    const double start = .2;
-//    const double end = 1.;
-//    const int parts = 10;
-//    const double partsize = (end - start) / parts;
+        sp_mat block0(d::N_x, d::N_x);
+        block0.diag().fill(dr2 - 0.5 / r / d::dr);
 
-//    vec V_g, I;
-//    for (int i = 0; i < parts; ++i) {
-//        steady_state::transfer({0., start + i * partsize, .4}, start + (i + 1) * partsize, n, V_g, I);
-//        mat data = join_horiz(V_g, I);
-//        data.save("../../../../Fitting/data" + to_string(i), csv_ascii);
-//    }
+        sp_mat block1 = sp_mat(d::N_x, d::N_x);
+        block1.diag( 0).fill(-2.0 * (dr2 + dx2));
+        block1.diag( 1).fill(dx2);
+        block1.diag(-1).fill(dx2);
+        block1(0, 1) *= 2;
+        block1(d::N_x - 1, d::N_x - 2) *= 2;
+
+        sp_mat block2 = sp_mat(d::N_x, d::N_x);
+        block2.diag().fill(dr2 + 0.5 / r / d::dr);
+
+        S2 = join_horiz(join_horiz(block0, block1), block2);
+        S = join_horiz(S, sp_mat(d::N_x, d::N_x));
+        S = join_vert(S, S2);
+    }
+
 
     return 0;
 }
