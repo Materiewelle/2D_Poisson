@@ -19,8 +19,8 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    static constexpr double dr2 = 1.0 / d::dr * d::dr;
-    static constexpr double dx2 = 1.0 / d::dx * d::dx;
+    static constexpr double dr2 = 1.0 / d::dr / d::dr;
+    static constexpr double dx2 = 1.0 / d::dx / d::dx;
 
     // get the size of the complete sparse matrix:
     int D = 0;
@@ -29,8 +29,7 @@ int main() {
     D += ((d::N_s + d::N_sox) + (d::N_d + d::N_dox)) * d::M_ext;
     sp_mat S(D, D);
 
-
-    // first two blocks
+    // first row of blocks
     sp_mat S_00(d::N_x, d::N_x);
     S_00.diag(0).fill(-2.0 * (dr2 + dx2));
     S_00.diag( 1).fill(dx2);
@@ -43,35 +42,47 @@ int main() {
     S01.diag().fill(2.0 * dr2);
     S({0, d::N_x-1},{d::N_x, 2*d::N_x-1}) = S01;
 
+    // central rows of blocks
+    for (int i = 1; i < d::M_cnt - 1; ++i) {
+        double r = i * d::dr;
+
+        sp_mat sides(d::N_x, d::N_x);
+        sides.diag().fill(dr2 - 0.5 / r / d::dr);
+
+        sp_mat center = sp_mat(d::N_x, d::N_x);
+        center.diag( 0).fill(-2.0 * (dr2 + dx2));
+        center.diag( 1).fill(dx2);
+        center.diag(-1).fill(dx2);
+        center(0, 1) *= 2;
+        center(d::N_x - 1, d::N_x - 2) *= 2;
+
+        S({i * d::N_x, (i+1) * d::N_x - 1}, {(i-1) * d::N_x, i     * d::N_x - 1}) = sides;
+        S({i * d::N_x, (i+1) * d::N_x - 1}, {i     * d::N_x, (i+1) * d::N_x - 1}) = center;
+        S({i * d::N_x, (i+1) * d::N_x - 1}, {(i+1) * d::N_x, (i+2) * d::N_x - 1}) = sides;
+    }
+
+    // transition from nanotube to gate-oxide
+    int i = d::M_cnt - 1;
+    sp_mat left(d::N_x, d::N_x);
+    double r = i * d::dr;
+    left.diag().fill(dr2 - 0.5 / r / d::dr);
+
+    sp_mat center(d::N_x, d::N_x);
+    center.diag(0).fill(-2.0 * (dr2 + dx2));
+    center.diag( 1).fill(dx2);
+    center.diag(-1).fill(dx2);
+    center(0, 1) *= 2;
+    center(d::N_x - 1, d::N_x - 2) *= 2;
+
+    int N_ox = d::N_x - d::N_sc - d::N_dc;
+    sp_mat right(N_ox, d::N_x);
+    right.diag(-d::N_sc).fill(5); //dummy-value
+
+    S({i * d::N_x, (i+1) * d::N_x - 1}, {(i-1) * d::N_x, i     * d::N_x - 1}) = left;
+    S({i * d::N_x, (i+1) * d::N_x - 1}, {i     * d::N_x, (i+1) * d::N_x - 1}) = center;
+    S({i * d::N_x, (i+1) * d::N_x - 1}, {(i+1) * d::N_x, (i+1) * d::N_x + d::N_sc - 1}) = right;
+
     cout << S << endl;
-
-//    for (int i = 1; i < d::M_sc - 1; ++i) {
-//        double r = i * d::dr;
-
-//        sp_mat block0(d::N_x, d::N_x);
-//        block0.diag().fill(dr2 - 0.5 / r / d::dr);
-
-//        sp_mat block1 = sp_mat(d::N_x, d::N_x);
-//        block1.diag( 0).fill(-2.0 * (dr2 + dx2));
-//        block1.diag( 1).fill(dx2);
-//        block1.diag(-1).fill(dx2);
-//        block1(0, 1) *= 2;
-//        block1(d::N_x - 1, d::N_x - 2) *= 2;
-
-//        sp_mat block2 = sp_mat(d::N_x, d::N_x);
-//        block2.diag().fill(dr2 + 0.5 / r / d::dr);
-
-//        S2 = join_horiz(join_horiz(block0, block1), block2);
-//        S = join_horiz(S, sp_mat(d::N_x, d::N_x));
-//        S = join_vert(S, S2);
-//    }
-
-//    sp_mat A(10,10);
-//    sp_mat B(5,5);
-//    B.diag(0).fill(2.5);
-//    A({0, 4}, {0, 4}) = B;
-
-//    cout << A << endl;
 
 
     return 0;
