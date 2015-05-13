@@ -10,8 +10,8 @@
 namespace d {
 
     // material properties
-    static constexpr double eps_g = 10;                                           // relative permittivity of channel
-    static constexpr double eps_o = 25;                                           // relative permittivity of oxide
+    static constexpr double eps_cnt = 10;                                           // relative permittivity in cnt
+    static constexpr double eps_ox = 25;                                           // relative permittivity of oxide
     static constexpr double E_g   = 0.62;                                         // bandgap
     static constexpr double m_eff = 0.1 * c::m_e;                                 // effective mass
     static constexpr double E_gc  = 0.2;                                          // bandgap of contacts

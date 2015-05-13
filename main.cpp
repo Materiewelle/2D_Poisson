@@ -14,9 +14,105 @@
 using namespace arma;
 using namespace std;
 
+class box {
+public:
+    int i0;
+    int i1;
+    int j0;
+    int j1;
+
+    double e_in;
+    double e_out[4]; // lrtb
+};
+
+vector<box> init_boxes() {
+    using namespace d;
+
+    static constexpr int i1 = N_sc;
+    static constexpr int i2 = i1 + N_s;
+    static constexpr int i3 = i2 + N_sox;
+    static constexpr int i4 = i3 + N_g;
+    static constexpr int i5 = i4 + N_dox;
+    static constexpr int i6 = i5 + N_d;
+    static constexpr int i7 = i6 + N_dc;
+
+    static constexpr int j1 = M_cnt;
+    static constexpr int j2 = j1 + M_ox;
+    static constexpr int j3 = j2 + M_ext;
+
+    vector<box> boxes(15);
+
+    // --------------------------- cnt-layer ---------------------------------------------
+    // cnt-source-box
+    boxes[0] = box({0, i1, 0, j1, eps_cnt, {eps_cnt, eps_cnt, eps_cnt, eps_cnt}});
+
+    // cnt-air-source-box
+    boxes[1] = box({i1, i2, 0, j1, eps_cnt, {eps_cnt, eps_cnt, c::eps_0, eps_cnt}});
+
+    // cnt-oxide-box
+    boxes[2] = box({i2, i5, 0, j1, eps_cnt, {eps_cnt, eps_cnt, eps_ox, eps_cnt}});
+
+    // cnt-air-drain
+    boxes[3] = box({i5, i6, 0, j1, eps_cnt, {eps_cnt, eps_cnt, c::eps_0, eps_cnt}});
+
+    // cnt-drain-box
+    boxes[4] = box({i6, i7, 0, j1, eps_cnt, {eps_cnt, eps_cnt, eps_cnt, eps_cnt}});
+
+    // --------------------------- oxide-layer -------------------------------------------
+    // left-air-box in oxide layer
+    boxes[5] = box({i1, i2, j1, j2, c::eps_0, {c::eps_0, eps_ox, c::eps_0, eps_cnt}});
+
+    // left-oxide-under-air-box
+    boxes[6] = box({i2, i3, j1, j2, eps_ox, {c::eps_0, eps_ox, eps_ox, eps_cnt}});
+
+    // oxide-under-gate-box
+    boxes[7] = box({i3, i4, j1, j2, eps_ox, {eps_ox, eps_ox, eps_ox, eps_cnt}});
+
+    // right-oxide-under-air-box
+    boxes[8] = box({i4, i5, j1, j2, eps_ox, {eps_ox, c::eps_0, c::eps_0, eps_cnt}});
+
+    // right-air-box in oxide layer
+    boxes[9] = box({i5, i6, j1, j2, c::eps_0, {eps_ox, c::eps_0, c::eps_0, eps_cnt}});
+
+    // --------------------------- gate-layer --------------------------------------------
+    // left-air-box in gate layer
+    boxes[10] = box({i1, i2, j2, j3, c::eps_0, {c::eps_0, c::eps_0, c::eps_0, c::eps_0}});
+
+    // left-air-over-oxide-box
+    boxes[11] = box({i2, i3, j2, j3, c::eps_0, {c::eps_0, eps_ox, c::eps_0, eps_ox}});
+
+    // gate-box
+    boxes[12] = box({i3, i4, j2, j3, 0, {c::eps_0, c::eps_0, 0, eps_ox}});
+
+    // right-air-over-oxide-box
+    boxes[13] = box({i4, i5, j2, j3, c::eps_0, {c::eps_0, c::eps_0, c::eps_0, eps_ox}});
+
+    // right-air-box in gate layer
+    boxes[14] = box({i5, i6, j2, j3, c::eps_0, {c::eps_0, c::eps_0, c::eps_0, c::eps_0}});
+
+    // --------------------------- contacts ----------------------------------------------
+    // left-contact-box
+    boxes[15] = box({0, i1, j1, j3, 0, {0, c::eps_0, 0, eps_cnt}});
+
+    //right-contact-box
+    boxes[16] = box({i6, i7, j1, j3, 0, {c::eps_0, 0, 0, eps_cnt}});
+
+    return boxes;
+}
+
 template<int dir>
 static inline double eps(int i, int j) {
-    return c::eps_0;
+    static int last_box = 0;
+    vector<box> boxes = init_boxes();
+    // ToDo: do all boxes cyclically until last box (linked list of int?)
+    for (int b = last_box; b < before_last; ++b) {
+        if (inside_box) {
+            eps = border_check(boxes[b]);
+            last_box = b;
+            return eps;
+        }
+    return -1; // something went wrong
+    }
 }
 
 int main() {
