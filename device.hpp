@@ -23,17 +23,17 @@ namespace d {
     static constexpr double F_dc  = F_d;                                          // Fermi level in drain contact
 
     // geometry (everything in nm)
-    static constexpr double l_sc  = 1;                                            // source contact length
-    static constexpr double l_s   = 1;                                           // source length
-    static constexpr double l_sox  = 1;                                           // source oxide length
-    static constexpr double l_g   = 1;                                           // gate length
-    static constexpr double l_dox  = 1;                                           // drain oxide length
-    static constexpr double l_d   = 1;                                           // drain length
-    static constexpr double l_dc  = 1;                                            // drain contact length
+    static constexpr double l_sc  = 0.2;                                            // source contact length
+    static constexpr double l_s   = 0.2;                                           // source length
+    static constexpr double l_sox  = 0.2;                                           // source oxide length
+    static constexpr double l_g   = 0.6;                                           // gate length
+    static constexpr double l_dox  = 0.2;                                           // drain oxide length
+    static constexpr double l_d   = 0.2;                                           // drain length
+    static constexpr double l_dc  = 0.2;                                            // drain contact length
     static constexpr double l     = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;// device length
-    static constexpr double r_cnt = 1;                                            // CNT radius
-    static constexpr double d_ox   = 1;                                           // oxide thickness
-    static constexpr double r_ext = 1;                                            // extension thickness
+    static constexpr double r_cnt = 0.3;                                            // CNT radius
+    static constexpr double d_ox   = 0.2;                                           // oxide thickness
+    static constexpr double r_ext = 0.2;                                            // extension thickness
     static constexpr double R     = r_cnt + d_ox + r_ext;                         // complete thickness
 
     // lattice in x direction
@@ -69,6 +69,7 @@ namespace d {
     static constexpr int    M_cnt = round(r_cnt / dr);                            // # of points in nanotube
     static constexpr int    M_ox  = round(d_ox / dr);                             // # of points in oxide
     static constexpr int    M_ext = round(r_ext / dr);                            // # of points in extension
+    static constexpr int    M_r   = M_cnt + M_ox + M_ext;                         // total # of points
 
     // hopping parameters central region
     static constexpr double t1    = 0.25 * E_g * (1 + sqrt(1 + 2 * c::h_bar2 / (dx*dx * 1E-18 * m_eff * E_g * c::e)));
