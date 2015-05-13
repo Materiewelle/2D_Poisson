@@ -36,8 +36,8 @@ int main() {
     };
 
     double V_s = -(0.0 + d::F_s);
-    double V_g = -(0.0 + d::F_g);
-    double V_d = -(1.0 + d::F_d);
+    double V_g = -(1.0 + d::F_g);
+    double V_d = -(0.0 + d::F_d);
 
     // construct S matrix
     uword D = d::N_x * d::M_r;
@@ -110,7 +110,7 @@ int main() {
         k = j * d::N_x + i;
         T(k) -= dx2 * r * eps<R>(i, j) * V_d;
     }
-    i = d::N_sc + d::N_s + d::N_sox;
+    i = d::N_sc + d::N_s + d::N_sox - 1;
     for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
         r = j * d::dr + 0.5 * d::dr;
         k = j * d::N_x + i;
@@ -131,7 +131,7 @@ int main() {
         k = j * d::N_x + i;
         T(k) -= dr2 * rp * eps<A>(i, j) * V_s;
     }
-    for (i = d::N_x - d::N_dc - 1; i < d::N_x; ++i) {
+    for (i = d::N_x - d::N_dc; i < d::N_x; ++i) {
         k = j * d::N_x + i;
         T(k) -= dr2 * rp * eps<A>(i, j) * V_d;
     }
@@ -220,19 +220,46 @@ int main() {
 //    gp2.set_background(flipud(mat(S1)));
 //    gp2.plot();
 
+    cout << "setup done" << endl;
+    wall_clock timer;
+    timer.tic();
     vec phivec1 = spsolve(S1, T1);
+    cout << timer.toc() << endl;
 
-    vec phivec = phivec1({0, uword(d::N_x * (d::M_cnt - 1))});
-    plot(phivec({0, uword(d::N_x - 1)}));
+    vec phivec = vec(d::N_x * d::M_r);
+    k0 = 0;
+    k1 = d::N_x * d::M_cnt - 1;
+    phivec({k0, k1}) = phivec1({k0, k1});
+
+    k0 = k1 + 1;
+    k1 += N_ox;
+    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
+        uword c =  j * d::N_x + d::N_sc;
+        phivec({c, c + N_ox - 1}) = phivec1({k0, k1});
+        k0 = k1 + 1;
+        k1 += N_ox;
+    }
+
+    k1 -= N_ox;
+    k0 = k1 + 1;
+    k1 += N_ssox;
+    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+        uword c1 =  j    * d::N_x + d::N_sc;
+        phivec({c1, c1 + N_ssox - 1}) = phivec1({k0, k1});
+        k0 = k1 + 1;
+        k1 += N_ssox;
+
+        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
+        S1({k0, k1},{k0, k1}) = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
+        phivec({c2, c2 + N_ddox - 1}) = phivec1({k0, k1});
+        k0 = k1 + 1;
+        k1 += N_ddox;
+    }
 
     mat phi(phivec);
-    phi.reshape(d::N_x, d::M_cnt);
+    phi.reshape(d::N_x, d::M_r);
 
-    gnuplot gp3;
-    gp3 << "set terminal wxt size 800, 800" << endl;
-    gp3 << "unset colorbox" << endl;
-    gp3.set_background(phi.t());
-    gp3.plot();
+    image(phi.t());
 
     cout << d::N_x << endl;
     cout << d::M_r << endl;
