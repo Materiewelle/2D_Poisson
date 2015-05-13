@@ -14,6 +14,11 @@
 using namespace arma;
 using namespace std;
 
+template<int dir>
+static inline double eps(int i, int j) {
+    return c::eps_0;
+}
+
 int main() {
     //flush denormal floats to zero for massive speedup
     //(i.e. set bits 15 and 6 in SSE control register MXCSR)
