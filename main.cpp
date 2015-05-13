@@ -243,14 +243,29 @@ int main() {
     S({j2, j3}, {j2 - N_sext - N_dext, j3 - N_sext - N_dext}) = left2;
     S({j2, j3}, {j2                  , j3                  }) = center2;
 
-
     gnuplot gp;
     gp << "set terminal wxt size 640, 640" << endl;
     gp << "unset colorbox" << endl;
     gp.set_background(flipud(mat(S)));
     gp.plot();
 
+    double V_s = 0;
+    double V_g = 0.5;
+    double V_d = 1.0;
+    vec R(D);
+    i = d::M_cnt - 1;
+    for (int j = 0; j < d::N_sc; ++j) {
+        R(i * d::N_x + j) = V_s;
+    }
+    for (int j = d::N_x - d::N_dc; j < d::N_x; ++j) {
+        R(i * d::N_x + j) = V_d;
+    }
 
+    vec phi = spsolve(S, R);
+
+    phi = phi({uword(i * d::N_x), uword((i+1) * d::N_x - 1)});
+
+    plot(phi);
 
     return 0;
 }

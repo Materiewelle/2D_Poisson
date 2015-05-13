@@ -28,7 +28,7 @@ HEADERS += \
     voltage.hpp \
     sd_quantity.hpp
 
-LIBS += -lblas -lgomp
+LIBS += -lblas -lgomp -lsuperlu
 
 QMAKE_CXXFLAGS = -std=c++14 -march=native -fopenmp
 
