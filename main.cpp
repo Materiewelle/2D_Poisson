@@ -35,16 +35,22 @@ int main() {
         I = 3
     };
 
-    int D = d::N_x * d::M_r;
+    double V_s = -(0.0 + d::F_s);
+    double V_g = -(0.0 + d::F_g);
+    double V_d = -(1.0 + d::F_d);
+
+    // construct S matrix
+    uword D = d::N_x * d::M_r;
+    uword i, j, k;
+    double r, rp, rm;
     sp_mat S(D, D);
+    for (j = 0; j < d::M_r; ++j) {
+        r = j * d::dr + 0.5 * d::dr;
+        rp = r + 0.5 * d::dr;
+        rm = r - 0.5 * d::dr;
 
-    for (int j = 0; j < d::M_r; ++j) {
-        double r = j * d::dr + 0.5 * d::dr;
-        double rp = r + 0.5 * d::dr;
-        double rm = r - 0.5 * d::dr;
-
-        for (int i = 0; i < d::N_x; ++i) {
-            int k = j * d::N_x + i;
+        for (i = 0; i < d::N_x; ++i) {
+            k = j * d::N_x + i;
 
             if (k >= d::N_x) {
                 S(k, k - d::N_x) = dr2 * rm * eps<I>(i, j);
@@ -63,7 +69,8 @@ int main() {
         }
     }
 
-    for (int j = 1; j < d::M_r; ++j) {
+    // remove coupling between end of j-th line and start of (j+1)-th line
+    for (j = 1; j < d::M_r; ++j) {
         int k = j * d::N_x;
         S(k, k - 1) = 0;
         S(k - 1, k) = 0;
@@ -71,7 +78,7 @@ int main() {
 
     // horizontal von Neumann
     S(0, 1) *= 2;
-    for (int j = 1; j < d::M_cnt; ++j) {
+    for (j = 1; j < d::M_cnt; ++j) {
         int k = j * d::N_x;
         S(k - 1, k - 2) *= 2;
         S(k, k + 1) *= 2;
@@ -79,269 +86,156 @@ int main() {
     S(d::M_cnt * d::N_x - 1, d::M_cnt * d::N_x - 2) *= 2;
 
     // vertical von Neumann
-    for (int i = 0; i < d::N_x; ++i) {
+    for (i = 0; i < d::N_x; ++i) {
         S(i, d::N_x + i) -= dr2 * 0.5 * d::dr * eps<A>(i, 0);
         S(i, d::N_x + i) *= 2;
+        S(D - d::N_x + i, D - d::N_x * 2 + i) += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
+        S(D - d::N_x + i, D - d::N_x * 2 + i) *= 2;
     }
 
-    gnuplot gp;
-    gp << "set terminal wxt size 640, 640" << endl;
-    gp << "unset colorbox" << endl;
-    gp.set_background(flipud(mat(S)));
-    gp.plot();
+    // right side vector
+    vec T(D);
+    T.fill(0);
 
+    // horizontal Dirichlet
+    i = d::N_sc;
+    for (j = d::M_cnt; j < d::M_r; ++j) {
+        r = j * d::dr + 0.5 * d::dr;
+        k = j * d::N_x + i;
+        T(k) -= dx2 * r * eps<L>(i, j) * V_s;
+    }
+    i = d::N_x - d::N_dc - 1;
+    for (j = d::M_cnt; j < d::M_r; ++j) {
+        r = j * d::dr + 0.5 * d::dr;
+        k = j * d::N_x + i;
+        T(k) -= dx2 * r * eps<R>(i, j) * V_d;
+    }
+    i = d::N_sc + d::N_s + d::N_sox;
+    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+        r = j * d::dr + 0.5 * d::dr;
+        k = j * d::N_x + i;
+        T(k) -= dx2 * r * eps<R>(i, j) * V_g;
+    }
+    i = d::N_sc + d::N_s + d::N_sox + d::N_g;
+    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+        r = j * d::dr + 0.5 * d::dr;
+        k = j * d::N_x + i;
+        T(k) -= dx2 * r * eps<L>(i, j) * V_g;
+    }
 
+    // vertical Dirichlet
+    j = d::M_cnt - 1;
+    r = j * d::dr + 0.5 * d::dr;
+    rp = r + 0.5 * d::dr;
+    for (i = 0; i < d::N_sc; ++i) {
+        k = j * d::N_x + i;
+        T(k) -= dr2 * rp * eps<A>(i, j) * V_s;
+    }
+    for (i = d::N_x - d::N_dc - 1; i < d::N_x; ++i) {
+        k = j * d::N_x + i;
+        T(k) -= dr2 * rp * eps<A>(i, j) * V_d;
+    }
+    j = d::M_cnt + d::M_ox - 1;
+    r = j * d::dr + 0.5 * d::dr;
+    rp = r + 0.5 * d::dr;
+    for (i = d::N_sc + d::N_s + d::N_sox; i < d::N_sc + d::N_s + d::N_sox + d::N_g; ++i) {
+        k = j * d::N_x + i;
+        T(k) -= dr2 * rp * eps<A>(i, j) * V_g;
+    }
 
-//    double mull = 1;
-//    int i = 0;
-//    sp_mat left, left2, center, center2, right, right2;
+    // copy non metal parts S => S1, T => T1
+    uword N_ssox = d::N_s + d::N_sox;
+    uword N_ddox = d::N_d + d::N_dox;
+    uword N_ox   = N_ssox + d::N_g + N_ddox;
+    D = d::N_x * d::M_cnt + N_ox * d::M_ox + (N_ssox + N_ddox) * d::M_ext;
+    sp_mat S1 = sp_mat(D, D);
+    vec T1 = vec(D);
 
-//    // get the size of the complete sparse matrix:
-//    int N_ox = d::N_x - d::N_sc - d::N_dc;
-//    int N_sext = d::N_s + d::N_sox;
-//    int N_dext = d::N_d + d::N_dox;
-//    int D = 0;
-//    D += d::N_x * d::M_cnt;
-//    D +=   N_ox * d::M_ox;
-//    D += (N_sext + N_dext) * d::M_ext;
-//    sp_mat S(D, D);
+    // cnt part
+    uword k0 = 0;
+    uword k1 = d::N_x * d::M_cnt - 1;
+    S1({k0, k1}, {k0, k1}) = S({k0, k1}, {k0, k1});
+    T1({k0, k1}) = T({k0, k1});
 
-//    // cnt start
-//    double r = 0;
-//    center = sp_mat(d::N_x, d::N_x);
-//    center.diag(0).fill(mull);
-//    center.diag( 1).fill(mull);
-//    center.diag(-1).fill(mull);
-//    center(0, 1) *= 2;
-//    center(d::N_x - 1, d::N_x - 2) *= 2;
-//    right = sp_mat(d::N_x, d::N_x);
-//    right.diag().fill(2 * mull);
-//    uword k0 = 0;
-//    uword k1 = d::N_x - 1;
-//    S({k0, k1}, {k0         , k1         }) = center;
-//    S({k0, k1}, {k0 + d::N_x, k1 + d::N_x}) = right;
+    // oxide part
+    k0 = k1 + 1;
+    k1 += N_ox;
+    uword delta = d::N_dc; // offset for first left/up blocks
+    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
+        uword l = (j-1) * d::N_x + d::N_sc;
+        uword c =  j    * d::N_x + d::N_sc;
+        auto left   = S({c, c + N_ox - 1}, {l, l + N_ox - 1});
+        auto center = S({c, c + N_ox - 1}, {c, c + N_ox - 1});
+        auto up     = S({l, l + N_ox - 1}, {c, c + N_ox - 1});
+        S1({k0, k1},{k0 - N_ox - delta, k1 - N_ox - delta}) = left;
+        S1({k0, k1},{k0, k1}) = center;
+        S1({k0 - N_ox - delta, k1 - N_ox - delta},{k0, k1}) = up;
+        T1({k0, k1}) = T({c, c + N_ox - 1});
+        k0 = k1 + 1;
+        k1 += N_ox;
+        delta = 0; // set offset to 0 for next blocks
+    }
 
-//    mull = 2;
-//    // cnt mid
-//    for (i = 1; i < d::M_cnt - 1; ++i) {
-//        r = i * d::dr;
-//        left = sp_mat(d::N_x, d::N_x);
-//        left.diag().fill(mull);
-//        center = sp_mat(d::N_x, d::N_x);
-//        center.diag( 0).fill(mull);
-//        center.diag( 1).fill(mull);
-//        center.diag(-1).fill(mull);
-//        center(0, 1) *= 2;
-//        center(d::N_x - 1, d::N_x - 2) *= 2;
-//        right = sp_mat(d::N_x, d::N_x);
-//        right.diag().fill(mull);
-//        k0 = k1 + 1;
-//        k1 += d::N_x;
-//        S({k0, k1}, {k0 - d::N_x, k1 - d::N_x}) = left;
-//        S({k0, k1}, {k0         , k1         }) = center;
-//        S({k0, k1}, {k0 + d::N_x, k1 + d::N_x}) = right;
-//    }
+    // extension part
+    k1 -= N_ox;
+    k0 = k1 + 1;
+    k1 += N_ssox;
+    delta = d::N_g; // offset for first left/up blocks
+    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+        uword l1 = (j-1) * d::N_x + d::N_sc;
+        uword c1 =  j    * d::N_x + d::N_sc;
+        auto left1   = S({c1, c1 + N_ssox - 1},{l1, l1 + N_ssox - 1});
+        auto center1 = S({c1, c1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
+        auto up1     = S({l1, l1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
+        S1({k0, k1},{k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta}) = left1;
+        S1({k0, k1},{k0, k1}) = center1;
+        S1({k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta},{k0, k1}) = up1;
+        T1({k0, k1}) = T({c1, c1 + N_ssox - 1});
+        k0 = k1 + 1;
+        k1 += N_ssox;
+        delta = 0; // set offset to 0 for next blocks
 
-//    mull = 3;
-//    // cnt end
-//    r = i * d::dr;
-//    left = sp_mat(d::N_x, d::N_x);
-//    left.diag().fill(mull);
-//    center = sp_mat(d::N_x, d::N_x);
-//    center.diag( 0).fill(mull);
-//    center.diag( 1).fill(mull);
-//    center.diag(-1).fill(mull);
-//    center(0, 1) *= 2;
-//    center(d::N_x - 1, d::N_x - 2) *= 2;
-//    right = sp_mat(d::N_x, N_ox);
-//    right.diag(-d::N_sc).fill(mull);
-//    k0 = k1 + 1;
-//    k1 += d::N_x;
-//    S({k0, k1}, {k0 - d::N_x, k1 - d::N_x}) = left;
-//    S({k0, k1}, {k0         , k1         }) = center;
-//    S({k0, k1}, {k0 + d::N_x, k1 + N_ox  }) = right;
-//    ++i;
-
-//    mull = 4;
-//    // ox start
-//    r = i * d::dr;
-//    left = sp_mat(N_ox, d::N_x);
-//    left.diag(d::N_sc).fill(mull);
-//    center = sp_mat(N_ox, N_ox);
-//    center.diag( 0).fill(mull);
-//    center.diag( 1).fill(mull);
-//    center.diag(-1).fill(mull);
-//    right = sp_mat(N_ox, N_ox);
-//    right.diag().fill(mull);
-//    k0 = k1 + 1;
-//    k1 += N_ox;
-//    S({k0, k1}, {k0 - d::N_x, k1 - N_ox}) = left;
-//    S({k0, k1}, {k0         , k1       }) = center;
-//    S({k0, k1}, {k0 + N_ox  , k1 + N_ox}) = right;
-//    ++i;
-
-//    mull = 5;
-//    // ox mid
-//    for (; i < d::M_cnt + d::M_ox - 1; ++i) {
-//        r = i * d::dr;
-//        left = sp_mat(N_ox, N_ox);
-//        left.diag().fill(mull);
-//        center = sp_mat(N_ox, N_ox);
-//        center.diag( 0).fill(mull);
-//        center.diag( 1).fill(mull);
-//        center.diag(-1).fill(mull);
-//        right = sp_mat(N_ox, N_ox);
-//        right.diag().fill(mull);
-//        k0 = k1 + 1;
-//        k1 += N_ox;
-//        S({k0, k1}, {k0 - N_ox, k1 - N_ox}) = left;
-//        S({k0, k1}, {k0       , k1       }) = center;
-//        S({k0, k1}, {k0 + N_ox, k1 + N_ox}) = right;
-//    }
-
-//    mull = 6;
-//    // ox end
-//    r = i * d::dr;
-//    left = sp_mat(N_ox, N_ox);
-//    left.diag().fill(mull);
-//    center = sp_mat(N_ox, N_ox);
-//    center.diag( 0).fill(mull);
-//    center.diag( 1).fill(mull);
-//    center.diag(-1).fill(mull);
-//    right = sp_mat(N_sext, N_sext);
-//    right.diag().fill(mull);
-//    right2 = sp_mat(N_dext, N_dext);
-//    right2.diag().fill(mull);
-//    k0 = k1 + 1;
-//    k1 += N_ox;
-//    S({k0, k1}, {k0 - N_ox, k1 - N_ox}) = left;
-//    S({k0, k1}, {k0       , k1       }) = center;
-//    uword k2 = k1 - N_dext + 1;
-//    uword k3 = k1;
-//    k1 = k0 + N_sext - 1;
-//    S({k0, k1}, {k0 + N_ox, k1 + N_ox}) = right;
-//    S({k2, k3}, {k3 + N_sext + 1, k3 + N_sext + N_dext}) = right2;
-//    ++i;
-
-//    mull = 7;
-//    // ext start
-//    r = i * d::dr;
-//    left = sp_mat(N_sext, N_sext);
-//    left.diag().fill(mull);
-//    left2 = sp_mat(N_dext, N_dext);
-//    left2.diag().fill(mull*2);
-//    center = sp_mat(N_sext, N_sext);
-//    center.diag( 0).fill(mull);
-//    center.diag( 1).fill(mull);
-//    center.diag(-1).fill(mull);
-//    center2 = sp_mat(N_dext, N_dext);
-//    center2.diag( 0).fill(mull*2);
-//    center2.diag( 1).fill(mull*2);
-//    center2.diag(-1).fill(mull*2);
-//    right = sp_mat(N_sext, N_sext);
-//    right.diag().fill(mull);
-//    right2 = sp_mat(N_dext, N_dext);
-//    right2.diag().fill(mull*2);
-
-//    k0 += N_ox;
-//    k1 += N_ox;
-//    k2 += N_sext + N_dext;
-//    k3 += N_sext + N_dext;
-//    S({k0, k1}, {k0 - N_ox, k1 - N_ox}) = left;
-//    S({k0, k1}, {k0         , k1         }) = center;
-//    S({k0, k1}, {k0 + N_sext + N_dext, k1 + N_sext + N_dext}) = right;
-//    S({k2, k3}, {k2 - N_sext - N_dext, k3 - N_sext - N_dext}) = left2;
-//    S({k2, k3}, {k2                  , k3}) = center2;
-//    S({k2, k3}, {k2 + N_sext + N_dext, k3 + N_sext + N_dext}) = right2;
-//    ++i;
-
-//    mull = 10;
-//    // ext mid
-//    for (; i < d::M_cnt + d::M_ox + d::M_ext - 1; ++i) {
-//        r = i * d::dr;
-//        left = sp_mat(N_sext, N_sext);
-//        left.diag().fill(mull);
-//        left2 = sp_mat(N_dext, N_dext);
-//        left2.diag().fill(mull*2);
-//        center = sp_mat(N_sext, N_sext);
-//        center.diag( 0).fill(mull);
-//        center.diag( 1).fill(mull);
-//        center.diag(-1).fill(mull);
-//        center2 = sp_mat(N_dext, N_dext);
-//        center2.diag( 0).fill(mull*2);
-//        center2.diag( 1).fill(mull*2);
-//        center2.diag(-1).fill(mull*2);
-//        right = sp_mat(N_sext, N_sext);
-//        right.diag().fill(mull);
-//        right2 = sp_mat(N_dext, N_dext);
-//        right2.diag().fill(mull*2);
-
-//        k0 += N_sext + N_dext;
-//        k1 += N_sext + N_dext;
-//        k2 += N_sext + N_dext;
-//        k3 += N_sext + N_dext;
-//        S({k0, k1}, {k0 - N_sext - N_dext, k1 - N_sext - N_dext}) = left;
-//        S({k0, k1}, {k0                  , k1                  }) = center;
-//        S({k0, k1}, {k0 + N_sext + N_dext, k1 + N_sext + N_dext}) = right;
-//        S({k2, k3}, {k2 - N_sext - N_dext, k3 - N_sext - N_dext}) = left2;
-//        S({k2, k3}, {k2                  , k3                  }) = center2;
-//        S({k2, k3}, {k2 + N_sext + N_dext, k3 + N_sext + N_dext}) = right2;
-//    }
-
-//    mull = 12;
-//    // ext end
-//    r = i * d::dr;
-//    left = sp_mat(N_sext, N_sext);
-//    left.diag().fill(mull*2);
-//    left2 = sp_mat(N_dext, N_dext);
-//    left2.diag().fill(mull*3);
-//    center = sp_mat(N_sext, N_sext);
-//    center.diag( 0).fill(mull);
-//    center.diag( 1).fill(mull);
-//    center.diag(-1).fill(mull);
-//    center2 = sp_mat(N_dext, N_dext);
-//    center2.diag( 0).fill(mull*2);
-//    center2.diag( 1).fill(mull*2);
-//    center2.diag(-1).fill(mull*2);
-//    k0 += N_sext + N_dext;
-//    k1 += N_sext + N_dext;
-//    k2 += N_sext + N_dext;
-//    k3 += N_sext + N_dext;
-//    S({k0, k1}, {k0 - N_sext - N_dext, k1 - N_sext - N_dext}) = left;
-//    S({k0, k1}, {k0                  , k1                  }) = center;
-//    S({k2, k3}, {k2 - N_sext - N_dext, k3 - N_sext - N_dext}) = left2;
-//    S({k2, k3}, {k2                  , k3                  }) = center2;
+        uword l2 =  j    * d::N_x - d::N_sc - N_ddox;
+        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
+        auto left2   = S({c2, c2 + N_ddox - 1},{l2, l2 + N_ddox - 1});
+        auto center2 = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
+        auto up2     = S({l2, l2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
+        S1({k0, k1},{k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox}) = left2;
+        S1({k0, k1},{k0, k1}) = center2;
+        S1({k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox},{k0, k1}) = up2;
+        T1({k0, k1}) = T({c2, c2 + N_ddox - 1});
+        k0 = k1 + 1;
+        k1 += N_ddox;
+    }
 
 //    gnuplot gp;
-//    gp << "set terminal wxt size 640, 640" << endl;
+//    gp << "set terminal wxt size 800, 800" << endl;
 //    gp << "unset colorbox" << endl;
 //    gp.set_background(flipud(mat(S)));
 //    gp.plot();
 
-//    double V_s = 0;
-//    double V_g = 0.5;
-//    double V_d = 1.0;
-//    vec R(D);
-//    i = d::M_cnt - 1;
-//    r = i * d::dr;
-//    for (int j = 0; j < d::N_sc; ++j) {
-//        R(i * d::N_x + j) = - (r + 0.5 * d::dr) * eps<2>(i, j) * V_s * dr2;
-//    }
-//    for (int j = d::N_x - d::N_dc; j < d::N_x; ++j) {
-//        R(i * d::N_x + j) = - (r + 0.5 * d::dr) * eps<2>(i, j) * V_d * dr2;
-//    }
-//    i = d::M_cnt + d::M_ox - 1;
-//    r = i * d::dr;
-//    for (int j = d::N_sc + d::N_sox; j < d::N_sc + d::N_sox + d::N_ox; ++j) {
-//        R(i * d::N_)
-//    }
+//    gnuplot gp2;
+//    gp2 << "set terminal wxt size 800, 800" << endl;
+//    gp2 << "unset colorbox" << endl;
+//    gp2.set_background(flipud(mat(S1)));
+//    gp2.plot();
 
+    vec phivec1 = spsolve(S1, T1);
 
-//    vec phi = spsolve(S, R);
+    vec phivec = phivec1({0, uword(d::N_x * (d::M_cnt - 1))});
+    plot(phivec({0, uword(d::N_x - 1)}));
 
-//    phi = phi({uword(i * d::N_x), uword((i+1) * d::N_x - 1)});
+    mat phi(phivec);
+    phi.reshape(d::N_x, d::M_cnt);
 
-//    plot(phi);
+    gnuplot gp3;
+    gp3 << "set terminal wxt size 800, 800" << endl;
+    gp3 << "unset colorbox" << endl;
+    gp3.set_background(phi.t());
+    gp3.plot();
+
+    cout << d::N_x << endl;
+    cout << d::M_r << endl;
 
     return 0;
 }
