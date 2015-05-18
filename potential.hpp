@@ -177,7 +177,7 @@ arma::vec potential_impl::poisson(const arma::vec & R0, const charge_density & n
     // build right side
     arma::vec R = get_R(R0, n);
     arma::vec phi2D = arma::spsolve(potential_impl::S, R);
-    return phi2D({0, d::M_cnt * d::N_x - 1});
+    return phi2D({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1});
 }
 
 std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vector<int> & jbox) {
