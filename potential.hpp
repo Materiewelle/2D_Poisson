@@ -17,8 +17,8 @@ public:
     arma::vec twice;
 
     inline potential();
-    inline potential(const voltage & V, arma::vec & R);
-    inline double update(const voltage & V, arma::vec & R, anderson & mr_neo);
+    inline potential(const arma::vec & R0, const charge_density & n);
+    inline double update(const arma::vec & R0, const charge_density & n, anderson & mr_neo);
 
     inline void smooth();
 
@@ -43,46 +43,37 @@ private:
 
 namespace potential_impl {
 
-    static inline arma::vec poisson(const voltage & V);
-    static inline arma::vec poisson(const voltage & V, const charge_density & n);
-    static inline std::vector<double> get_boxes(std::vector<int> & ibox, std::vector<int> & jbox);
+    static inline arma::vec poisson(const arma::vec & R0, const charge_density & n);
 
+    static inline std::vector<double> get_boxes(std::vector<int> & ibox, std::vector<int> & jbox);
     template<int dir>
     static inline double eps(int i, int j);
-
     static inline arma::sp_mat get_S();
-    static inline arma::vec get_R(const voltage & V);
+
+    static inline arma::vec get_R0(const voltage & V);
+    static inline arma::vec get_R(const arma::vec & R0, const charge_density & n);
 
     static const arma::sp_mat S = get_S();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-potential::potential()
-    : twice(d::N_x * 2) {
+potential::potential() {
 }
 
-potential::potential(const voltage & V)
-    : twice(d::N_x * 2) {
-    using namespace potential_impl;
-
-    data = poisson(V);
-    update_twice();
-}
-
-potential::potential(const voltage & V, const charge_density & n)
+potential::potential(const arma::vec & R0, const charge_density & n)
     : twice(d::N_x * 2) {
     using namespace potential_impl;
 
-    data = poisson(V, n);
+    data = poisson(R0, n);
     update_twice();
 }
 
-double potential::update(const voltage & V, const charge_density & n, anderson & mr_neo) {
+double potential::update(const arma::vec & R0, const charge_density & n, anderson & mr_neo) {
     using namespace arma;
     using namespace potential_impl;
 
-    vec f = poisson(V, n) - data;
+    vec f = poisson(R0, n) - data;
 
 //    static int asdf = 0;
 //    if ((asdf++) % 20 == 0) {
@@ -187,14 +178,9 @@ void potential::update_twice() {
     }
 }
 
-arma::vec potential_impl::poisson(const voltage & V) {
-    return poisson(V, charge_density());
-}
-
-arma::vec potential_impl::poisson(const voltage & V, const charge_density & n) {
+arma::vec potential_impl::poisson(const arma::vec & R0, const charge_density & n) {
     // build right side
-    auto R = get_R(V);
-    R += n.data / c::eps_0 / d::eps_g * 1e9;
+    arma::vec R = get_R(R0, n);
 
     return arma::spsolve(potential_impl::S, R);
 }
@@ -278,7 +264,7 @@ double potential_impl::eps(int i, int j) {
     return eps_box[kj * N_i + ki];
 }
 
-arma::sp_mat get_S() {
+arma::sp_mat potential_impl::get_S() {
     using namespace arma;
     static constexpr double dr2 = 1.0 / d::dr / d::dr;
     static constexpr double dx2 = 1.0 / d::dx / d::dx;
@@ -409,7 +395,8 @@ arma::sp_mat get_S() {
     return S1;
 }
 
-arma::vec potential_imp::get_R(const voltage & V) {
+arma::vec potential_impl::get_R0(const voltage & V) {
+    using namespace arma;
     static constexpr double dr2 = 1.0 / d::dr / d::dr;
     static constexpr double dx2 = 1.0 / d::dx / d::dx;
 
@@ -425,6 +412,9 @@ arma::vec potential_imp::get_R(const voltage & V) {
     const double V_d = -(V.d + d::F_d);
 
     // right side vector
+    uword D = d::N_x * d::M_r;
+    uword i, j, k;
+    double r, rp;
     vec T(D);
     T.fill(0);
 
@@ -474,51 +464,49 @@ arma::vec potential_imp::get_R(const voltage & V) {
         T(k) -= dr2 * rp * eps<O>(i, j) * V_g;
     }
 
-    // copy non metal parts S => S1, T => T1
+    // copy non metal parts T => R0
     uword N_ssox = d::N_s + d::N_sox;
     uword N_ddox = d::N_d + d::N_dox;
     uword N_ox   = N_ssox + d::N_g + N_ddox;
     D = d::N_x * d::M_cnt + N_ox * d::M_ox + (N_ssox + N_ddox) * d::M_ext;
-    vec T1 = vec(D);
+    vec R0 = vec(D);
 
     // cnt part
     uword k0 = 0;
     uword k1 = d::N_x * d::M_cnt - 1;
-    T1({k0, k1}) = T({k0, k1});
+    R0({k0, k1}) = T({k0, k1});
 
     // oxide part
     k0 = k1 + 1;
     k1 += N_ox;
-    uword delta = d::N_dc; // offset for first left/up blocks
     for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
         uword c =  j    * d::N_x + d::N_sc;
-        T1({k0, k1}) = T({c, c + N_ox - 1});
+        R0({k0, k1}) = T({c, c + N_ox - 1});
         k0 = k1 + 1;
         k1 += N_ox;
-        delta = 0; // set offset to 0 for next blocks
     }
 
     // extension part
     k1 -= N_ox;
     k0 = k1 + 1;
     k1 += N_ssox;
-    delta = d::N_g; // offset for first left/up blocks
     for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
         k0 = k1 + 1;
         k1 += N_ssox;
-        delta = 0; // set offset to 0 for next blocks
         uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
-        T1({k0, k1}) = T({c2, c2 + N_ddox - 1});
+        R0({k0, k1}) = T({c2, c2 + N_ddox - 1});
         k0 = k1 + 1;
         k1 += N_ddox;
     }
 
-    return T1;
+    return R0;
 }
 
-
-
-
+arma::vec potential_impl::get_R(const arma::vec & R0, const charge_density & n) {
+    arma::vec R = R0;
+    R({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1}) += n.data; // TODO: scaling ????
+    return R;
+}
 
 #endif
 

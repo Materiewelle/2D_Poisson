@@ -22,7 +22,7 @@ public:
     arma::vec W[4];
 
     inline steady_state(const voltage & V);
-    inline steady_state(const voltage & V, const potential & phi0);
+    inline steady_state(const voltage & V, const charge_density & n0);
 
     template<bool smooth = true>
     inline bool solve();
@@ -35,16 +35,20 @@ public:
 //----------------------------------------------------------------------------------------------------------------------
 
 steady_state::steady_state(const voltage & VV)
-    : V(VV), n(), phi(V) {
+    : V(VV), n() {
 }
 
-steady_state::steady_state(const voltage & VV, const potential & phi0)
-    : V(VV), n(), phi(phi0) {
+steady_state::steady_state(const voltage & VV, const charge_density & n0)
+    : V(VV), n(n0) {
 }
 
 template<bool smooth>
 bool steady_state::solve() {
     using namespace std;
+
+    // init potential
+    arma::vec R0 = potential_impl::get_R0(V);
+    phi = potential(R0, n);
 
     // dphi = norm(delta_phi)
     double dphi;
@@ -60,7 +64,7 @@ bool steady_state::solve() {
         n.update(phi, E, W);
 
         // update potential
-        dphi = phi.update(V, n, mr_neo);
+        dphi = phi.update(R0, n, mr_neo);
 
         //cout << V.s << ", " << V.g << ", " << V.d;
         //cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
@@ -108,7 +112,7 @@ void steady_state::output(const voltage & V0, double V_d1, int N, arma::vec & V_
     for (int i = 1; i < N; ++i) {
         voltage V = { V0.s, V0.g, V_d(i) };
         if (conv) {
-            s = steady_state(V, s.phi);
+            s = steady_state(V, s.n);
             conv = s.solve<false>();
         } else {
             s = steady_state(V);
@@ -133,7 +137,7 @@ void steady_state::transfer(const voltage & V0, double V_g1, int N, arma::vec & 
         std::cout << "Step " << i+1 << "/" << N << ": V_g=" << V_g(i) << ": ";
         voltage V = { V0.s, V_g(i), V0.d };
         if (reuse && conv) {
-            s = steady_state(V, s.phi);
+            s = steady_state(V, s.n);
             conv = s.solve<false>();
             if (!conv) {
                 s = steady_state(V);
