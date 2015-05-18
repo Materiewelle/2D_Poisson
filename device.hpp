@@ -166,7 +166,7 @@ namespace d {
         ret(d).fill(nsgd(2));
         ret(dc).fill(nc(1));
 
-        ret *= 4 * c::e / M_PI / M_PI / dx / r_cnt / r_cnt; // ToDo: Factor
+        ret *= 2 * c::e / M_PI / M_PI / r_cnt / dr / dx; // spintel inside (?)
 
         return ret;
     }

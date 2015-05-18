@@ -69,7 +69,6 @@ bool steady_state::solve() {
         //cout << V.s << ", " << V.g << ", " << V.d;
         //cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
 
-
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
             break;
