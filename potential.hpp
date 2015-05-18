@@ -499,7 +499,7 @@ arma::vec potential_impl::get_R0(const voltage & V) {
 
 arma::vec potential_impl::get_R(const arma::vec & R0, const charge_density & n) {
     arma::vec R = R0;
-    R({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1}) += n.data; // TODO: scaling ????
+    R({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1}) += n.data * d::r_cnt; // TODO: scaling ????
     return R;
 }
 

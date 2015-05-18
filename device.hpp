@@ -23,13 +23,13 @@ namespace d {
     static constexpr double F_dc  = F_d;                                          // Fermi level in drain contact
 
     // geometry (everything in nm)
-    static constexpr double l_sc  = 5.05;                                         // source contact length
+    static constexpr double l_sc  = 10;                                         // source contact length
     static constexpr double l_s   = 5;                                          // source length
     static constexpr double l_sox = 5;                                          // source oxide length
     static constexpr double l_g   = 20;                                          // gate length
     static constexpr double l_dox = 5;                                          // drain oxide length
     static constexpr double l_d   = 5;                                          // drain length
-    static constexpr double l_dc  = 5.05;                                         // drain contact length
+    static constexpr double l_dc  = 10;                                         // drain contact length
     static constexpr double l     = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;// device length
     static constexpr double r_cnt = 1.25;                                         // CNT radius
     static constexpr double d_ox  = 1.3;                                          // oxide thickness

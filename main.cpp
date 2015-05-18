@@ -98,6 +98,8 @@ int main() {
 
     steady_state s({0, 0, 0});
     s.solve();
+    plot(s.phi.data);
+    plot(s.n.data);
 
 //    static constexpr double dr2 = 1.0 / d::dr / d::dr;
 //    static constexpr double dx2 = 1.0 / d::dx / d::dx;
