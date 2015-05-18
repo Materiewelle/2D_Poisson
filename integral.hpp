@@ -19,7 +19,7 @@ namespace integral_impl {
     inline auto correct_abs<>(double x) {
         return std::abs(x);
     }
-    
+
     template<int N>
     struct ret_type {
         using type = vec;
@@ -83,7 +83,7 @@ namespace integral_impl {
             return std::abs(delta_I) <= tol * I2_abs;
         }
     };
-    
+
     template<int N>
     struct interval_data {
         unsigned index[5];

@@ -14,7 +14,85 @@
 using namespace arma;
 using namespace std;
 
-class box {
+static inline std::vector<double> get_boxes(std::vector<int> & ibox, std::vector<int> & jbox) {
+    std::vector<double> eps_box;
+    ibox.resize(7);
+    jbox.resize(3);
+    eps_box.resize(7 * 3);
+
+    ibox[0] =           d::N_sc  * 2;
+    ibox[1] = ibox[0] + d::N_s   * 2;
+    ibox[2] = ibox[1] + d::N_sox * 2;
+    ibox[3] = ibox[2] + d::N_g   * 2;
+    ibox[4] = ibox[3] + d::N_dox * 2;
+    ibox[5] = ibox[4] + d::N_d   * 2;
+    ibox[6] = ibox[5] + d::N_dc  * 2;
+
+    jbox[0] =           d::M_cnt * 2;
+    jbox[1] = jbox[0] + d::M_ox  * 2;
+    jbox[2] = jbox[1] + d::M_ext * 2;
+
+    for (int i = 0; i < 7; ++i) {
+        cout << ibox[i] << endl;
+    }
+
+    int j = 0;
+    for (int i = 0; i < 7; ++i) {
+        eps_box[j * 7 + i] = d::eps_cnt * c::eps_0;
+    }
+    j = 1;
+    for (int i = 0; i < 2; ++i) {
+        eps_box[j * 7 + i] = c::eps_0;
+    }
+    for (int i = 2; i < 5; ++i) {
+        eps_box[j * 7 + i] = d::eps_ox * c::eps_0;
+    }
+    for (int i = 5; i < 7; ++i) {
+        eps_box[j * 7 + i] = c::eps_0;
+    }
+    j = 2;
+    for (int i = 0; i < 7; ++i) {
+        eps_box[j * 7 + i] = c::eps_0;
+    }
+
+    return eps_box;
+}
+
+static inline double eps(int dir, int i, int j) {
+    static std::vector<int> ibox;
+    static std::vector<int> jbox;
+    static std::vector<double> eps_box = get_boxes(ibox, jbox);
+    static int N_i = ibox.size();
+    static int N_j = jbox.size();
+
+    enum {
+        L = 0,
+        R = 1,
+        I = 2,
+        O = 3
+    };
+
+    int i2 = i * 2 + ((dir == R) ? 1 : 0);
+    int j2 = j * 2 + ((dir == O) ? 1 : 0);
+
+    int ki;
+    for (ki = 0; ki < N_i; ++ki) {
+        if (i2 < ibox[ki]) {
+            break;
+        }
+    }
+
+    int kj;
+    for (kj = 0; kj < N_j; ++kj) {
+        if (j2 < jbox[kj]) {
+            break;
+        }
+    }
+
+    return eps_box[kj * N_i + ki];
+}
+
+/*class box {
 public:
     int i0;
     int i1;
@@ -113,7 +191,7 @@ static inline double eps(int i, int j) {
         }
     return -1; // something went wrong
     }
-}
+}*/
 
 int main() {
     //flush denormal floats to zero for massive speedup
@@ -127,238 +205,251 @@ int main() {
     enum {
         L = 0,
         R = 1,
-        A = 2,
-        I = 3
+        I = 2,
+        O = 3
     };
 
-    double V_s = -(0.0 + d::F_s);
-    double V_g = -(1.0 + d::F_g);
-    double V_d = -(0.0 + d::F_d);
-
-    // construct S matrix
-    uword D = d::N_x * d::M_r;
-    uword i, j, k;
-    double r, rp, rm;
-    sp_mat S(D, D);
-    for (j = 0; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        rp = r + 0.5 * d::dr;
-        rm = r - 0.5 * d::dr;
-
-        for (i = 0; i < d::N_x; ++i) {
-            k = j * d::N_x + i;
-
-            if (k >= d::N_x) {
-                S(k, k - d::N_x) = dr2 * rm * eps<I>(i, j);
-            }
-            if (k >= 1) {
-                S(k, k - 1) = dx2 * r * eps<L>(i, j);
-            }
-            S(k, k) = - dx2 * (r  * eps<L>(i, j) + r  * eps<R>(i, j))
-                      - dr2 * (rp * eps<A>(i, j) + rm * eps<I>(i, j));
-            if (k < D - 1) {
-                S(k, k + 1) = dx2 * r * eps<R>(i, j);
-            }
-            if (k < D - d::N_x) {
-                S(k, k + d::N_x) = dr2 * rp * eps<A>(i, j);
+    mat epss[4];
+    for (int dir = 0; dir < 4; ++dir) {
+        epss[dir] = mat(d::M_r, d::N_x);
+        for (int j = 0; j < d::M_r; ++j) {
+            for (int i = 0; i < d::N_x; ++i) {
+                epss[dir](j, i) = eps(dir, i, j);
             }
         }
     }
+    return 0;
 
-    // remove coupling between end of j-th line and start of (j+1)-th line
-    for (j = 1; j < d::M_r; ++j) {
-        int k = j * d::N_x;
-        S(k, k - 1) = 0;
-        S(k - 1, k) = 0;
-    }
 
-    // horizontal von Neumann
-    S(0, 1) *= 2;
-    for (j = 1; j < d::M_cnt; ++j) {
-        int k = j * d::N_x;
-        S(k - 1, k - 2) *= 2;
-        S(k, k + 1) *= 2;
-    }
-    S(d::M_cnt * d::N_x - 1, d::M_cnt * d::N_x - 2) *= 2;
+//    double V_s = -(0.0 + d::F_s);
+//    double V_g = -(1.0 + d::F_g);
+//    double V_d = -(0.0 + d::F_d);
 
-    // vertical von Neumann
-    for (i = 0; i < d::N_x; ++i) {
-        S(i, d::N_x + i) -= dr2 * 0.5 * d::dr * eps<A>(i, 0);
-        S(i, d::N_x + i) *= 2;
-        S(D - d::N_x + i, D - d::N_x * 2 + i) += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
-        S(D - d::N_x + i, D - d::N_x * 2 + i) *= 2;
-    }
+//    // construct S matrix
+//    uword D = d::N_x * d::M_r;
+//    uword i, j, k;
+//    double r, rp, rm;
+//    sp_mat S(D, D);
+//    for (j = 0; j < d::M_r; ++j) {
+//        r = j * d::dr + 0.5 * d::dr;
+//        rp = r + 0.5 * d::dr;
+//        rm = r - 0.5 * d::dr;
 
-    // right side vector
-    vec T(D);
-    T.fill(0);
+//        for (i = 0; i < d::N_x; ++i) {
+//            k = j * d::N_x + i;
 
-    // horizontal Dirichlet
-    i = d::N_sc;
-    for (j = d::M_cnt; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<L>(i, j) * V_s;
-    }
-    i = d::N_x - d::N_dc - 1;
-    for (j = d::M_cnt; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<R>(i, j) * V_d;
-    }
-    i = d::N_sc + d::N_s + d::N_sox - 1;
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<R>(i, j) * V_g;
-    }
-    i = d::N_sc + d::N_s + d::N_sox + d::N_g;
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<L>(i, j) * V_g;
-    }
+//            if (k >= d::N_x) {
+//                S(k, k - d::N_x) = dr2 * rm * eps<I>(i, j);
+//            }
+//            if (k >= 1) {
+//                S(k, k - 1) = dx2 * r * eps<L>(i, j);
+//            }
+//            S(k, k) = - dx2 * (r  * eps<L>(i, j) + r  * eps<R>(i, j))
+//                      - dr2 * (rp * eps<O>(i, j) + rm * eps<I>(i, j));
+//            if (k < D - 1) {
+//                S(k, k + 1) = dx2 * r * eps<R>(i, j);
+//            }
+//            if (k < D - d::N_x) {
+//                S(k, k + d::N_x) = dr2 * rp * eps<O>(i, j);
+//            }
+//        }
+//    }
 
-    // vertical Dirichlet
-    j = d::M_cnt - 1;
-    r = j * d::dr + 0.5 * d::dr;
-    rp = r + 0.5 * d::dr;
-    for (i = 0; i < d::N_sc; ++i) {
-        k = j * d::N_x + i;
-        T(k) -= dr2 * rp * eps<A>(i, j) * V_s;
-    }
-    for (i = d::N_x - d::N_dc; i < d::N_x; ++i) {
-        k = j * d::N_x + i;
-        T(k) -= dr2 * rp * eps<A>(i, j) * V_d;
-    }
-    j = d::M_cnt + d::M_ox - 1;
-    r = j * d::dr + 0.5 * d::dr;
-    rp = r + 0.5 * d::dr;
-    for (i = d::N_sc + d::N_s + d::N_sox; i < d::N_sc + d::N_s + d::N_sox + d::N_g; ++i) {
-        k = j * d::N_x + i;
-        T(k) -= dr2 * rp * eps<A>(i, j) * V_g;
-    }
+//    // remove coupling between end of j-th line and start of (j+1)-th line
+//    for (j = 1; j < d::M_r; ++j) {
+//        int k = j * d::N_x;
+//        S(k, k - 1) = 0;
+//        S(k - 1, k) = 0;
+//    }
 
-    // copy non metal parts S => S1, T => T1
-    uword N_ssox = d::N_s + d::N_sox;
-    uword N_ddox = d::N_d + d::N_dox;
-    uword N_ox   = N_ssox + d::N_g + N_ddox;
-    D = d::N_x * d::M_cnt + N_ox * d::M_ox + (N_ssox + N_ddox) * d::M_ext;
-    sp_mat S1 = sp_mat(D, D);
-    vec T1 = vec(D);
+//    // horizontal von Neumann
+//    S(0, 1) *= 2;
+//    for (j = 1; j < d::M_cnt; ++j) {
+//        int k = j * d::N_x;
+//        S(k - 1, k - 2) *= 2;
+//        S(k, k + 1) *= 2;
+//    }
+//    S(d::M_cnt * d::N_x - 1, d::M_cnt * d::N_x - 2) *= 2;
 
-    // cnt part
-    uword k0 = 0;
-    uword k1 = d::N_x * d::M_cnt - 1;
-    S1({k0, k1}, {k0, k1}) = S({k0, k1}, {k0, k1});
-    T1({k0, k1}) = T({k0, k1});
+//    // vertical von Neumann
+//    for (i = 0; i < d::N_x; ++i) {
+//        S(i, d::N_x + i) -= dr2 * 0.5 * d::dr * eps<O>(i, 0);
+//        S(i, d::N_x + i) *= 2;
+//        S(D - d::N_x + i, D - d::N_x * 2 + i) += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
+//        S(D - d::N_x + i, D - d::N_x * 2 + i) *= 2;
+//    }
 
-    // oxide part
-    k0 = k1 + 1;
-    k1 += N_ox;
-    uword delta = d::N_dc; // offset for first left/up blocks
-    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
-        uword l = (j-1) * d::N_x + d::N_sc;
-        uword c =  j    * d::N_x + d::N_sc;
-        auto left   = S({c, c + N_ox - 1}, {l, l + N_ox - 1});
-        auto center = S({c, c + N_ox - 1}, {c, c + N_ox - 1});
-        auto up     = S({l, l + N_ox - 1}, {c, c + N_ox - 1});
-        S1({k0, k1},{k0 - N_ox - delta, k1 - N_ox - delta}) = left;
-        S1({k0, k1},{k0, k1}) = center;
-        S1({k0 - N_ox - delta, k1 - N_ox - delta},{k0, k1}) = up;
-        T1({k0, k1}) = T({c, c + N_ox - 1});
-        k0 = k1 + 1;
-        k1 += N_ox;
-        delta = 0; // set offset to 0 for next blocks
-    }
+//    // right side vector
+//    vec T(D);
+//    T.fill(0);
 
-    // extension part
-    k1 -= N_ox;
-    k0 = k1 + 1;
-    k1 += N_ssox;
-    delta = d::N_g; // offset for first left/up blocks
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        uword l1 = (j-1) * d::N_x + d::N_sc;
-        uword c1 =  j    * d::N_x + d::N_sc;
-        auto left1   = S({c1, c1 + N_ssox - 1},{l1, l1 + N_ssox - 1});
-        auto center1 = S({c1, c1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
-        auto up1     = S({l1, l1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
-        S1({k0, k1},{k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta}) = left1;
-        S1({k0, k1},{k0, k1}) = center1;
-        S1({k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta},{k0, k1}) = up1;
-        T1({k0, k1}) = T({c1, c1 + N_ssox - 1});
-        k0 = k1 + 1;
-        k1 += N_ssox;
-        delta = 0; // set offset to 0 for next blocks
+//    // horizontal Dirichlet
+//    i = d::N_sc;
+//    for (j = d::M_cnt; j < d::M_r; ++j) {
+//        r = j * d::dr + 0.5 * d::dr;
+//        k = j * d::N_x + i;
+//        T(k) -= dx2 * r * eps<L>(i, j) * V_s;
+//    }
+//    i = d::N_x - d::N_dc - 1;
+//    for (j = d::M_cnt; j < d::M_r; ++j) {
+//        r = j * d::dr + 0.5 * d::dr;
+//        k = j * d::N_x + i;
+//        T(k) -= dx2 * r * eps<R>(i, j) * V_d;
+//    }
+//    i = d::N_sc + d::N_s + d::N_sox - 1;
+//    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+//        r = j * d::dr + 0.5 * d::dr;
+//        k = j * d::N_x + i;
+//        T(k) -= dx2 * r * eps<R>(i, j) * V_g;
+//    }
+//    i = d::N_sc + d::N_s + d::N_sox + d::N_g;
+//    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+//        r = j * d::dr + 0.5 * d::dr;
+//        k = j * d::N_x + i;
+//        T(k) -= dx2 * r * eps<L>(i, j) * V_g;
+//    }
 
-        uword l2 =  j    * d::N_x - d::N_sc - N_ddox;
-        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
-        auto left2   = S({c2, c2 + N_ddox - 1},{l2, l2 + N_ddox - 1});
-        auto center2 = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
-        auto up2     = S({l2, l2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
-        S1({k0, k1},{k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox}) = left2;
-        S1({k0, k1},{k0, k1}) = center2;
-        S1({k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox},{k0, k1}) = up2;
-        T1({k0, k1}) = T({c2, c2 + N_ddox - 1});
-        k0 = k1 + 1;
-        k1 += N_ddox;
-    }
+//    // vertical Dirichlet
+//    j = d::M_cnt - 1;
+//    r = j * d::dr + 0.5 * d::dr;
+//    rp = r + 0.5 * d::dr;
+//    for (i = 0; i < d::N_sc; ++i) {
+//        k = j * d::N_x + i;
+//        T(k) -= dr2 * rp * eps<O>(i, j) * V_s;
+//    }
+//    for (i = d::N_x - d::N_dc; i < d::N_x; ++i) {
+//        k = j * d::N_x + i;
+//        T(k) -= dr2 * rp * eps<O>(i, j) * V_d;
+//    }
+//    j = d::M_cnt + d::M_ox - 1;
+//    r = j * d::dr + 0.5 * d::dr;
+//    rp = r + 0.5 * d::dr;
+//    for (i = d::N_sc + d::N_s + d::N_sox; i < d::N_sc + d::N_s + d::N_sox + d::N_g; ++i) {
+//        k = j * d::N_x + i;
+//        T(k) -= dr2 * rp * eps<O>(i, j) * V_g;
+//    }
 
-//    gnuplot gp;
-//    gp << "set terminal wxt size 800, 800" << endl;
-//    gp << "unset colorbox" << endl;
-//    gp.set_background(flipud(mat(S)));
-//    gp.plot();
+//    // copy non metal parts S => S1, T => T1
+//    uword N_ssox = d::N_s + d::N_sox;
+//    uword N_ddox = d::N_d + d::N_dox;
+//    uword N_ox   = N_ssox + d::N_g + N_ddox;
+//    D = d::N_x * d::M_cnt + N_ox * d::M_ox + (N_ssox + N_ddox) * d::M_ext;
+//    sp_mat S1 = sp_mat(D, D);
+//    vec T1 = vec(D);
 
-//    gnuplot gp2;
-//    gp2 << "set terminal wxt size 800, 800" << endl;
-//    gp2 << "unset colorbox" << endl;
-//    gp2.set_background(flipud(mat(S1)));
-//    gp2.plot();
+//    // cnt part
+//    uword k0 = 0;
+//    uword k1 = d::N_x * d::M_cnt - 1;
+//    S1({k0, k1}, {k0, k1}) = S({k0, k1}, {k0, k1});
+//    T1({k0, k1}) = T({k0, k1});
 
-    cout << "setup done" << endl;
-    wall_clock timer;
-    timer.tic();
-    vec phivec1 = spsolve(S1, T1);
-    cout << timer.toc() << endl;
+//    // oxide part
+//    k0 = k1 + 1;
+//    k1 += N_ox;
+//    uword delta = d::N_dc; // offset for first left/up blocks
+//    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
+//        uword l = (j-1) * d::N_x + d::N_sc;
+//        uword c =  j    * d::N_x + d::N_sc;
+//        auto left   = S({c, c + N_ox - 1}, {l, l + N_ox - 1});
+//        auto center = S({c, c + N_ox - 1}, {c, c + N_ox - 1});
+//        auto up     = S({l, l + N_ox - 1}, {c, c + N_ox - 1});
+//        S1({k0, k1},{k0 - N_ox - delta, k1 - N_ox - delta}) = left;
+//        S1({k0, k1},{k0, k1}) = center;
+//        S1({k0 - N_ox - delta, k1 - N_ox - delta},{k0, k1}) = up;
+//        T1({k0, k1}) = T({c, c + N_ox - 1});
+//        k0 = k1 + 1;
+//        k1 += N_ox;
+//        delta = 0; // set offset to 0 for next blocks
+//    }
 
-    vec phivec = vec(d::N_x * d::M_r);
-    k0 = 0;
-    k1 = d::N_x * d::M_cnt - 1;
-    phivec({k0, k1}) = phivec1({k0, k1});
+//    // extension part
+//    k1 -= N_ox;
+//    k0 = k1 + 1;
+//    k1 += N_ssox;
+//    delta = d::N_g; // offset for first left/up blocks
+//    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+//        uword l1 = (j-1) * d::N_x + d::N_sc;
+//        uword c1 =  j    * d::N_x + d::N_sc;
+//        auto left1   = S({c1, c1 + N_ssox - 1},{l1, l1 + N_ssox - 1});
+//        auto center1 = S({c1, c1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
+//        auto up1     = S({l1, l1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
+//        S1({k0, k1},{k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta}) = left1;
+//        S1({k0, k1},{k0, k1}) = center1;
+//        S1({k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta},{k0, k1}) = up1;
+//        T1({k0, k1}) = T({c1, c1 + N_ssox - 1});
+//        k0 = k1 + 1;
+//        k1 += N_ssox;
+//        delta = 0; // set offset to 0 for next blocks
 
-    k0 = k1 + 1;
-    k1 += N_ox;
-    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
-        uword c =  j * d::N_x + d::N_sc;
-        phivec({c, c + N_ox - 1}) = phivec1({k0, k1});
-        k0 = k1 + 1;
-        k1 += N_ox;
-    }
+//        uword l2 =  j    * d::N_x - d::N_sc - N_ddox;
+//        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
+//        auto left2   = S({c2, c2 + N_ddox - 1},{l2, l2 + N_ddox - 1});
+//        auto center2 = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
+//        auto up2     = S({l2, l2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
+//        S1({k0, k1},{k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox}) = left2;
+//        S1({k0, k1},{k0, k1}) = center2;
+//        S1({k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox},{k0, k1}) = up2;
+//        T1({k0, k1}) = T({c2, c2 + N_ddox - 1});
+//        k0 = k1 + 1;
+//        k1 += N_ddox;
+//    }
 
-    k1 -= N_ox;
-    k0 = k1 + 1;
-    k1 += N_ssox;
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        uword c1 =  j    * d::N_x + d::N_sc;
-        phivec({c1, c1 + N_ssox - 1}) = phivec1({k0, k1});
-        k0 = k1 + 1;
-        k1 += N_ssox;
+////    gnuplot gp;
+////    gp << "set terminal wxt size 800, 800" << endl;
+////    gp << "unset colorbox" << endl;
+////    gp.set_background(flipud(mat(S)));
+////    gp.plot();
 
-        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
-        S1({k0, k1},{k0, k1}) = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
-        phivec({c2, c2 + N_ddox - 1}) = phivec1({k0, k1});
-        k0 = k1 + 1;
-        k1 += N_ddox;
-    }
+////    gnuplot gp2;
+////    gp2 << "set terminal wxt size 800, 800" << endl;
+////    gp2 << "unset colorbox" << endl;
+////    gp2.set_background(flipud(mat(S1)));
+////    gp2.plot();
 
-    mat phi(phivec);
-    phi.reshape(d::N_x, d::M_r);
+//    cout << "setup done" << endl;
+//    wall_clock timer;
+//    timer.tic();
+//    vec phivec1 = spsolve(S1, T1);
+//    cout << timer.toc() << endl;
 
-    image(phi.t());
+//    vec phivec = vec(d::N_x * d::M_r);
+//    phivec.fill(0);
+//    k0 = 0;
+//    k1 = d::N_x * d::M_cnt - 1;
+//    phivec({k0, k1}) = phivec1({k0, k1});
 
-    cout << d::N_x << endl;
-    cout << d::M_r << endl;
+//    k0 = k1 + 1;
+//    k1 += N_ox;
+//    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
+//        uword c =  j * d::N_x + d::N_sc;
+//        phivec({c, c + N_ox - 1}) = phivec1({k0, k1});
+//        k0 = k1 + 1;
+//        k1 += N_ox;
+//    }
+
+//    k1 -= N_ox;
+//    k0 = k1 + 1;
+//    k1 += N_ssox;
+//    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
+//        uword c1 =  j    * d::N_x + d::N_sc;
+//        phivec({c1, c1 + N_ssox - 1}) = phivec1({k0, k1});
+//        k0 = k1 + 1;
+//        k1 += N_ssox;
+
+//        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
+//        S1({k0, k1},{k0, k1}) = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
+//        phivec({c2, c2 + N_ddox - 1}) = phivec1({k0, k1});
+//        k0 = k1 + 1;
+//        k1 += N_ddox;
+//    }
+
+//    mat phi(phivec);
+//    phi.reshape(d::N_x, d::M_r);
+
+//    image(phi.t());
+
+//    cout << d::N_x << endl;
+//    cout << d::M_r << endl;
 
     return 0;
 }

@@ -72,5 +72,5 @@ static const std::string rwth_plt =
     "set style line 444 lc '#9C9E9F' lt 1 lw 2\n"
     "set border 3 ls 444\n"
     "set tics nomirror\n"
-    "set palette defined (0 '#000000', 1 '#041F37', 2'#5A84AB', 3 '#DDEFFF', 4 '#164D7E')\n";
+    "set palette defined (0 '#000000', 1 '#041F37', 2'#5A84AB', 3 '#DDEFFF', 4 '#FFFFFF')\n";
 #endif
