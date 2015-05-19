@@ -17,6 +17,7 @@ public:
     arma::vec twice;
 
     inline potential();
+    inline potential(const voltage & V);
     inline potential(const arma::vec & R0, const charge_density & n);
     inline double update(const arma::vec & R0, const charge_density & n, anderson & mr_neo);
 
@@ -59,6 +60,16 @@ namespace potential_impl {
 //----------------------------------------------------------------------------------------------------------------------
 
 potential::potential() {
+}
+
+potential::potential(const voltage & V)
+    : twice(d::N_x * 2) {
+    using namespace potential_impl;
+
+    arma::vec R0 = get_R0(V);
+    charge_density n;
+    data = poisson(R0, n);
+    update_twice();
 }
 
 potential::potential(const arma::vec & R0, const charge_density & n)
@@ -188,13 +199,13 @@ std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vect
     jbox.resize(3); // 3 different regions in radial direction
     eps_box.resize(7 * 3);
 
-    ibox[0] =           d::N_sc  * 2;
+    ibox[0] =           d::N_sc  * 2 + 2;
     ibox[1] = ibox[0] + d::N_s   * 2;
     ibox[2] = ibox[1] + d::N_sox * 2 - 1;
-    ibox[3] = ibox[2] + d::N_g   * 2 + 3;
+    ibox[3] = ibox[2] + d::N_g   * 2 + 1;
     ibox[4] = ibox[3] + d::N_dox * 2 - 1;
     ibox[5] = ibox[4] + d::N_d   * 2;
-    ibox[6] = ibox[5] + d::N_dc  * 2;
+    ibox[6] = ibox[5] + d::N_dc  * 2 + 2;
 
     jbox[0] =           d::M_cnt * 2;
     jbox[1] = jbox[0] + d::M_ox  * 2;
@@ -224,6 +235,8 @@ std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vect
 
 template<int dir> // the direction of the surface normal vector (lrio)
 double potential_impl::eps(int i, int j) {
+    return c::eps_0;
+
     // returns the correct dielectric constant for a given set of lattice-points
     static std::vector<int> ibox;
     static std::vector<int> jbox;
@@ -271,123 +284,97 @@ arma::sp_mat potential_impl::get_S() {
         O = 3
     };
 
-    // construct S matrix
-    std::cout << "Constructing S-matrix...";
-    uword D = d::N_x * d::M_r;
-    uword i, j, k;
-    double r, rp, rm;
-    sp_mat S(D, D);
-    for (j = 0; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        rp = r + 0.5 * d::dr;
-        rm = r - 0.5 * d::dr;
+//    umat indices(2, ...);
+//    vec values(...);
 
-        for (i = 0; i < d::N_x; ++i) {
-            k = j * d::N_x + i;
+//    uword N_v = 0;
+//    auto set_value = [&] (uword ki, uword kj, double value) {
+//        indices(0, N_v) = ki;
+//        indices(1, N_v) = kj;
+//        values(N_v++) = value;
+//    };
 
-            if (k >= d::N_x) {
-                S(k, k - d::N_x) = dr2 * rm * eps<I>(i, j);
-            }
-            if (k >= 1) {
-                S(k, k - 1) = dx2 * r * eps<L>(i, j);
-            }
+    sp_mat S(d::N_x * d::M_r, d::N_x * d::M_r);
+
+    uword k = 0;          // current main diagonal element
+    uword i0 = 0;         // left i limit
+    uword i1 = d::N_x;    // right i limit
+    uword delta = d::N_x; // distance to next vertical coupling off diagonal
+
+    for (uword j = 0; j < d::M_r; ++j) {
+        double r = j * d::dr + 0.5 * d::dr;
+        double rp = r + 0.5 * d::dr;
+        double rm = r - 0.5 * d::dr;
+
+        for (uword i = i0; i < i1; ++i) {
+            // main diagonal
             S(k, k) = - dx2 * (r  * eps<L>(i, j) + r  * eps<R>(i, j))
                       - dr2 * (rp * eps<O>(i, j) + rm * eps<I>(i, j));
-            if (k < D - 1) {
-                S(k, k + 1) = dx2 * r * eps<R>(i, j);
+
+            // horizontal coupling
+            if (i > i0) {
+                S(k, k - 1) = dx2 * r * eps<L>(i    , j);
+                S(k - 1, k) = dx2 * r * eps<R>(i - 1, j);
             }
-            if (k < D - d::N_x) {
-                S(k, k + d::N_x) = dr2 * rp * eps<O>(i, j);
+
+            // vertical coupling
+            if (j > 0) {
+                S(k, k - delta) = dr2 * rm * eps<I>(i, j    );
+                S(k - delta, k) = dr2 * rp * eps<O>(i, j - 1);
+            }
+
+            // horizontal von Neumann boundary conditions
+            if (i == 1) {
+                S(k - 1, k) *= 2;
+            }
+            if (i == d::N_x - 1) {
+                S(k, k - 1) *= 2;
+            }
+
+            // vertical von Neumann boundary conditions
+            if (j == 1) {
+                S(k - delta, k) -= dr2 * 0.5 * d::dr * eps<O>(i, 0);
+                S(k - delta, k) *= 2;
+            }
+            if (j == d::M_r - 1) {
+                S(k, k - delta) += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
+                S(k, k - delta) *= 2;
+            }
+
+            // next diag element
+            ++k;
+        }
+
+        // cut off source, drain contacts
+        if (j == d::M_cnt - 1) {
+            i0 = d::N_sc;
+            i1 = d::N_x - d::N_dc;
+            delta = d::N_x - d::N_sc;
+        }
+        if (j == d::M_cnt) {
+            delta = d::N_x - d::N_sc - d::N_dc;
+        }
+
+        // cut off gate contact
+        if (j == d::M_cnt + d::M_ox - 1) {
+            i1 = i0 + d::N_s + d::N_sox;
+        }
+        if ((j == d::M_cnt + d::M_ox) && (i0 == d::N_sc)) {
+            delta = d::N_x - d::N_sc - d::N_dc - d::N_g;
+        }
+        if (j >= d::M_cnt + d::M_ox) {
+            if (i0 == d::N_sc) {
+                i0 = i1 + d::N_g;
+                i1 = d::N_x - d::N_dc;
+                --j; // repeat i loop for second part (right side of gate)
+            } else {
+                i1 = i0 - d::N_g;
+                i0 = d::N_sc;
             }
         }
     }
-
-    // remove coupling between end of j-th line and start of (j+1)-th line
-    for (j = 1; j < d::M_r; ++j) {
-        int k = j * d::N_x;
-        S(k, k - 1) = 0;
-        S(k - 1, k) = 0;
-    }
-
-    // horizontal von Neumann boundary conditions
-    S(0, 1) *= 2;
-    for (j = 1; j < d::M_cnt; ++j) {
-        int k = j * d::N_x;
-        S(k - 1, k - 2) *= 2;
-        S(k, k + 1) *= 2;
-    }
-    S(d::M_cnt * d::N_x - 1, d::M_cnt * d::N_x - 2) *= 2;
-
-    // vertical von Neumann boundary conditions
-    for (i = 0; i < d::N_x; ++i) {
-        S(i, d::N_x + i) -= dr2 * 0.5 * d::dr * eps<O>(i, 0);
-        S(i, d::N_x + i) *= 2;
-        S(D - d::N_x + i, D - d::N_x * 2 + i) += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
-        S(D - d::N_x + i, D - d::N_x * 2 + i) *= 2;
-    }
-
-    // cut out the relevant parts
-    uword N_ssox = d::N_s + d::N_sox;
-    uword N_ddox = d::N_d + d::N_dox;
-    uword N_ox   = N_ssox + d::N_g + N_ddox;
-    D = d::N_x * d::M_cnt + N_ox * d::M_ox + (N_ssox + N_ddox) * d::M_ext;
-    sp_mat S1 = sp_mat(D, D);
-
-    // cnt part
-    uword k0 = 0;
-    uword k1 = d::N_x * d::M_cnt - 1;
-    S1({k0, k1}, {k0, k1}) = S({k0, k1}, {k0, k1});
-
-    // oxide part
-    k0 = k1 + 1;
-    k1 += N_ox;
-    uword delta = d::N_dc; // offset for first left/up blocks
-    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
-        uword l = (j-1) * d::N_x + d::N_sc;
-        uword c =  j    * d::N_x + d::N_sc;
-        auto left   = S({c, c + N_ox - 1}, {l, l + N_ox - 1});
-        auto center = S({c, c + N_ox - 1}, {c, c + N_ox - 1});
-        auto up     = S({l, l + N_ox - 1}, {c, c + N_ox - 1});
-        S1({k0, k1},{k0 - N_ox - delta, k1 - N_ox - delta}) = left;
-        S1({k0, k1},{k0, k1}) = center;
-        S1({k0 - N_ox - delta, k1 - N_ox - delta},{k0, k1}) = up;
-        k0 = k1 + 1;
-        k1 += N_ox;
-        delta = 0; // set offset to 0 for next blocks
-    }
-
-    // extension part
-    k1 -= N_ox;
-    k0 = k1 + 1;
-    k1 += N_ssox;
-    delta = d::N_g; // offset for first left/up blocks
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        uword l1 = (j-1) * d::N_x + d::N_sc;
-        uword c1 =  j    * d::N_x + d::N_sc;
-        auto left1   = S({c1, c1 + N_ssox - 1},{l1, l1 + N_ssox - 1});
-        auto center1 = S({c1, c1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
-        auto up1     = S({l1, l1 + N_ssox - 1},{c1, c1 + N_ssox - 1});
-        S1({k0, k1},{k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta}) = left1;
-        S1({k0, k1},{k0, k1}) = center1;
-        S1({k0 - N_ssox - N_ddox - delta, k1 - N_ssox - N_ddox - delta},{k0, k1}) = up1;
-        k0 = k1 + 1;
-        k1 += N_ssox;
-        delta = 0; // set offset to 0 for next blocks
-
-        uword l2 =  j    * d::N_x - d::N_sc - N_ddox;
-        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
-        auto left2   = S({c2, c2 + N_ddox - 1},{l2, l2 + N_ddox - 1});
-        auto center2 = S({c2, c2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
-        auto up2     = S({l2, l2 + N_ddox - 1},{c2, c2 + N_ddox - 1});
-        S1({k0, k1},{k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox}) = left2;
-        S1({k0, k1},{k0, k1}) = center2;
-        S1({k0 - N_ssox - N_ddox, k1 - N_ssox - N_ddox},{k0, k1}) = up2;
-        k0 = k1 + 1;
-        k1 += N_ddox;
-    }
-
-    std::cout << " done!\n";
-    return S1;
+    // return sp_mat(indices, values);
+    return S;
 }
 
 arma::vec potential_impl::get_R0(const voltage & V) {
