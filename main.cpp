@@ -21,9 +21,13 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    auto phi2D = potential_impl::poisson2D({0.0, 0.5, 1.0}, {});
+    steady_state s({0,0,0});
+    s.solve();
 
-    image(phi2D.t());
+
+//    auto phi2D = potential_impl::poisson2D({0.0, 0.5, 1.0}, {});
+
+//    image(phi2D.t());
 
     return 0;
 }
