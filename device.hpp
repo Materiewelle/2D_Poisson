@@ -10,8 +10,8 @@
 namespace d {
 
     // material properties
-    static constexpr double eps_cnt = 5;                                           // relative permittivity in cnt
-    static constexpr double eps_ox = 10;                                           // relative permittivity of oxide
+    static constexpr double eps_cnt = 10;                                         // relative permittivity in cnt
+    static constexpr double eps_ox = 25;                                          // relative permittivity of oxide
     static constexpr double E_g   = 0.62;                                         // bandgap
     static constexpr double m_eff = 0.1 * c::m_e;                                 // effective mass
     static constexpr double E_gc  = 0.2;                                          // bandgap of contacts
@@ -23,17 +23,17 @@ namespace d {
     static constexpr double F_dc  = F_d;                                          // Fermi level in drain contact
 
     // geometry (everything in nm)
-    static constexpr double l_sc  = .25;                                         // source contact length
-    static constexpr double l_s   = .3;                                          // source length
-    static constexpr double l_sox = .3;                                          // source oxide length
-    static constexpr double l_g   = .2;                                          // gate length
-    static constexpr double l_dox = .3;                                          // drain oxide length
-    static constexpr double l_d   = .3;                                          // drain length
-    static constexpr double l_dc  = .25;                                         // drain contact length
+    static constexpr double l_sc  = 15;                                           // source contact length
+    static constexpr double l_s   = 1;                                            // source length
+    static constexpr double l_sox = 5;                                            // source oxide length
+    static constexpr double l_g   = 15;                                           // gate length
+    static constexpr double l_dox = 5;                                            // drain oxide length
+    static constexpr double l_d   = 1;                                            // drain length
+    static constexpr double l_dc  = 15;                                           // drain contact length
     static constexpr double l     = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;// device length
-    static constexpr double r_cnt = .25;                                         // CNT radius
-    static constexpr double d_ox  = .3;                                          // oxide thickness
-    static constexpr double r_ext = .25;                                         // extension thickness
+    static constexpr double r_cnt = 1;                                            // CNT radius
+    static constexpr double d_ox  = 3;                                            // oxide thickness
+    static constexpr double r_ext = 5;                                            // extension thickness
     static constexpr double R     = r_cnt + d_ox + r_ext;                         // complete thickness
 
     // lattice in x direction
@@ -66,9 +66,9 @@ namespace d {
 
     // lattice in r-direction (for electrostatics)
     static constexpr double dr    = 0.1;                                          // lattice constant
-    static constexpr int    M_cnt = round(r_cnt / dr);               // # of points in nanotube
-    static constexpr int    M_ox  = round(d_ox / dr);                             // # of points in oxide
-    static constexpr int    M_ext = round(r_ext / dr);              // # of points in extension
+    static constexpr int    M_cnt = round(r_cnt / dr);                            // # of points in nanotube
+    static constexpr int    M_ox  = round(d_ox  / dr);                            // # of points in oxide
+    static constexpr int    M_ext = round(r_ext / dr);                            // # of points in extension
     static constexpr int    M_r   = M_cnt + M_ox + M_ext;                         // total # of points
 
     // hopping parameters central region

@@ -45,7 +45,8 @@ private:
 namespace potential_impl {
 
     static inline arma::vec poisson(const arma::vec & R0, const charge_density & n);
-
+    template<bool duplicate = false, bool black = false>
+    static inline arma::mat poisson2D(const voltage & V, const charge_density & n);
     static inline std::vector<double> get_boxes(std::vector<int> & ibox, std::vector<int> & jbox);
     template<int dir>
     static inline double eps(int i, int j);
@@ -68,7 +69,10 @@ potential::potential(const voltage & V)
 
     arma::vec R0 = get_R0(V);
     charge_density n;
-    data = poisson(R0, n);
+
+    arma::vec phi2D = poisson(R0, n);
+    data = phi2D({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1});
+
     update_twice();
 }
 
@@ -76,7 +80,9 @@ potential::potential(const arma::vec & R0, const charge_density & n)
     : twice(d::N_x * 2) {
     using namespace potential_impl;
 
-    data = poisson(R0, n);
+    arma::vec phi2D = poisson(R0, n);
+    data = phi2D({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1});
+
     update_twice();
 }
 
@@ -84,7 +90,8 @@ double potential::update(const arma::vec & R0, const charge_density & n, anderso
     using namespace arma;
     using namespace potential_impl;
 
-    vec f = poisson(R0, n) - data;
+    arma::vec phi2D = poisson(R0, n);
+    vec f = phi2D({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1}) - data;
 
     // anderson mixing
     mr_neo.update(data, f);
@@ -187,8 +194,37 @@ void potential::update_twice() {
 arma::vec potential_impl::poisson(const arma::vec & R0, const charge_density & n) {
     // build right side
     arma::vec R = get_R(R0, n);
-    arma::vec phi2D = arma::spsolve(potential_impl::S, R);
-    return phi2D({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1});
+    return arma::spsolve(S, R);
+}
+template<bool duplicate, bool black>
+arma::mat potential_impl::poisson2D(const voltage & V, const charge_density & n) {
+    using namespace arma;
+
+    vec R0 = get_R0(V);
+    vec R = get_R(R0, n);
+    vec phivec = spsolve(S, R);
+    mat phimat(d::N_x, d::M_r);
+
+    uword k = 0;
+    for (uword j = 0; j < d::M_r; ++j) {
+        for (uword i = 0; i < d::N_x; ++i) {
+            if ((j >= d::M_cnt) && (i < d::N_sc)) {
+                phimat(i, j) = black ? -2 : -(V.s + d::F_s);
+            } else if ((j >= d::M_cnt) && (i >= d::N_x - d::N_dc)) {
+                phimat(i, j) = black ? -2 : -(V.d + d::F_d);
+            } else if ((j >= d::M_cnt + d::M_ox) && (i >= d::N_sc + d::N_s + d::N_sox) && (i < d::N_sc + d::N_s + d::N_sox + d::N_g)) {
+                phimat(i, j) = black ? -2 : -(V.g + d::F_g);
+            } else {
+                phimat(i, j) = phivec(k++);
+            }
+        }
+    }
+
+    if (duplicate) {
+        phimat = join_horiz(fliplr(phimat), phimat);
+    }
+
+    return phimat;
 }
 
 std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vector<int> & jbox) {
@@ -199,13 +235,13 @@ std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vect
     jbox.resize(3); // 3 different regions in radial direction
     eps_box.resize(7 * 3);
 
-    ibox[0] =           d::N_sc  * 2 + 2;
-    ibox[1] = ibox[0] + d::N_s   * 2;
-    ibox[2] = ibox[1] + d::N_sox * 2 - 1;
-    ibox[3] = ibox[2] + d::N_g   * 2 + 1;
-    ibox[4] = ibox[3] + d::N_dox * 2 - 1;
-    ibox[5] = ibox[4] + d::N_d   * 2;
-    ibox[6] = ibox[5] + d::N_dc  * 2 + 2;
+    ibox[0] =           d::N_sc  * 2;
+    ibox[1] = ibox[0] + d::N_s   * 2 - 1;
+    ibox[2] = ibox[1] + d::N_sox * 2 + 2;
+    ibox[3] = ibox[2] + d::N_g   * 2 - 1;
+    ibox[4] = ibox[3] + d::N_dox * 2 + 2;
+    ibox[5] = ibox[4] + d::N_d   * 2 - 1;
+    ibox[6] = ibox[5] + d::N_dc  * 2;
 
     jbox[0] =           d::M_cnt * 2;
     jbox[1] = jbox[0] + d::M_ox  * 2;
@@ -235,7 +271,7 @@ std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vect
 
 template<int dir> // the direction of the surface normal vector (lrio)
 double potential_impl::eps(int i, int j) {
-    return c::eps_0;
+    //return c::eps_0;
 
     // returns the correct dielectric constant for a given set of lattice-points
     static std::vector<int> ibox;
@@ -284,17 +320,15 @@ arma::sp_mat potential_impl::get_S() {
         O = 3
     };
 
-//    umat indices(2, ...);
-//    vec values(...);
+    umat indices(2, d::M_r * d::N_x * 5);
+    vec values(d::M_r * d::N_x * 5);
 
-//    uword N_v = 0;
-//    auto set_value = [&] (uword ki, uword kj, double value) {
-//        indices(0, N_v) = ki;
-//        indices(1, N_v) = kj;
-//        values(N_v++) = value;
-//    };
-
-    sp_mat S(d::N_x * d::M_r, d::N_x * d::M_r);
+    uword N_v = 0;
+    auto set_value = [&] (uword ki, uword kj, double value) {
+        indices(0, N_v) = ki;
+        indices(1, N_v) = kj;
+        values(N_v++) = value;
+    };
 
     uword k = 0;          // current main diagonal element
     uword i0 = 0;         // left i limit
@@ -303,42 +337,44 @@ arma::sp_mat potential_impl::get_S() {
 
     for (uword j = 0; j < d::M_r; ++j) {
         double r = j * d::dr + 0.5 * d::dr;
-        double rp = r + 0.5 * d::dr;
         double rm = r - 0.5 * d::dr;
+        double rp = r + 0.5 * d::dr;
 
         for (uword i = i0; i < i1; ++i) {
-            // main diagonal
-            S(k, k) = - dx2 * (r  * eps<L>(i, j) + r  * eps<R>(i, j))
-                      - dr2 * (rp * eps<O>(i, j) + rm * eps<I>(i, j));
-
-            // horizontal coupling
-            if (i > i0) {
-                S(k, k - 1) = dx2 * r * eps<L>(i    , j);
-                S(k - 1, k) = dx2 * r * eps<R>(i - 1, j);
-            }
-
-            // vertical coupling
-            if (j > 0) {
-                S(k, k - delta) = dr2 * rm * eps<I>(i, j    );
-                S(k - delta, k) = dr2 * rp * eps<O>(i, j - 1);
-            }
+            double diag    = - dx2 * (r  * eps<L>(i, j) + r  * eps<R>(i, j))
+                             - dr2 * (rp * eps<O>(i, j) + rm * eps<I>(i, j));
+            double left    = dx2 * r  * eps<L>(i    , j);
+            double right   = dx2 * r  * eps<R>(i - 1, j);
+            double inside  = dr2 * rm * eps<I>(i, j    );
+            double outside = dr2 * rm * eps<O>(i, j - 1);
 
             // horizontal von Neumann boundary conditions
             if (i == 1) {
-                S(k - 1, k) *= 2;
+                right *= 2;
             }
             if (i == d::N_x - 1) {
-                S(k, k - 1) *= 2;
+                left *= 2;
             }
 
             // vertical von Neumann boundary conditions
             if (j == 1) {
-                S(k - delta, k) -= dr2 * 0.5 * d::dr * eps<O>(i, 0);
-                S(k - delta, k) *= 2;
+                outside -= dr2 * 0.5 * d::dr * eps<O>(i, 0);
+                outside *= 2;
             }
             if (j == d::M_r - 1) {
-                S(k, k - delta) += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
-                S(k, k - delta) *= 2;
+                inside += dr2 * 0.5 * d::dr * eps<I>(i, d::M_r - 1);
+                inside *= 2;
+            }
+
+            // store values
+            set_value(k, k, diag);
+            if (i > i0) {
+                set_value(k, k - 1, left);
+                set_value(k - 1, k, right);
+            }
+            if (j > 0) {
+                set_value(k, k - delta, inside);
+                set_value(k - delta, k, outside);
             }
 
             // next diag element
@@ -373,8 +409,10 @@ arma::sp_mat potential_impl::get_S() {
             }
         }
     }
-    // return sp_mat(indices, values);
-    return S;
+
+    indices.resize(2, N_v);
+    values.resize(N_v);
+    return sp_mat(indices, values);
 }
 
 arma::vec potential_impl::get_R0(const voltage & V) {
@@ -389,98 +427,53 @@ arma::vec potential_impl::get_R0(const voltage & V) {
         O = 3
     };
 
-    const double V_s = -(V.s + d::F_s);
-    const double V_g = -(V.g + d::F_g);
-    const double V_d = -(V.d + d::F_d);
+    double V_s = - (V.s + d::F_s);
+    double V_g = - (V.g + d::F_g);
+    double V_d = - (V.d + d::F_d);
 
-    // right side vector
-    uword D = d::N_x * d::M_r;
+    vec R0(d::N_x * d::M_r);
+    R0.fill(0);
     uword i, j, k;
     double r, rp;
-    vec T(D);
-    T.fill(0);
 
-    // horizontal Dirichlet
-    i = d::N_sc;
-    for (j = d::M_cnt; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<L>(i, j) * V_s;
-    }
-    i = d::N_x - d::N_dc - 1;
-    for (j = d::M_cnt; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<R>(i, j) * V_d;
-    }
-    i = d::N_sc + d::N_s + d::N_sox - 1;
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<R>(i, j) * V_g;
-    }
-    i = d::N_sc + d::N_s + d::N_sox + d::N_g;
-    for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        r = j * d::dr + 0.5 * d::dr;
-        k = j * d::N_x + i;
-        T(k) -= dx2 * r * eps<L>(i, j) * V_g;
-    }
-
-    // vertical Dirichlet
     j = d::M_cnt - 1;
     r = j * d::dr + 0.5 * d::dr;
     rp = r + 0.5 * d::dr;
+
+    k = j * d::N_x;
     for (i = 0; i < d::N_sc; ++i) {
-        k = j * d::N_x + i;
-        T(k) -= dr2 * rp * eps<O>(i, j) * V_s;
+        R0(k++) -= dr2 * rp * eps<O>(i, j) * V_s;
     }
+    k = j * d::N_x + d::N_x - d::N_dc;
     for (i = d::N_x - d::N_dc; i < d::N_x; ++i) {
-        k = j * d::N_x + i;
-        T(k) -= dr2 * rp * eps<O>(i, j) * V_d;
+        R0(k++) -= dr2 * rp * eps<O>(i, j) * V_d;
     }
-    j = d::M_cnt + d::M_ox - 1;
+    for (j = d::M_cnt; j < d::M_cnt + d::M_ox - 1; ++j) {
+        r = j * d::dr + 0.5 * d::dr;
+        R0(k) -= dx2 * r * eps<L>(d::N_sc, j) * V_s;
+        k += d::N_s + d::N_sox + d::N_g + d::N_dox + d::N_d - 1;
+        R0(k++) -= dx2 * r * eps<R>(d::N_x - d::N_dc - 1, j) * V_d;
+    }
     r = j * d::dr + 0.5 * d::dr;
     rp = r + 0.5 * d::dr;
+    R0(k) -= dx2 * r * eps<L>(d::N_sc, j) * V_s;
+    k += d::N_s + d::N_sox;
     for (i = d::N_sc + d::N_s + d::N_sox; i < d::N_sc + d::N_s + d::N_sox + d::N_g; ++i) {
-        k = j * d::N_x + i;
-        T(k) -= dr2 * rp * eps<O>(i, j) * V_g;
+        R0(k++) -= dr2 * rp * eps<O>(i, j) * V_g;
     }
-
-    // copy non metal parts T => R0
-    uword N_ssox = d::N_s + d::N_sox;
-    uword N_ddox = d::N_d + d::N_dox;
-    uword N_ox   = N_ssox + d::N_g + N_ddox;
-    D = d::N_x * d::M_cnt + N_ox * d::M_ox + (N_ssox + N_ddox) * d::M_ext;
-    vec R0 = vec(D);
-
-    // cnt part
-    uword k0 = 0;
-    uword k1 = d::N_x * d::M_cnt - 1;
-    R0({k0, k1}) = T({k0, k1});
-
-    // oxide part
-    k0 = k1 + 1;
-    k1 += N_ox;
-    for (j = d::M_cnt; j < d::M_cnt + d::M_ox; ++j) {
-        uword c =  j    * d::N_x + d::N_sc;
-        R0({k0, k1}) = T({c, c + N_ox - 1});
-        k0 = k1 + 1;
-        k1 += N_ox;
-    }
-
-    // extension part
-    k1 -= N_ox;
-    k0 = k1 + 1;
-    k1 += N_ssox;
+    k += d::N_dox + d::N_d - 1;
+    R0(k++) -= dx2 * r * eps<R>(d::N_x - d::N_dc - 1, j) * V_d;
     for (j = d::M_cnt + d::M_ox; j < d::M_r; ++j) {
-        k0 = k1 + 1;
-        k1 += N_ssox;
-        uword c2 = (j+1) * d::N_x - d::N_sc - N_ddox;
-        R0({k0, k1}) = T({c2, c2 + N_ddox - 1});
-        k0 = k1 + 1;
-        k1 += N_ddox;
+        r = j * d::dr + 0.5 * d::dr;
+        R0(k) -= dx2 * r * eps<L>(d::N_sc, j) * V_s;
+        k += d::N_s + d::N_sox - 1;
+        R0(k++) -= dx2 * r * eps<R>(d::N_sc + d::N_s + d::N_sox - 1, j) * V_g;
+        R0(k) -= dx2 * r * eps<L>(d::N_sc + d::N_s + d::N_sox + d::N_g, j) * V_g;
+        k += d::N_dox + d::N_d - 1;
+        R0(k++) -= dx2 * r * eps<R>(d::N_x - d::N_dc - 1, j) * V_d;
     }
 
+    R0.resize(k);
     return R0;
 }
 
