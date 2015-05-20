@@ -5,6 +5,7 @@
 
 #include "anderson.hpp"
 #include "voltage.hpp"
+#include "gnuplot.hpp"
 
 // forward declarations
 #ifndef CHARGE_DENSITY_HPP
@@ -59,6 +60,8 @@ namespace potential_impl {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+
+static inline void plot_phi2D(const voltage & V, const charge_density & n = charge_density());
 
 potential::potential() {
 }
@@ -196,7 +199,7 @@ arma::vec potential_impl::poisson(const arma::vec & R0, const charge_density & n
     arma::vec R = get_R(R0, n);
     return arma::spsolve(S, R);
 }
-template<bool duplicate, bool black>
+template<bool duplicate = true, bool black = false>
 arma::mat potential_impl::poisson2D(const voltage & V, const charge_density & n) {
     using namespace arma;
 
@@ -481,6 +484,68 @@ arma::vec potential_impl::get_R(const arma::vec & R0, const charge_density & n) 
     arma::vec R = R0;
     R({(d::M_cnt - 1) * d::N_x, d::M_cnt * d::N_x - 1}) += n.data * d::r_cnt * 1e9; // 10^9 because of m->nm in epsilon_0
     return R;
+}
+
+void plot_phi2D(const voltage & V, const charge_density & n) {
+    arma::mat phi2D = potential_impl::poisson2D<true, false>(V, n).t();
+
+    gnuplot gp;
+
+    gp << "set palette defined ( 0 '#D73027', 1 '#F46D43', 2 '#FDAE61', 3 '#FEE090', 4 '#E0F3F8', 5 '#ABD9E9', 6 '#74ADD1', 7 '#4575B4' )\n";
+    gp << "set title \"2D Potential\"\n";
+    gp << "set xlabel \"x / nm\"\n";
+    gp << "set ylabel \"r / nm\"\n";
+    gp << "set zlabel \"Phi / V\"\n";
+    gp << "unset key\n";
+
+    using namespace d;
+
+    // indicate cnt area
+    gp << "set obj rect from " << 0 << "," << r_cnt << " to " << l << "," << -r_cnt << "front fillstyle empty\n";
+    gp << "set label \"CNT\" at " << 0.5 * l << "," << 0 << " center front\n";
+
+    // indicate oxide area
+    double x0 = l_sc + l_s;
+    double x1 = l - l_dc - l_d;
+    double y0 = r_cnt + d_ox;
+    double y1 = r_cnt;
+    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
+    gp << "set label \"gate oxide\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
+    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
+    gp << "set label \"gate oxide\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+
+    // indicate gate contact area
+    x0 = l_sc + l_s + l_sox;
+    x1 = l - l_dc - l_d - l_dox;
+    y0 = R;
+    y1 = r_cnt + d_ox;
+    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
+    gp << "set label \"gate contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
+    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
+    gp << "set label \"gate contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+
+    // indicate left contact area
+    x0 = 0;
+    x1 = l_sc;
+    y0 = R;
+    y1 = r_cnt;
+    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
+    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
+    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
+    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+
+    // indicate left contact area
+    x0 = l - l_dc;
+    x1 = l;
+    y0 = R;
+    y1 = r_cnt;
+    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
+    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
+    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
+    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+
+    gp.set_background(x, arma::join_vert(arma::flipud(-r), r), phi2D);
+    gp.plot();
 }
 
 #endif

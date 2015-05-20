@@ -24,11 +24,11 @@ namespace d {
 
     // geometry (everything in nm)
     static constexpr double l_sc  = 15;                                           // source contact length
-    static constexpr double l_s   = 1;                                            // source length
+    static constexpr double l_s   = 5;                                            // source length
     static constexpr double l_sox = 5;                                            // source oxide length
-    static constexpr double l_g   = 15;                                           // gate length
+    static constexpr double l_g   = 20;                                           // gate length
     static constexpr double l_dox = 5;                                            // drain oxide length
-    static constexpr double l_d   = 1;                                            // drain length
+    static constexpr double l_d   = 5;                                            // drain length
     static constexpr double l_dc  = 15;                                           // drain contact length
     static constexpr double l     = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;// device length
     static constexpr double r_cnt = 1;                                            // CNT radius
@@ -70,6 +70,7 @@ namespace d {
     static constexpr int    M_ox  = round(d_ox  / dr);                            // # of points in oxide
     static constexpr int    M_ext = round(r_ext / dr);                            // # of points in extension
     static constexpr int    M_r   = M_cnt + M_ox + M_ext;                         // total # of points
+    static const arma::vec  r     = arma::linspace(0.5 * dr, R - 0.5 * dr, M_r);  // radial lattice points
 
     // hopping parameters central region
     static constexpr double t1    = 0.25 * E_g * (1 + sqrt(1 + 2 * c::h_bar2 / (dx*dx * 1E-18 * m_eff * E_g * c::e)));
