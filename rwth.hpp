@@ -75,4 +75,5 @@ static const std::string rwth_plt =
     "set terminal wxt\n";
     //"set palette defined(0 '#000000', 1 '#060D20', 2 '#2E4374', 3 '#849CD3', 4 '#FFFFFF')\n";
     //"set palette defined (0 '#000000', 1 '#041F37', 2'#5A84AB', 3 '#DDEFFF', 4 '#FFFFFF')\n";
+    //"set palette defined (0 '#000000', 1 '#001073', 2'#213FFF', 3 '#A7B3FF', 4 '#FFFFFF')\n";
 #endif
