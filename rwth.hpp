@@ -72,8 +72,7 @@ static const std::string rwth_plt =
     "set style line 444 lc '#9C9E9F' lt 1 lw 2\n"
     "set border 3 ls 444\n"
     "set tics nomirror\n"
-    "set terminal wxt\n"
-    "set palette defined(0 '#0000FF', 1 '#00FF00', 2 '#FF0000')\n";
+    "set terminal wxt\n";
     //"set palette defined(0 '#000000', 1 '#060D20', 2 '#2E4374', 3 '#849CD3', 4 '#FFFFFF')\n";
     //"set palette defined (0 '#000000', 1 '#041F37', 2'#5A84AB', 3 '#DDEFFF', 4 '#FFFFFF')\n";
 #endif
