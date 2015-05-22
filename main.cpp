@@ -22,10 +22,9 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    plot(d::n0);
-    steady_state s({0,-0.5,1.0});
+    steady_state s({0,0,1});
     s.solve();
-    plot_ldos(s.phi, 1000);
+    plot_ldos(s.phi);
 
     return 0;
 }
