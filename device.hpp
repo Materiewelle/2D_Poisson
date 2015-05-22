@@ -7,6 +7,9 @@
 #include "fermi.hpp"
 #include "integral.hpp"
 
+extern "C" void openblas_set_num_threads(int);
+extern "C" int openblas_get_num_threads();
+
 namespace d {
 
     // material properties
@@ -117,6 +120,9 @@ namespace d {
 
         vec x0, x1, x2, x3, w0, w1, w2, w3;
 
+        int num_threads = openblas_get_num_threads();
+        openblas_set_num_threads(1);
+
         // valence band in contact region
         vec nvc = integral<2>([] (double E) {
             double dos = E / sqrt(4*tc1*tc1*tc2*tc2 - (E*E - tc1*tc1 - tc2*tc2) * (E*E - tc1*tc1 - tc2*tc2));
@@ -154,6 +160,8 @@ namespace d {
             ret(2) = fermi(E, F_d) * dos;
             return ret;
         }, linspace(0.5 * E_g, E_max, 100), rel_tol, c::epsilon(), x3, w3);
+
+        openblas_set_num_threads(num_threads);
 
         // total charge density in contact regions
         vec nc = nvc + ncc;

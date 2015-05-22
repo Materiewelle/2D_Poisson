@@ -1,4 +1,4 @@
-//#define ARMA_NO_DEBUG    // no bound checks
+#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 
 #include <iostream>
@@ -22,8 +22,10 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    steady_state s({0,0,0});
+    plot(d::n0);
+    steady_state s({0,-0.5,1.0});
     s.solve();
+    plot_ldos(s.phi, 1000);
 
     return 0;
 }
