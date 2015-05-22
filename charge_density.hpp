@@ -119,23 +119,21 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
         }
         return A;
     };
-
     auto n_sv = integral<d::N_x>(I_s, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
     auto n_sc = integral<d::N_x>(I_s, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
     auto n_dv = integral<d::N_x>(I_d, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
     auto n_dc = integral<d::N_x>(I_d, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
 
-
-//    auto n_sv = integral<d::N_x>([&] (double E) -> vec {
+//    auto n_sv2 = integral<d::N_x>([&] (double E) -> vec {
 //        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc) - 1);
 //    }, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
-//    auto n_dv = integral<d::N_x>([&] (double E) -> vec {
+//    auto n_dv2 = integral<d::N_x>([&] (double E) -> vec {
 //        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc) - 1);
 //    }, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
-//    auto n_sc = integral<d::N_x>([&] (double E) -> vec {
+//    auto n_sc2 = integral<d::N_x>([&] (double E) -> vec {
 //        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc));
 //    }, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
-//    auto n_dc = integral<d::N_x>([&] (double E) -> vec {
+//    auto n_dc2 = integral<d::N_x>([&] (double E) -> vec {
 //        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc));
 //    }, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
 

@@ -65,7 +65,6 @@ bool steady_state::solve() {
 
         // update potential
         dphi = phi.update(R0, n, mr_neo);
-        plot(phi.data);
 
         cout << V.s << ", " << V.g << ", " << V.d;
         cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
