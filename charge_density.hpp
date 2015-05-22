@@ -103,32 +103,55 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
     vec i_dc = get_intervals(phi.d() + 0.5 * d::E_gc, phi.d() + d::E_max);
 
     // calculate charge density
-    auto n_sv = integral<d::N_x>([&] (double E) -> vec {
-        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc) - 1);
-    }, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
-    auto n_dv = integral<d::N_x>([&] (double E) -> vec {
-        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc) - 1);
-    }, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
-    auto n_sc = integral<d::N_x>([&] (double E) -> vec {
-        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc));
-    }, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
-    auto n_dc = integral<d::N_x>([&] (double E) -> vec {
-        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc));
-    }, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
+    auto I_s = [&] (double E) -> vec {
+        vec A = get_A<true>(phi, E);
+        double f = fermi(E - phi.s(), d::F_sc);
+        for (int i = 0; i < d::N_x; ++i) {
+            A(i) *= (E >= phi.data(i)) ? f : (f - 1);
+        }
+        return A;
+    };
+    auto I_d = [&] (double E) -> vec {
+        vec A = get_A<false>(phi, E);
+        double f = fermi(E - phi.d(), d::F_dc);
+        for (int i = 0; i < d::N_x; ++i) {
+            A(i) *= (E >= phi.data(i)) ? f : (f - 1);
+        }
+        return A;
+    };
+
+    auto n_sv = integral<d::N_x>(I_s, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
+    auto n_sc = integral<d::N_x>(I_s, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
+    auto n_dv = integral<d::N_x>(I_d, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
+    auto n_dc = integral<d::N_x>(I_d, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
+
+
+//    auto n_sv = integral<d::N_x>([&] (double E) -> vec {
+//        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc) - 1);
+//    }, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
+//    auto n_dv = integral<d::N_x>([&] (double E) -> vec {
+//        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc) - 1);
+//    }, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
+//    auto n_sc = integral<d::N_x>([&] (double E) -> vec {
+//        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc));
+//    }, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
+//    auto n_dc = integral<d::N_x>([&] (double E) -> vec {
+//        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc));
+//    }, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
 
     // multiply weights with fermi function
-    for (unsigned i = 0; i < E[LV].size(); ++i) {
-        W[LV](i) *= (1.0 - fermi(E[LV](i) - phi.s(), d::F_sc));
-    }
-    for (unsigned i = 0; i < E[RV].size(); ++i) {
-        W[RV](i) *= (1.0 - fermi(E[RV](i) - phi.d(), d::F_dc));
-    }
-    for (unsigned i = 0; i < E[LC].size(); ++i) {
-        W[LC](i) *= fermi(E[LC](i) - phi.s(), d::F_sc);
-    }
-    for (unsigned i = 0; i < E[RC].size(); ++i) {
-        W[RC](i) *= fermi(E[RC](i) - phi.d(), d::F_dc);
-    }
+//    for (unsigned i = 0; i < E[LV].size(); ++i) {
+//        W[LV](i) *= (1.0 - fermi(E[LV](i) - phi.s(), d::F_sc));
+//    }
+//    for (unsigned i = 0; i < E[RV].size(); ++i) {
+//        W[RV](i) *= (1.0 - fermi(E[RV](i) - phi.d(), d::F_dc));
+//    }
+//    for (unsigned i = 0; i < E[LC].size(); ++i) {
+//        W[LC](i) *= fermi(E[LC](i) - phi.s(), d::F_sc);
+//    }
+//    for (unsigned i = 0; i < E[RC].size(); ++i) {
+//        W[RC](i) *= fermi(E[RC](i) - phi.d(), d::F_dc);
+//    }
 
     // scaling factor
     static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
