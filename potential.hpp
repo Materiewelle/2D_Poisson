@@ -48,7 +48,8 @@ namespace potential_impl {
     static inline arma::vec poisson(const arma::vec & R0, const charge_density & n);
     template<bool duplicate = false, bool black = false>
     static inline arma::mat poisson2D(const voltage & V, const charge_density & n);
-    static inline std::vector<double> get_boxes(std::vector<int> & ibox, std::vector<int> & jbox);
+//    static inline std::vector<double> get_boxes(std::vector<int> & ibox, std::vector<int> & jbox);
+    static inline void get_eps_mat(arma::mat eps[4]);
     template<int dir>
     static inline double eps(int i, int j);
     static inline arma::sp_mat get_S();
@@ -106,15 +107,12 @@ double potential::update(const arma::vec & R0, const charge_density & n, anderso
 }
 
 void potential::smooth() {
-    smooth<(d::F_s > 0)>(0, d::N_sc * 0.3);
 
     // smooth source region
-    smooth<(d::F_s > 0)>(d::N_sc + 0.3 * d::N_s, d::N_sc + d::N_s + d::N_g * 0.05);
+    smooth<(d::F_s > 0)>(0, d::N_sc + d::N_s + d::N_sox + d::N_g * 0.05);
 
     // smooth drain region
-    smooth<(d::F_d > 0)>(d::N_sc + d::N_s + d::N_g * 0.95, d::N_x - (d::N_dc + 0.3 * d::N_d));
-
-    smooth<(d::F_d > 0)>(d::N_x - 0.3 * d::N_dc, d::N_x);
+    smooth<(d::F_d > 0)>(d::N_sc + d::N_s + d::N_sox + d::N_g * 0.95, d::N_x);
 
     update_twice();
 }
@@ -230,58 +228,53 @@ arma::mat potential_impl::poisson2D(const voltage & V, const charge_density & n)
     return phimat;
 }
 
-std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vector<int> & jbox) {
-    std::vector<double> eps_box;
+//std::vector<double> potential_impl::get_boxes(std::vector<int> & ibox, std::vector<int> & jbox) {
+//    std::vector<double> eps_box;
 
-    // the following defines the device's 2D wrap-gate geometry
-    ibox.resize(7); // 7 different regions in lateral direction
-    jbox.resize(3); // 3 different regions in radial direction
-    eps_box.resize(7 * 3);
+//    // the following defines the device's 2D wrap-gate geometry
+//    ibox.resize(7); // 7 different regions in lateral direction
+//    jbox.resize(3); // 3 different regions in radial direction
+//    eps_box.resize(7 * 3);
 
-    ibox[0] =           d::N_sc  * 2;
-    ibox[1] = ibox[0] + d::N_s   * 2 - 1;
-    ibox[2] = ibox[1] + d::N_sox * 2 + 2;
-    ibox[3] = ibox[2] + d::N_g   * 2 - 1;
-    ibox[4] = ibox[3] + d::N_dox * 2 + 2;
-    ibox[5] = ibox[4] + d::N_d   * 2 - 1;
-    ibox[6] = ibox[5] + d::N_dc  * 2;
+//    ibox[0] =           d::N_sc  * 2;
+//    ibox[1] = ibox[0] + d::N_s   * 2 - 1;
+//    ibox[2] = ibox[1] + d::N_sox * 2 + 2;
+//    ibox[3] = ibox[2] + d::N_g   * 2 - 1;
+//    ibox[4] = ibox[3] + d::N_dox * 2 + 2;
+//    ibox[5] = ibox[4] + d::N_d   * 2 - 1;
+//    ibox[6] = ibox[5] + d::N_dc  * 2;
 
-    jbox[0] =           d::M_cnt * 2;
-    jbox[1] = jbox[0] + d::M_ox  * 2;
-    jbox[2] = jbox[1] + d::M_ext * 2 + 1;
+//    jbox[0] =           d::M_cnt * 2;
+//    jbox[1] = jbox[0] + d::M_ox  * 2;
+//    jbox[2] = jbox[1] + d::M_ext * 2 + 1;
 
-    int j = 0; // nanotube region
-    for (int i = 0; i < 7; ++i) {
-        eps_box[j * 7 + i] = d::eps_cnt * c::eps_0;
+//    int j = 0; // nanotube region
+//    for (int i = 0; i < 7; ++i) {
+//        eps_box[j * 7 + i] = d::eps_cnt * c::eps_0;
+//    }
+//    j = 1; // gate-oxide region
+//    for (int i = 0; i < 2; ++i) {
+//        eps_box[j * 7 + i] = c::eps_0;
+//    }
+//    for (int i = 2; i < 5; ++i) {
+//        eps_box[j * 7 + i] = d::eps_ox * c::eps_0;
+//    }
+//    for (int i = 5; i < 7; ++i) {
+//        eps_box[j * 7 + i] = c::eps_0;
+//    }
+//    j = 2; // gate-contact/extended region
+//    for (int i = 0; i < 7; ++i) {
+//        eps_box[j * 7 + i] = c::eps_0;
+//    }
+
+//    return eps_box;
+//}
+
+void potential_impl::get_eps_mat(arma::mat eps[4]) {
+    for (int i = 0; i < 4; ++i) {
+        eps[i] = arma::mat(d::N_x, d::M_r);
+        eps[i].fill(c::eps_0);
     }
-    j = 1; // gate-oxide region
-    for (int i = 0; i < 2; ++i) {
-        eps_box[j * 7 + i] = c::eps_0;
-    }
-    for (int i = 2; i < 5; ++i) {
-        eps_box[j * 7 + i] = d::eps_ox * c::eps_0;
-    }
-    for (int i = 5; i < 7; ++i) {
-        eps_box[j * 7 + i] = c::eps_0;
-    }
-    j = 2; // gate-contact/extended region
-    for (int i = 0; i < 7; ++i) {
-        eps_box[j * 7 + i] = c::eps_0;
-    }
-
-    return eps_box;
-}
-
-template<int dir> // the direction of the surface normal vector (lrio)
-double potential_impl::eps(int i, int j) {
-    //return c::eps_0;
-
-    // returns the correct dielectric constant for a given set of lattice-points
-    static std::vector<int> ibox;
-    static std::vector<int> jbox;
-    static std::vector<double> eps_box = get_boxes(ibox, jbox);
-    static int N_i = ibox.size();
-    static int N_j = jbox.size();
 
     enum {
         L = 0, //left
@@ -290,25 +283,127 @@ double potential_impl::eps(int i, int j) {
         O = 3  //outside (up)
     };
 
-    // move to adjacent lattice points according to value of <dir>
-    int i2 = i * 2 + 1 + ((dir == R) ? 1 : 0) + ((dir == L) ? -1 : 0);
-    int j2 = j * 2 + 1 + ((dir == O) ? 1 : 0) + ((dir == I) ? -1 : 0);
+    int i, j;
 
-    // linear search (not many elements, so binary search not necessary)
-    int ki;
-    for (ki = 0; ki < N_i; ++ki) {
-        if (i2 < ibox[ki]) {
-            break;
-        }
-    }
-    int kj;
-    for (kj = 0; kj < N_j; ++kj) {
-        if (j2 < jbox[kj]) {
-            break;
+    // cnt
+    for (j = 0; j < d::M_cnt - 1; ++j) {
+        for (i = 0; i < d::N_x; ++i) {
+            eps[L](i, j) = d::eps_cnt * c::eps_0;
+            eps[R](i, j) = d::eps_cnt * c::eps_0;
+            eps[I](i, j) = d::eps_cnt * c::eps_0;
+            eps[O](i, j) = d::eps_cnt * c::eps_0;
         }
     }
 
-    return eps_box[kj * N_i + ki];
+    // cnt border
+    for (i = 0; i < d::N_sc + d::N_s - 1; ++i) {
+        eps[L](i, j) = 0.5 * (1.0 + d::eps_cnt) * c::eps_0;
+        eps[R](i, j) = 0.5 * (1.0 + d::eps_cnt) * c::eps_0;
+        eps[I](i, j) = d::eps_cnt * c::eps_0;
+        eps[O](i, j) = c::eps_0;
+    }
+    eps[L](i, j) = 0.5 * (1.0 + d::eps_cnt) * c::eps_0;
+    eps[R](i, j) = 0.5 * (d::eps_ox + d::eps_cnt) * c::eps_0;
+    eps[I](i, j) = d::eps_cnt * c::eps_0;
+    eps[O](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+    for (++i; i < d::N_x - d::N_dc - d::N_d; ++i) {
+        eps[L](i, j) = 0.5 * (d::eps_ox + d::eps_cnt) * c::eps_0;
+        eps[R](i, j) = 0.5 * (d::eps_ox + d::eps_cnt) * c::eps_0;
+        eps[I](i, j) = d::eps_cnt * c::eps_0;
+        eps[O](i, j) = d::eps_ox * c::eps_0;
+    }
+    eps[L](i, j) = 0.5 * (d::eps_ox + d::eps_cnt) * c::eps_0;
+    eps[R](i, j) = 0.5 * (1.0 + d::eps_cnt) * c::eps_0;
+    eps[I](i, j) = d::eps_cnt * c::eps_0;
+    eps[O](i, j) = 0.5  * (1.0 + d::eps_ox) * c::eps_0;
+    for (++i; i < d::N_x; ++i) {
+        eps[L](i, j) = 0.5 * (1.0 + d::eps_cnt) * c::eps_0;
+        eps[R](i, j) = 0.5 * (1.0 + d::eps_cnt) * c::eps_0;
+        eps[I](i, j) = d::eps_cnt * c::eps_0;
+        eps[O](i, j) = c::eps_0;
+    }
+
+    // gate oxide
+    for (j = d::M_cnt; j < d::M_cnt + d::M_ox - 1; ++j) {
+        i = d::N_sc + d::N_s - 1;
+        eps[L](i, j) = c::eps_0;
+        eps[R](i, j) = d::eps_ox * c::eps_0;
+        eps[I](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+        eps[O](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+        for (++i; i < d::N_x - d::N_dc - d::N_d; ++i) {
+            eps[L](i, j) = d::eps_ox * c::eps_0;
+            eps[R](i, j) = d::eps_ox * c::eps_0;
+            eps[I](i, j) = d::eps_ox * c::eps_0;
+            eps[O](i, j) = d::eps_ox * c::eps_0;
+        }
+        eps[L](i, j) = d::eps_ox * c::eps_0;
+        eps[R](i, j) = c::eps_0;
+        eps[I](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+        eps[O](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+    }
+
+    // gate oxide border
+    i = d::N_sc + d::N_s - 1;
+    eps[L](i, j) = c::eps_0;
+    eps[R](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+    eps[I](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+    eps[O](i, j) = c::eps_0;
+    for (++i; i < d::N_x - d::N_dc - d::N_d; ++i) {
+        eps[L](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+        eps[R](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+        eps[I](i, j) = d::eps_ox * c::eps_0;
+        eps[O](i, j) = c::eps_0;
+    }
+    eps[L](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+    eps[R](i, j) = c::eps_0;
+    eps[I](i, j) = 0.5 * (1.0 + d::eps_ox) * c::eps_0;
+    eps[O](i, j) = c::eps_0;
+}
+
+template<int dir> // the direction of the surface normal vector (lrio)
+double potential_impl::eps(int i, int j) {
+    static arma::mat eps[4];
+    static bool eps_initialized = false;
+
+    if (!eps_initialized) {
+        get_eps_mat(eps);
+        eps_initialized = true;
+    }
+
+    return eps[dir](i, j);
+//    // returns the correct dielectric constant for a given set of lattice-points
+//    static std::vector<int> ibox;
+//    static std::vector<int> jbox;
+//    static std::vector<double> eps_box = get_boxes(ibox, jbox);
+//    static int N_i = ibox.size();
+//    static int N_j = jbox.size();
+
+//    enum {
+//        L = 0, //left
+//        R = 1, //right
+//        I = 2, //inside  (down)
+//        O = 3  //outside (up)
+//    };
+
+//    // move to adjacent lattice points according to value of <dir>
+//    int i2 = i * 2 + 1 + ((dir == R) ? 1 : 0) + ((dir == L) ? -1 : 0);
+//    int j2 = j * 2 + 1 + ((dir == O) ? 1 : 0) + ((dir == I) ? -1 : 0);
+
+//    // linear search (not many elements, so binary search not necessary)
+//    int ki;
+//    for (ki = 0; ki < N_i; ++ki) {
+//        if (i2 < ibox[ki]) {
+//            break;
+//        }
+//    }
+//    int kj;
+//    for (kj = 0; kj < N_j; ++kj) {
+//        if (j2 < jbox[kj]) {
+//            break;
+//        }
+//    }
+
+//    return eps_box[kj * N_i + ki];
 }
 
 arma::sp_mat potential_impl::get_S() {

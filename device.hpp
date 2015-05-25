@@ -6,19 +6,17 @@
 #include "constant.hpp"
 #include "fermi.hpp"
 #include "integral.hpp"
-
-extern "C" void openblas_set_num_threads(int);
-extern "C" int openblas_get_num_threads();
+#include "gnuplot.hpp"
 
 namespace d {
 
     // material properties
     static constexpr double eps_cnt = 10;                                         // relative permittivity in cnt
     static constexpr double eps_ox = 25;                                          // relative permittivity of oxide
-    static constexpr double E_g   = 0.62;                                         // bandgap
-    static constexpr double m_eff = 0.1 * c::m_e;                                 // effective mass
+    static constexpr double E_g   = 0.4;                                         // bandgap
+    static constexpr double m_eff = 0.05 * c::m_e;                                 // effective mass
     static constexpr double E_gc  = 0.2;                                          // bandgap of contacts
-    static constexpr double m_efc = 0.01 * c::m_e;                                 // effective mass of contacts
+    static constexpr double m_efc = 0.1 * c::m_e;                                 // effective mass of contacts
     static constexpr double F_s   = +(E_g/2 + 0.011);                             // Fermi level in source
     static constexpr double F_g   = 0;                                            // Fermi level in gate
     static constexpr double F_d   = +(E_g/2 + 0.011);                             // Fermi level in drain
@@ -29,7 +27,7 @@ namespace d {
     static constexpr double l_sc  = 15;                                           // source contact length
     static constexpr double l_s   = 5;                                            // source length
     static constexpr double l_sox = 5;                                            // source oxide length
-    static constexpr double l_g   = 20;                                           // gate length
+    static constexpr double l_g   = 10;                                           // gate length
     static constexpr double l_dox = 5;                                            // drain oxide length
     static constexpr double l_d   = 5;                                            // drain length
     static constexpr double l_dc  = 15;                                           // drain contact length
@@ -112,16 +110,13 @@ namespace d {
     // integration parameters
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
-    static constexpr double rel_tol = 7e-3;
+    static constexpr double rel_tol = 5e-3;
 
     // doping
     inline arma::vec create_n0() {
         using namespace arma;
 
         vec x0, x1, x2, x3, w0, w1, w2, w3;
-
-        int num_threads = openblas_get_num_threads();
-        openblas_set_num_threads(1);
 
         // valence band in contact region
         vec nvc = integral<2>([] (double E) {
@@ -161,8 +156,6 @@ namespace d {
             return ret;
         }, linspace(0.5 * E_g, E_max, 100), rel_tol, c::epsilon(), x3, w3);
 
-        openblas_set_num_threads(num_threads);
-
         // total charge density in contact regions
         vec nc = nvc + ncc;
         // total charge density in central region
@@ -171,7 +164,9 @@ namespace d {
         vec ret(N_x);
         ret(sc).fill(nc(0));
         ret(s).fill(nsgd(0));
+        ret(sox).fill(0);
         ret(g).fill(nsgd(1));
+        ret(dox).fill(0);
         ret(d).fill(nsgd(2));
         ret(dc).fill(nc(1));
 

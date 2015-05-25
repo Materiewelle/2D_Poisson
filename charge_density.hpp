@@ -162,7 +162,7 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
     using namespace arma;
 
     // get abs(psi)²
-    mat get_abs = [] (const cx_mat & m) {
+    auto get_abs = [] (const cx_mat & m) {
         mat ret(m.n_rows / 2, m.n_cols);
         auto ptr0 = m.memptr();
         auto ptr1 = ret.memptr();
@@ -178,17 +178,17 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
         n[i] = vec(d::N_x);
         mat raw = get_abs(psi[i].data);
 
-        for (int j = 0; j < psi[i].E.n_rows; ++j) {
+        for (unsigned j = 0; j < psi[i].E.n_rows; ++j) {
 
             double f;
             if (i == LV || i == LC) {
-                f = fermi(E - phi.s(), d::F_sc);
+                f = fermi(psi[i].E(j) - phi.s(), d::F_sc);
             } else if (i == RV || i == RC) {
-                f = fermi(E - phi.d(), d::F_dc);
+                f = fermi(psi[i].E(j) - phi.d(), d::F_dc);
             }
 
             for (int k = 0; k < d::N_x; ++k) {
-                n[i](k) += psi[i].W(j) * ((E >= phi.data(i)) ? f : (f - 1)) * raw(k, j);
+                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(i)) ? f : (f - 1)) * raw(k, j);
             }
         }
     }
