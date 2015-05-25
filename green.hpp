@@ -56,8 +56,8 @@ static inline arma::mat get_lDOS(const potential & phi, int N_grid, arma::vec & 
 
     mat ret(N_grid, d::N_x);
 
-    double phi_min = d::E_min;//min(phi.data);
-    double phi_max = d::E_max;//max(phi.data);
+    double phi_min = min(phi.data);
+    double phi_max = max(phi.data);
 
     E = linspace(phi_min - 0.5 * d::E_g - 0.2, phi_max + 0.5 * d::E_g + 0.2, N_grid);
 
