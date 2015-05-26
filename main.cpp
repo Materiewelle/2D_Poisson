@@ -30,17 +30,16 @@ int main() {
 //    plot_ldos(s.phi);
 
 
-//    gnuplot gpn;
-    //gpn.add(make_pair(d::x, s.n.data));
+    gnuplot gpn;
+    gpn.add(make_pair(d::x, s.n.data));
     wave_packet psi[4];
     psi[LV].init< true>(s.E[LV], s.W[LV], s.phi);
     psi[RV].init<false>(s.E[RV], s.W[RV], s.phi);
     psi[LC].init< true>(s.E[LC], s.W[LC], s.phi);
     psi[RC].init<false>(s.E[RC], s.W[RC], s.phi);
     s.n.update(psi, s.phi);
-    plot(testbla, s.n.data);
-//    gpn.add(make_pair(d::x, s.n.data));
-//    gpn.plot();
+    gpn.add(make_pair(d::x, s.n.data));
+    gpn.plot();
 
     return 0;
 }
