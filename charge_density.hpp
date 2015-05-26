@@ -124,35 +124,10 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
     auto n_dv = integral<d::N_x>(I_d, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
     auto n_dc = integral<d::N_x>(I_d, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
 
-//    auto n_sv2 = integral<d::N_x>([&] (double E) -> vec {
-//        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc) - 1);
-//    }, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
-//    auto n_dv2 = integral<d::N_x>([&] (double E) -> vec {
-//        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc) - 1);
-//    }, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
-//    auto n_sc2 = integral<d::N_x>([&] (double E) -> vec {
-//        return get_A<true>(phi, E) * (fermi(E - phi.s(), d::F_sc));
-//    }, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
-//    auto n_dc2 = integral<d::N_x>([&] (double E) -> vec {
-//        return get_A<false>(phi, E) * (fermi(E - phi.d(), d::F_dc));
-//    }, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
-
-    // multiply weights with fermi function
-//    for (unsigned i = 0; i < E[LV].size(); ++i) {
-//        W[LV](i) *= (1.0 - fermi(E[LV](i) - phi.s(), d::F_sc));
-//    }
-//    for (unsigned i = 0; i < E[RV].size(); ++i) {
-//        W[RV](i) *= (1.0 - fermi(E[RV](i) - phi.d(), d::F_dc));
-//    }
-//    for (unsigned i = 0; i < E[LC].size(); ++i) {
-//        W[LC](i) *= fermi(E[LC](i) - phi.s(), d::F_sc);
-//    }
-//    for (unsigned i = 0; i < E[RC].size(); ++i) {
-//        W[RC](i) *= fermi(E[RC](i) - phi.d(), d::F_dc);
-//    }
-
     // scaling factor
     static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
+
+    plot(n_dc * scale);
 
     // scaling and doping
     data = (n_sv + n_sc + n_dv + n_dc) * scale + d::n0;
@@ -175,20 +150,26 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
     vec n[4]; // charge density containers
     for (int i = 0; i < 4; ++i) { // loop over all energy lattices
 
-        n[i] = vec(d::N_x); // initialize result vector
-        mat M = get_abs(psi[i].data); // matrix of unweighted absolute square of psi(x, E)
+        // initialize result vector
+        n[i] = vec(d::N_x);
+        n[i].fill(0);
+
+        // matrix of unweighted absolute square of psi(x, E)
+        mat M = get_abs(psi[i].data);
 
         for (unsigned j = 0; j < psi[i].E.n_rows; ++j) {
 
+            // electron statistics for current energy
             double f;
-            if (i == LV || i == LC) {
+            if (i == LV || i == LC) { // source side
                 f = fermi(psi[i].E(j) - phi.s(), d::F_sc);
-            } else if (i == RV || i == RC) {
+            } else if (i == RV || i == RC) { // drain side
                 f = fermi(psi[i].E(j) - phi.d(), d::F_dc);
             }
 
             for (int k = 0; k < d::N_x; ++k) {
-                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(i)) ? f : (f - 1)) * raw(k, j);
+                // count as e- if E above branching point, count as h+ otherwise
+                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(i)) ? f : (f - 1)) * M(k, j);
             }
         }
     }
@@ -196,8 +177,13 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
     // scaling factor
     static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
 
+//    plot(n[LV] * scale);
+//    plot(n[RV] * scale);
+//    plot(n[LC] * scale);
+    plot(n[RC] * scale);
+
     // scaling and doping
-    data = (- n[LV] - n[RV] + n[LC] + n[RC]) * scale + d::n0;
+    data = (n[LV] + n[RV] + n[LC] + n[RC]) * scale + d::n0;
 }
 
 arma::vec charge_density_impl::get_bound_states(const potential & phi) {
