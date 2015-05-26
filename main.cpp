@@ -22,15 +22,12 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    voltage V{0, 0, 1};
-    plot_phi2D(V);
-    plot_ldos({V});
+    vec V_g;
+    vec I;
+    steady_state::transfer({0, 0, 0.6}, 0.7, 300, V_g, I);
 
-    steady_state s(V);
-    s.solve();
-
-    plot_phi2D(V, s.n);
-    plot_ldos(s.phi);
+    plot(make_pair(V_g, I));
+    plot(make_pair(V_g, log(I)));
 
     return 0;
 }
