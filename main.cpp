@@ -34,6 +34,7 @@ int main() {
 //    plot_phi2D(V);
 //    plot_ldos({V});
 
+<<<<<<< HEAD
 //    steady_state s(V);
 //    s.solve();
 
@@ -55,6 +56,28 @@ int main() {
     vec test = {1,2,2,3,3,4,5,5,6};
     cout << *upper_bound(test.begin(), test.end(), 4.1) << endl;
 >>>>>>> 1c54c16d07833e86f1946740621fa95dccfdf113
+=======
+    steady_state s(V);
+    s.solve();
+
+//    plot_phi2D(V, s.n);
+//    plot_ldos(s.phi);
+
+
+    gnuplot gpn;
+    gpn.add(make_pair(d::x, s.n.data));
+    wave_packet psi[4];
+    psi[LV].init< true>(s.E[LV], s.W[LV], s.phi);
+    psi[RV].init<false>(s.E[RV], s.W[RV], s.phi);
+    psi[LC].init< true>(s.E[LC], s.W[LC], s.phi);
+    psi[RC].init<false>(s.E[RC], s.W[RC], s.phi);
+    s.n.update(psi, s.phi);
+    gpn.add(make_pair(d::x, s.n.data));
+    gpn.plot();
+
+//    vec test = {1,2,2,3,3,4,5,5,6};
+//    cout << *upper_bound(test.begin(), test.end(), 4.1) << endl;
+>>>>>>> 422f66cfb66211b0a7febec58fb6eacfca72a79c
 
     return 0;
 }
