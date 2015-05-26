@@ -172,11 +172,11 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
         return ret;
     };
 
-    vec n[4];
-    for (int i = 0; i < 4; ++i) {
+    vec n[4]; // charge density containers
+    for (int i = 0; i < 4; ++i) { // loop over all energy lattices
 
-        n[i] = vec(d::N_x);
-        mat raw = get_abs(psi[i].data);
+        n[i] = vec(d::N_x); // initialize result vector
+        mat M = get_abs(psi[i].data); // matrix of unweighted absolute square of psi(x, E)
 
         for (unsigned j = 0; j < psi[i].E.n_rows; ++j) {
 
