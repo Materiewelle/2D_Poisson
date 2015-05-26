@@ -127,8 +127,6 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
     // scaling factor
     static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
 
-    plot(n_dc * scale);
-
     // scaling and doping
     data = (n_sv + n_sc + n_dv + n_dc) * scale + d::n0;
 }
@@ -169,18 +167,13 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
 
             for (int k = 0; k < d::N_x; ++k) {
                 // count as e- if E above branching point, count as h+ otherwise
-                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(i)) ? f : (f - 1)) * M(k, j);
+                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(k)) ? f : (f - 1)) * M(k, j);
             }
         }
     }
 
     // scaling factor
     static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
-
-//    plot(n[LV] * scale);
-//    plot(n[RV] * scale);
-//    plot(n[LC] * scale);
-    plot(n[RC] * scale);
 
     // scaling and doping
     data = (n[LV] + n[RV] + n[LC] + n[RC]) * scale + d::n0;
