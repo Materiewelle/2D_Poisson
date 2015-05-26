@@ -1,4 +1,4 @@
-#define ARMA_NO_DEBUG    // no bound checks
+//#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 
 #include <iostream>
@@ -23,9 +23,6 @@ int main() {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     voltage V{0, 0, 1};
-//    plot_phi2D(V);
-//    plot_ldos({V});
-
     steady_state s(V);
     s.solve();
 
@@ -44,9 +41,6 @@ int main() {
     s.n.update(psi, s.phi);
     gpn.add(make_pair(d::x, s.n.data));
     gpn.plot();
-
-//    vec test = {1,2,2,3,3,4,5,5,6};
-//    cout << *upper_bound(test.begin(), test.end(), 4.1) << endl;
 
     return 0;
 }

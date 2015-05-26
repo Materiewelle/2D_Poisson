@@ -11,8 +11,13 @@
 
 class steady_state {
 public:
+<<<<<<< HEAD
     static constexpr auto dphi_threshold = 1e-9;
     static constexpr auto max_iterations = 0;
+=======
+    static constexpr auto dphi_threshold = 1e-5;
+    static constexpr auto max_iterations = 50;
+>>>>>>> 635203449689f329edbc38eaea47230f7cad7143
 
     voltage V;
     charge_density n;
@@ -66,8 +71,8 @@ bool steady_state::solve() {
         // update potential
         dphi = phi.update(R0, n, mr_neo);
 
-        cout << V.s << ", " << V.g << ", " << V.d;
-        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
+//        cout << V.s << ", " << V.g << ", " << V.d;
+//        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
@@ -134,6 +139,7 @@ void steady_state::transfer(const voltage & V0, double V_g1, int N, arma::vec & 
 
     for (int i = 0; i < N; ++i) {
         std::cout << "Step " << i+1 << "/" << N << ": V_g=" << V_g(i) << ": ";
+        std::flush(std::cout);
         voltage V = { V0.s, V_g(i), V0.d };
         if (reuse && conv) {
             s = steady_state(V, s.n);
