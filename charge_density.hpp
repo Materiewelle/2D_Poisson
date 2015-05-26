@@ -146,6 +146,7 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
     };
 
     vec n[4]; // charge density containers
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < 4; ++i) { // loop over all energy lattices
 
         // initialize result vector
