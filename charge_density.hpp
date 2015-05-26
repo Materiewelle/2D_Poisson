@@ -20,7 +20,7 @@ public:
     inline charge_density();
 
     inline void update(const potential & phi, arma::vec E[4], arma::vec W[4]);
-    inline void update(const wave_packet psi[4]);
+    inline void update(const wave_packet psi[4], const potential & phi);
 };
 
 // rest of includes
@@ -158,7 +158,7 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
     data = (n_sv + n_sc + n_dv + n_dc) * scale + d::n0;
 }
 
-void charge_density::update(const wave_packet psi[4]) {
+void charge_density::update(const wave_packet psi[4], const potential & phi) {
     using namespace arma;
 
     // get abs(psi)²
@@ -172,9 +172,25 @@ void charge_density::update(const wave_packet psi[4]) {
         return ret;
     };
 
-    vec n[4];
-    for (int i = 0; i < 4; ++i) {
-        n[i] = get_abs(psi[i].data) * psi[i].W;
+    vec n[4]; // charge density containers
+    for (int i = 0; i < 4; ++i) { // loop over all energy lattices
+
+        n[i] = vec(d::N_x); // initialize result vector
+        mat M = get_abs(psi[i].data); // matrix of unweighted absolute square of psi(x, E)
+
+        for (unsigned j = 0; j < psi[i].E.n_rows; ++j) {
+
+            double f;
+            if (i == LV || i == LC) {
+                f = fermi(psi[i].E(j) - phi.s(), d::F_sc);
+            } else if (i == RV || i == RC) {
+                f = fermi(psi[i].E(j) - phi.d(), d::F_dc);
+            }
+
+            for (int k = 0; k < d::N_x; ++k) {
+                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(i)) ? f : (f - 1)) * raw(k, j);
+            }
+        }
     }
 
     // scaling factor
@@ -347,7 +363,7 @@ arma::vec charge_density_impl::get_A(const potential & phi, const double E) {
         A(i) = A_twice(2 * i) + A_twice(2 * i + 1);
     }
 
-    return A;
+    return A; // ToDo: maybe the weight with the fermi function (spacially resolved) directly here? That would be more general...
 }
 
 #endif

@@ -110,7 +110,11 @@ namespace d {
     // integration parameters
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
+<<<<<<< HEAD
     static constexpr double rel_tol = 1e-2;
+=======
+    static constexpr double rel_tol = 5e-3;
+>>>>>>> 1c54c16d07833e86f1946740621fa95dccfdf113
 
     // doping
     inline arma::vec create_n0() {
