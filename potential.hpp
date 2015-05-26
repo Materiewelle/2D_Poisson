@@ -442,9 +442,9 @@ arma::sp_mat potential_impl::get_S() {
             double diag    = - dx2 * (r  * eps<L>(i, j) + r  * eps<R>(i, j))
                              - dr2 * (rp * eps<O>(i, j) + rm * eps<I>(i, j));
             double left    = dx2 * r  * eps<L>(i    , j);
-            double right   = dx2 * r  * eps<R>(i - 1, j);
+            double right   = (i > i0) ? dx2 * r  * eps<R>(i - 1, j) : 0;
             double inside  = dr2 * rm * eps<I>(i, j    );
-            double outside = dr2 * rm * eps<O>(i, j - 1);
+            double outside = (j > 0) ? dr2 * rm * eps<O>(i, j - 1) : 0;
 
             // horizontal von Neumann boundary conditions
             if (i == 1) {
