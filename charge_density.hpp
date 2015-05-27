@@ -3,6 +3,7 @@
 
 #include <armadillo>
 #include <stack>
+#include <unordered_map>
 
 // forward declarations
 #ifndef POTENTIAL_HPP
@@ -14,13 +15,12 @@ class wave_packet;
 
 class charge_density {
 public:
-    static constexpr int initial_waypoints = 30;
     arma::vec data;
 
     inline charge_density();
 
-    inline void update(const potential & phi, arma::vec E[4], arma::vec W[4]);
-    inline void update(const wave_packet psi[4], const potential & phi);
+    inline void update(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]);
+    inline void update(const device & d, const wave_packet psi[4], const potential & phi);
 };
 
 // rest of includes
@@ -37,28 +37,34 @@ public:
 
 namespace charge_density_impl {
 
-    static inline arma::vec get_bound_states(const potential & phi);
-    static inline arma::vec get_bound_states(const potential & phi, double E0, double E1);
+    static constexpr int initial_waypoints = 30;
+    static constexpr double E_min = -1.5;
+    static constexpr double E_max = +1.5;
+    static constexpr double rel_tol  =7e-3;
+
+    static inline arma::vec get_bound_states(const device & d, const potential & phi);
+    static inline arma::vec get_bound_states(const device & d, const potential & phi, double E0, double E1);
     template<bool zero_check = true>
     static inline int eval(const arma::vec & a, const arma::vec & a2, const arma::vec & b, double E);
 
     template<bool source>
-    static inline arma::vec get_A(const potential & phi, double E);
+    static inline arma::vec get_A(const device & d, const potential & phi, double E);
+
+    static inline arma::vec & get_n0(const device & d);
+    static std::unordered_map<std::string, arma::vec> n0_d;
 
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-charge_density::charge_density()
-    : data(d::N_x) {
-    data.fill(0.0);
+charge_density::charge_density() {
 }
 
-void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4]) {
+void charge_density::update(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]) {
     using namespace arma;
     using namespace charge_density_impl;
 
-    auto E_bound = get_bound_states(phi);
+    auto E_bound = get_bound_states(d, phi);
 
     // get integration intervals
     auto get_intervals = [&] (double E_min, double E_max) {
@@ -97,42 +103,44 @@ void charge_density::update(const potential & phi, arma::vec E[4], arma::vec W[4
             return lin;
         }
     };
-    vec i_sv = get_intervals(phi.s() + d::E_min, phi.s() - 0.5 * d::E_gc);
-    vec i_sc = get_intervals(phi.s() + 0.5 * d::E_gc, phi.s() + d::E_max);
-    vec i_dv = get_intervals(phi.d() + d::E_min, phi.d() - 0.5 * d::E_gc);
-    vec i_dc = get_intervals(phi.d() + 0.5 * d::E_gc, phi.d() + d::E_max);
+    vec i_sv = get_intervals(phi.s() + E_min, phi.s() - 0.5 * d.E_gc);
+    vec i_sc = get_intervals(phi.s() + 0.5 * d.E_gc, phi.s() + E_max);
+    vec i_dv = get_intervals(phi.d() + E_min, phi.d() - 0.5 * d.E_gc);
+    vec i_dc = get_intervals(phi.d() + 0.5 * d.E_gc, phi.d() + E_max);
 
     // calculate charge density
     auto I_s = [&] (double E) -> vec {
-        vec A = get_A<true>(phi, E);
-        double f = fermi(E - phi.s(), d::F_sc);
-        for (int i = 0; i < d::N_x; ++i) {
+        vec A = get_A<true>(d, phi, E);
+        double f = fermi(E - phi.s(), d.F_sc);
+        for (int i = 0; i < d.N_x; ++i) {
             A(i) *= (E >= phi.data(i)) ? f : (f - 1);
         }
         return A;
     };
     auto I_d = [&] (double E) -> vec {
-        vec A = get_A<false>(phi, E);
-        double f = fermi(E - phi.d(), d::F_dc);
-        for (int i = 0; i < d::N_x; ++i) {
+        vec A = get_A<false>(d, phi, E);
+        double f = fermi(E - phi.d(), d.F_dc);
+        for (int i = 0; i < d.N_x; ++i) {
             A(i) *= (E >= phi.data(i)) ? f : (f - 1);
         }
         return A;
     };
-    auto n_sv = integral<d::N_x>(I_s, i_sv, d::rel_tol, c::epsilon(), E[LV], W[LV]);
-    auto n_sc = integral<d::N_x>(I_s, i_sc, d::rel_tol, c::epsilon(), E[LC], W[LC]);
-    auto n_dv = integral<d::N_x>(I_d, i_dv, d::rel_tol, c::epsilon(), E[RV], W[RV]);
-    auto n_dc = integral<d::N_x>(I_d, i_dc, d::rel_tol, c::epsilon(), E[RC], W[RC]);
+    auto n_sv = integral(I_s, d.N_x, i_sv, rel_tol, c::epsilon(), E[LV], W[LV]);
+    auto n_sc = integral(I_s, d.N_x, i_sc, rel_tol, c::epsilon(), E[LC], W[LC]);
+    auto n_dv = integral(I_d, d.N_x, i_dv, rel_tol, c::epsilon(), E[RV], W[RV]);
+    auto n_dc = integral(I_d, d.N_x, i_dc, rel_tol, c::epsilon(), E[RC], W[RC]);
 
     // scaling factor
-    static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
+    double scale = - 0.5 * c::e / M_PI / M_PI / d.r_cnt / d.dr / d.dx;
 
     // scaling and doping
-    data = (n_sv + n_sc + n_dv + n_dc) * scale + d::n0;
+    data = (n_sv + n_sc + n_dv + n_dc) * scale + get_n0(d);
 }
 
-void charge_density::update(const wave_packet psi[4], const potential & phi) {
+void charge_density::update(const device & d, const wave_packet psi[4], const potential & phi) {
     using namespace arma;
+    using namespace charge_density_impl;
+
 
     // get abs(psi)²
     auto get_abs = [] (const cx_mat & m) {
@@ -150,7 +158,7 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
     for (int i = 0; i < 4; ++i) { // loop over all energy lattices
 
         // initialize result vector
-        n[i] = vec(d::N_x);
+        n[i] = vec(d.N_x);
         n[i].fill(0);
 
         // matrix of unweighted absolute square of psi(x, E)
@@ -161,12 +169,12 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
             // electron statistics for current energy
             double f;
             if (i == LV || i == LC) { // source side
-                f = fermi(psi[i].E(j) - phi.s(), d::F_sc);
+                f = fermi(psi[i].E(j) - phi.s(), d.F_sc);
             } else if (i == RV || i == RC) { // drain side
-                f = fermi(psi[i].E(j) - phi.d(), d::F_dc);
+                f = fermi(psi[i].E(j) - phi.d(), d.F_dc);
             }
 
-            for (int k = 0; k < d::N_x; ++k) {
+            for (int k = 0; k < d.N_x; ++k) {
                 // count as e- if E above branching point, count as h+ otherwise
                 n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(k)) ? f : (f - 1)) * M(k, j);
             }
@@ -174,43 +182,43 @@ void charge_density::update(const wave_packet psi[4], const potential & phi) {
     }
 
     // scaling factor
-    static constexpr double scale = - 0.5 * c::e / M_PI / M_PI / d::r_cnt / d::dr / d::dx;
+    double scale = - 0.5 * c::e / M_PI / M_PI / d.r_cnt / d.dr / d.dx;
 
     // scaling and doping
-    data = (n[LV] + n[RV] + n[LC] + n[RC]) * scale + d::n0;
+    data = (n[LV] + n[RV] + n[LC] + n[RC]) * scale + get_n0(d);
 }
 
-arma::vec charge_density_impl::get_bound_states(const potential & phi) {
+arma::vec charge_density_impl::get_bound_states(const device & d, const potential & phi) {
     double phi0, phi1, phi2, limit;
 
     // check for bound states in valence band
-    phi0 = arma::min(phi.data(d::s)) - 0.5 * d::E_g;
-    phi1 = arma::max(phi.data(d::g)) - 0.5 * d::E_g;
-    phi2 = arma::min(phi.data(d::d)) - 0.5 * d::E_g;
+    phi0 = arma::min(phi.data(d.s)) - 0.5 * d.E_g;
+    phi1 = arma::max(phi.data(d.g)) - 0.5 * d.E_g;
+    phi2 = arma::min(phi.data(d.d)) - 0.5 * d.E_g;
     limit = phi0 > phi2 ? phi0 : phi2;
     if (limit < phi1) {
-        return get_bound_states(phi, limit, phi1);
+        return get_bound_states(d, phi, limit, phi1);
     }
 
     // check for bound states in conduction band
-    phi0 = arma::max(phi.data(d::s)) + 0.5 * d::E_g;
-    phi1 = arma::min(phi.data(d::g)) + 0.5 * d::E_g;
-    phi2 = arma::max(phi.data(d::d)) + 0.5 * d::E_g;
+    phi0 = arma::max(phi.data(d.s)) + 0.5 * d.E_g;
+    phi1 = arma::min(phi.data(d.g)) + 0.5 * d.E_g;
+    phi2 = arma::max(phi.data(d.d)) + 0.5 * d.E_g;
     limit = phi0 < phi2 ? phi0 : phi2;
     if (limit > phi1) {
-        return get_bound_states(phi, phi1, limit);
+        return get_bound_states(d, phi, phi1, limit);
     }
 
     return arma::vec(arma::uword(0));
 }
 
-arma::vec charge_density_impl::get_bound_states(const potential & phi, double E0, double E1) {
+arma::vec charge_density_impl::get_bound_states(const device & d, const potential & phi, double E0, double E1) {
     using namespace arma;
 
     static constexpr double tol = 1e-10;
 
-    span range{d::s2.a, d::d2.b};
-    vec a = d::t_vec(range);
+    span range{d.s2.a, d.d2.b};
+    vec a = d.t_vec(range);
     vec a2 = a % a;
     vec b = phi.twice(range);
 
@@ -322,12 +330,12 @@ int charge_density_impl::eval(const arma::vec & a, const arma::vec & a2, const a
 }
 
 template<bool source>
-arma::vec charge_density_impl::get_A(const potential & phi, const double E) {
+arma::vec charge_density_impl::get_A(const device & d, const potential & phi, const double E) {
     using namespace arma;
 
     // calculate 1 column of green's function
     cx_double Sigma_s, Sigma_d;
-    cx_vec G = green_col<source>(phi, E, Sigma_s, Sigma_d);
+    cx_vec G = green_col<source>(d, phi, E, Sigma_s, Sigma_d);
 
     // get spectral function for each orbital (2 values per unit cell)
     vec A_twice;
@@ -338,12 +346,80 @@ arma::vec charge_density_impl::get_A(const potential & phi, const double E) {
     }
 
     // reduce spectral function to 1 value per unit cell (simple addition of both values)
-    vec A = vec(d::N_x);
+    vec A = vec(d.N_x);
     for (unsigned i = 0; i < A.size(); ++i) {
         A(i) = A_twice(2 * i) + A_twice(2 * i + 1);
     }
 
     return A;
+}
+
+arma::vec & charge_density_impl::get_n0(const device & d) {
+    using namespace arma;
+
+    auto it = n0_d.find(d.name);
+    if (it != std::end(n0_d)) {
+        return it->second;
+    }
+
+    vec x0, x1, x2, x3, w0, w1, w2, w3;
+
+    // valence band in contact region
+    vec nvc = integral([&] (double E) {
+        double dos = E / sqrt(4*d.tc1*d.tc1*d.tc2*d.tc2 - (E*E - d.tc1*d.tc1 - d.tc2*d.tc2) * (E*E - d.tc1*d.tc1 - d.tc2*d.tc2));
+        vec ret = arma::vec(2);
+        ret(0) = (1 - fermi(E, d.F_sc)) * dos;
+        ret(1) = (1 - fermi(E, d.F_dc)) * dos;
+        return ret;
+    }, 2, linspace(E_min, -0.5 * d.E_gc, 100), rel_tol, c::epsilon(), x0, w0);
+
+    // conduction band in contact region
+    vec ncc = integral([&] (double E) {
+        double dos = E / sqrt(4*d.tc1*d.tc1*d.tc2*d.tc2 - (E*E - d.tc1*d.tc1 - d.tc2*d.tc2) * (E*E - d.tc1*d.tc1 - d.tc2*d.tc2));
+        vec ret = arma::vec(2);
+        ret(0) = fermi(E, d.F_sc) * dos;
+        ret(1) = fermi(E, d.F_dc) * dos;
+        return ret;
+    }, 2, linspace(0.5 * d.E_gc, E_max, 100), rel_tol, c::epsilon(), x1, w1);
+
+    // valence band in central region
+    vec nvsgd = integral([&] (double E) {
+        double dos = E / sqrt(4*d.t1*d.t1*d.t2*d.t2 - (E*E - d.t1*d.t1 - d.t2*d.t2) * (E*E - d.t1*d.t1 - d.t2*d.t2));
+        vec ret = arma::vec(3);
+        ret(0) = (1 - fermi(E, d.F_s)) * dos;
+        ret(1) = (1 - fermi(E, d.F_g)) * dos;
+        ret(2) = (1 - fermi(E, d.F_d)) * dos;
+        return ret;
+    }, 3, linspace(E_min, - 0.5 * d.E_g, 100), rel_tol, c::epsilon(), x2, w2);
+
+    // conduction band in central region
+    vec ncsgd = integral([&] (double E) {
+        double dos = E / sqrt(4*d.t1*d.t1*d.t2*d.t2 - (E*E - d.t1*d.t1 - d.t2*d.t2) * (E*E - d.t1*d.t1 - d.t2*d.t2));
+        vec ret = arma::vec(3);
+        ret(0) = fermi(E, d.F_s) * dos;
+        ret(1) = fermi(E, d.F_g) * dos;
+        ret(2) = fermi(E, d.F_d) * dos;
+        return ret;
+    }, 3, linspace(0.5 * d.E_g, E_max, 100), rel_tol, c::epsilon(), x3, w3);
+
+    // total charge density in contact regions
+    vec nc = nvc + ncc;
+    // total charge density in central region
+    vec nsgd = nvsgd + ncsgd;
+
+    vec ret(d.N_x);
+    ret(d.sc).fill(nc(0));
+    ret(d.s).fill(nsgd(0));
+    ret(d.sox).fill(0);
+    ret(d.g).fill(nsgd(1));
+    ret(d.dox).fill(0);
+    ret(d.d).fill(nsgd(2));
+    ret(d.dc).fill(nc(1));
+
+    ret *= 2 * c::e / M_PI / M_PI / d.r_cnt / d.dr / d.dx; // spintel inside (?)
+
+    n0_d[d.name] = ret;
+    return n0_d[d.name];
 }
 
 #endif

@@ -14,6 +14,7 @@ public:
     static constexpr auto dphi_threshold = 1e-8;
     static constexpr auto max_iterations = 120;
 
+    device d;
     voltage V;
     charge_density n;
     potential phi;
@@ -21,25 +22,26 @@ public:
     arma::vec E[4];
     arma::vec W[4];
 
-    inline steady_state(const voltage & V);
-    inline steady_state(const voltage & V, const charge_density & n0);
+    inline steady_state(device dd, const voltage & V);
+    inline steady_state(device dd, const voltage & V, const charge_density & n0);
 
     template<bool smooth = true>
     inline bool solve();
 
-    static inline void output(const voltage & V0, double V_d1, int N, arma::vec & V_d, arma::vec & I);
     template<bool reuse=true>
-    static inline void transfer(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & I);
+    static inline void output(const device & d, const voltage & V0, double V_d1, int N, arma::vec & V_d, arma::vec & I);
+    template<bool reuse=true>
+    static inline void transfer(const device & d, const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & I);
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 
-steady_state::steady_state(const voltage & VV)
-    : V(VV), n() {
+steady_state::steady_state(device dd, const voltage & VV)
+    : d(dd), V(VV), n() {
 }
 
-steady_state::steady_state(const voltage & VV, const charge_density & n0)
-    : V(VV), n(n0) {
+steady_state::steady_state(device dd, const voltage & VV, const charge_density & n0)
+    : d(dd), V(VV), n(n0) {
 }
 
 template<bool smooth>
@@ -47,8 +49,8 @@ bool steady_state::solve() {
     using namespace std;
 
     // init potential
-    arma::vec R0 = potential_impl::get_R0(V);
-    phi = potential(R0, n);
+    arma::vec R0 = potential_impl::get_R0(d, V);
+    phi = potential(d, R0);
 
     // dphi = norm(delta_phi)
     double dphi;
@@ -61,13 +63,13 @@ bool steady_state::solve() {
     // repeat until potential does not change anymore or iteration limit has been reached
     for (it = 1; it <= max_iterations; ++it) {
         // update charge density
-        n.update(phi, E, W);
+        n.update(d, phi, E, W);
 
         // update potential
-        dphi = phi.update(R0, n, mr_neo);
+        dphi = phi.update(d, R0, n, mr_neo);
 
-//        cout << V.s << ", " << V.g << ", " << V.d;
-//        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
+        cout << V.s << ", " << V.g << ", " << V.d;
+        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
@@ -77,13 +79,13 @@ bool steady_state::solve() {
         if (smooth) {
             // smooth potential in the beginning
             if (it < 3) {
-                phi.smooth();
+                phi.smooth(d);
             }
         }
     }
 
     // get current
-    I = current(phi);
+    I = current(d, phi);
 
     bool converged = !(dphi > dphi_threshold);
 //    cout << V.s << ", " << V.g << ", " << V.d;
@@ -100,21 +102,26 @@ bool steady_state::solve() {
     //}
 }
 
-void steady_state::output(const voltage & V0, double V_d1, int N, arma::vec & V_d, arma::vec & I) {
+template<bool reuse>
+void steady_state::output(const device & d, const voltage & V0, double V_d1, int N, arma::vec & V_d, arma::vec & I) {
     V_d = arma::linspace(V0.d, V_d1, N);
     I = arma::vec(N);
 
-    steady_state s(V0);
+    steady_state s(d, V0);
     bool conv = s.solve();
     I(0) = s.I.total(0);
 
     for (int i = 1; i < N; ++i) {
         voltage V = { V0.s, V0.g, V_d(i) };
-        if (conv) {
-            s = steady_state(V, s.n);
+        if (reuse && conv) {
+            s = steady_state(d, V, s.n);
             conv = s.solve<false>();
+            if (!conv) {
+                s = steady_state(d, V);
+                conv = s.solve();
+            }
         } else {
-            s = steady_state(V);
+            s = steady_state(d, V);
             conv = s.solve();
         }
         I(i) = s.I.total(0);
@@ -122,11 +129,11 @@ void steady_state::output(const voltage & V0, double V_d1, int N, arma::vec & V_
 }
 
 template<bool reuse>
-void steady_state::transfer(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & I) {
+void steady_state::transfer(const device & d, const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & I) {
     V_g = arma::linspace(V0.g, V_g1, N);
     I = arma::vec(N);
 
-    steady_state s(V0);
+    steady_state s(d, V0);
     bool conv = false;
 
 //    int diverged = 0;
@@ -137,17 +144,17 @@ void steady_state::transfer(const voltage & V0, double V_g1, int N, arma::vec & 
         std::flush(std::cout);
         voltage V = { V0.s, V_g(i), V0.d };
         if (reuse && conv) {
-            s = steady_state(V, s.n);
+            s = steady_state(d, V, s.n);
             conv = s.solve<false>();
             if (!conv) {
-                s = steady_state(V);
+                s = steady_state(d, V);
                 conv = s.solve();
             }
         } else {
 //            if(++diverged >= max_div) {
 //                break;
 //            }
-            s = steady_state(V);
+            s = steady_state(d, V);
             conv = s.solve();
         }
         I(i) = s.I.total(0);

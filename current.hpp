@@ -17,8 +17,8 @@ public:
     arma::vec total;
 
     inline current();
-    inline current(const potential & phi);
-    inline current(const wave_packet psi[6], const potential & phi0, const potential & phi);
+    inline current(const device & d, const potential & phi);
+    inline current(const device & d, const wave_packet psi[6], const potential & phi0, const potential & phi);
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,14 +26,14 @@ public:
 current::current() {
 }
 
-current::current(const potential & phi)
-    : lv(d::N_x), rv(d::N_x), lc(d::N_x), rc(d::N_x), lt(d::N_x), rt(d::N_x) {
+current::current(const device & d, const potential & phi)
+    : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x), lt(d.N_x), rt(d.N_x) {
     using namespace arma;
 
     // transmission probability
     auto transmission = [&] (double E) -> double {
         cx_double Sigma_s, Sigma_d;
-        cx_vec G = green_col<false>(phi, E, Sigma_s, Sigma_d);
+        cx_vec G = green_col<false>(d, phi, E, Sigma_s, Sigma_d);
         return 4 * Sigma_s.imag() * Sigma_d.imag() * (std::norm(G(1)) + std::norm(G(2)));
     };
 
@@ -42,41 +42,47 @@ current::current(const potential & phi)
     vec E_lv, E_rv, E_lc, E_rc, E_lt, E_rt;
     vec W_lv, W_rv, W_lc, W_rc, W_lt, W_rt;
 
-    auto i_lv = linspace(phi.s() + d::E_min, phi.s() - 0.5 * d::E_gc, 50);
-    auto i_rv = linspace(phi.d() + d::E_min, phi.d() - 0.5 * d::E_gc, 50);
-    auto i_lc = linspace(phi.s() + 0.5 * d::E_gc, phi.s() + d::E_max, 50);
-    auto i_rc = linspace(phi.d() + 0.5 * d::E_gc, phi.d() + d::E_max, 50);
+    auto i_lv = linspace(phi.s() + charge_density_impl::E_min, phi.s() - 0.5 * d.E_gc, 50);
+    auto i_rv = linspace(phi.d() + charge_density_impl::E_min, phi.d() - 0.5 * d.E_gc, 50);
+    auto i_lc = linspace(phi.s() + 0.5 * d.E_gc, phi.s() + charge_density_impl::E_max, 50);
+    auto i_rc = linspace(phi.d() + 0.5 * d.E_gc, phi.d() + charge_density_impl::E_max, 50);
 
-    lv.fill(integral<1>([&] (double E) {
-        return scale * transmission(E) * (1.0 - fermi(E - phi.s(), d::F_sc));
-    }, i_lv, d::rel_tol, c::epsilon(1e-10), E_lv, W_lv));
+    lv(0) = integral([&] (double E) {
+        return scale * transmission(E) * (1.0 - fermi(E - phi.s(), d.F_sc));
+    }, 1, i_lv, charge_density_impl::rel_tol, c::epsilon(1e-10), E_lv, W_lv)(0);
+    lv.fill(lv(0));
 
-    rv.fill(integral<1>([&] (double E) {
-        return - scale * transmission(E) * (1.0 - fermi(E - phi.d(), d::F_dc));
-    }, i_rv, d::rel_tol, c::epsilon(1e-10), E_rv, W_rv));
+    rv(0) = integral([&] (double E) {
+        return - scale * transmission(E) * (1.0 - fermi(E - phi.d(), d.F_dc));
+    }, 1, i_rv, charge_density_impl::rel_tol, c::epsilon(1e-10), E_rv, W_rv)(0);
+    rv.fill(rv(0));
 
-    lc.fill(integral<1>([&] (double E) {
-        return scale * transmission(E) * fermi(E - phi.s(), d::F_sc);
-    }, i_lc, d::rel_tol, c::epsilon(1e-10), E_lc, W_lc));
+    lc(0) = integral([&] (double E) {
+        return scale * transmission(E) * fermi(E - phi.s(), d.F_sc);
+    }, 1, i_lc, charge_density_impl::rel_tol, c::epsilon(1e-10), E_lc, W_lc)(0);
+    lc.fill(lc(0));
 
-    rc.fill(integral<1>([&] (double E) {
-        return - scale * transmission(E) * fermi(E - phi.d(), d::F_dc);
-    }, i_rc, d::rel_tol, c::epsilon(1e-10), E_rc, W_rc));
+    rc(0) = integral([&] (double E) {
+        return - scale * transmission(E) * fermi(E - phi.d(), d.F_dc);
+    }, 1, i_rc, charge_density_impl::rel_tol, c::epsilon(1e-10), E_rc, W_rc)(0);
+    rc.fill(rc(0));
 
-    if (phi.s() > phi.d() + d::E_gc) {
-        auto i_lt = linspace(phi.d() + 0.5 * d::E_gc, phi.s() - 0.5 * d::E_gc, 100);
+    if (phi.s() > phi.d() + d.E_gc) {
+        auto i_lt = linspace(phi.d() + 0.5 * d.E_gc, phi.s() - 0.5 * d.E_gc, 100);
 
-        lt.fill(integral<1>([&] (double E) {
+        lt(0) = integral([&] (double E) {
             return scale * transmission(E);
-        }, i_lt, d::rel_tol, c::epsilon(1e-10), E_lt, W_lt));
+        }, 1, i_lt, charge_density_impl::rel_tol, c::epsilon(1e-10), E_lt, W_lt)(0);
+        lt.fill(lt(0));
         rt.fill(0.0);
-    } else if (phi.d() > phi.s() + d::E_gc) {
-        auto i_rt = linspace(phi.s() + 0.5 * d::E_gc, phi.d() - 0.5 * d::E_gc, 100);
+    } else if (phi.d() > phi.s() + d.E_gc) {
+        auto i_rt = linspace(phi.s() + 0.5 * d.E_gc, phi.d() - 0.5 * d.E_gc, 100);
 
-        lt.fill(0.0);
-        rt.fill(integral<1>([&] (double E) {
+        rt(0) = integral([&] (double E) {
             return - scale * transmission(E);
-        }, i_rt, d::rel_tol, c::epsilon(1e-10), E_rt, W_rt));
+        }, 1, i_rt, charge_density_impl::rel_tol, c::epsilon(1e-10), E_rt, W_rt)(0);
+        lt.fill(0.0);
+        rt.fill(rt(0));
     } else {
         lt.fill(0.0);
         rt.fill(0.0);
@@ -85,22 +91,22 @@ current::current(const potential & phi)
     total = lv + rv + lc + rc + lt + rt;
 }
 
-current::current(const wave_packet psi[6], const potential & phi0, const potential & phi)
-    : lv(d::N_x), rv(d::N_x), lc(d::N_x), rc(d::N_x), lt(d::N_x), rt(d::N_x) {
+current::current(const device & d, const wave_packet psi[6], const potential & phi0, const potential & phi)
+    : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x), lt(d.N_x), rt(d.N_x) {
     using namespace arma;
 
     // get imag(conj(psi) * psi)
-    auto get_psi_I = [] (const cx_mat & m) {
+    auto get_psi_I = [&] (const cx_mat & m) {
         mat ret(m.n_rows / 2, m.n_cols);
         auto ptr0 = m.memptr();
         auto ptr1 = ret.memptr();
-        vec t_vec(d::t_vec.size() + 1);
-        t_vec({0, d::t_vec.size() - 1}) = d::t_vec;
+        vec t_vec(d.t_vec.size() + 1);
+        t_vec({0, d.t_vec.size() - 1}) = d.t_vec;
         for (unsigned i = 1; i < m.n_elem - 1; i += 2) {
             (*ptr1++) = std::imag(ptr0[i] * std::conj(ptr0[i + 1])) * t_vec(i % t_vec.size());
         }
         for (unsigned i = 0; i < m.n_cols; ++i) {
-            ret(d::N_x-1, i) = ret(d::N_x-2, i);
+            ret(d.N_x-1, i) = ret(d.N_x-2, i);
         }
         return ret;
     };
