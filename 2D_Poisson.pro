@@ -26,7 +26,8 @@ HEADERS += \
     time_evolution.hpp \
     time_params.hpp \
     voltage.hpp \
-    sd_quantity.hpp
+    sd_quantity.hpp \
+    movie.hpp
 
 LIBS += -lblas -lgomp -lsuperlu
 
