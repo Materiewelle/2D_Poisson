@@ -25,12 +25,12 @@ public:
     arma::cx_mat data;
 
     template<bool left>
-    inline void init(const arma::vec & E, const arma::vec & W, const potential & phi);
+    inline void init(const device & d, const arma::vec & E, const arma::vec & W, const potential & phi);
 
     inline void memory_init();
     inline void memory_update(const sd_vec & affe, unsigned m);
 
-    inline void source_init(const sd_vec & u, const sd_vec & q);
+    inline void source_init(const device & d, const sd_vec & u, const sd_vec & q);
     inline void source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m);
 
     template<class T>
@@ -57,12 +57,12 @@ private:
 //----------------------------------------------------------------------------------------------------------------------
 
 template<bool left>
-void wave_packet::init(const arma::vec & EE, const arma::vec & WW, const potential & phi) {
+void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec & WW, const potential & phi) {
     using namespace arma;
 
     E = EE;
     W = WW;
-    data = cx_mat(d::N_x * 2, E.size());
+    data = cx_mat(d.N_x * 2, E.size());
     in = sd_vec(E.size());
     out = sd_vec(E.size());
     sum = sd_mat(t::N_t, E.size());
@@ -73,7 +73,7 @@ void wave_packet::init(const arma::vec & EE, const arma::vec & WW, const potenti
     for (unsigned i = 0; i < E.size(); ++i) {
         // calculate 1 column of green's function
         cx_double Sigma_s, Sigma_d;
-        cx_vec G = green_col<left>(phi, E(i), Sigma_s, Sigma_d);
+        cx_vec G = green_col<left>(d, phi, E(i), Sigma_s, Sigma_d);
 
         // calculate wave function
         if (left) {
@@ -88,8 +88,8 @@ void wave_packet::init(const arma::vec & EE, const arma::vec & WW, const potenti
         in.d(i)  = G(G.size() - 1);
 
         // calculate first layer in the leads analytically
-        out.s(i) = ((E(i) - phi.s()) * in.s(i) - d::tc1 * G(           1)) / d::tc2;
-        out.d(i) = ((E(i) - phi.d()) * in.d(i) - d::tc1 * G(G.size() - 2)) / d::tc2;
+        out.s(i) = ((E(i) - phi.s()) * in.s(i) - d.tc1 * G(           1)) / d.tc2;
+        out.d(i) = ((E(i) - phi.d()) * in.d(i) - d.tc1 * G(G.size() - 2)) / d.tc2;
     }
 }
 
@@ -103,10 +103,10 @@ void wave_packet::memory_update(const sd_vec & affe, unsigned m) {
     memory.d = (affe.d.st() * sum.d.rows({1, m - 1})).st();
 }
 
-void wave_packet::source_init(const sd_vec & u, const sd_vec & q) {
+void wave_packet::source_init(const device & d, const sd_vec & u, const sd_vec & q) {
     using namespace std::complex_literals;
-    source.s = - 2i * t::g * u.s(1) * (d::tc2 * out.s + 1i * t::g * q.s(0) * in.s) / (1.0 + 1i * t::g * E);
-    source.d = - 2i * t::g * u.d(1) * (d::tc2 * out.d + 1i * t::g * q.d(0) * in.d) / (1.0 + 1i * t::g * E);
+    source.s = - 2i * t::g * u.s(1) * (d.tc2 * out.s + 1i * t::g * q.s(0) * in.s) / (1.0 + 1i * t::g * E);
+    source.d = - 2i * t::g * u.d(1) * (d.tc2 * out.d + 1i * t::g * q.d(0) * in.d) / (1.0 + 1i * t::g * E);
 }
 
 void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m) {
@@ -129,7 +129,7 @@ void wave_packet::remember() {
 
 void wave_packet::update_sum(int m) {
     sum.s.row(m) = old_data.row(0) + data.row(0);
-    sum.d.row(m) = old_data.row(2*d::N_x-1) + data.row(2*d::N_x-1);
+    sum.s.row(m) = old_data.row(old_data.n_rows - 1) + data.row(data.n_rows - 1);
 }
 
 #endif
