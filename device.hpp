@@ -17,7 +17,7 @@ namespace d {
     static constexpr double m_eff = 0.05 * c::m_e;                                 // effective mass
     static constexpr double E_gc  = 0.2;                                          // bandgap of contacts
     static constexpr double m_efc = 0.1 * c::m_e;                                 // effective mass of contacts
-    static constexpr double F_s   = +(E_g/2 + 0.011);                             // Fermi level in source
+    static constexpr double F_s   = -(E_g/2 + 0.011);                             // Fermi level in source
     static constexpr double F_g   = 0;                                            // Fermi level in gate
     static constexpr double F_d   = +(E_g/2 + 0.011);                             // Fermi level in drain
     static constexpr double F_sc  = F_s;                                          // Fermi level in source contact
