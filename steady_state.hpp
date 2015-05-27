@@ -11,8 +11,8 @@
 
 class steady_state {
 public:
-    static constexpr auto dphi_threshold = 1e-5;
-    static constexpr auto max_iterations = 50;
+    static constexpr auto dphi_threshold = 1e-8;
+    static constexpr auto max_iterations = 120;
 
     voltage V;
     charge_density n;
