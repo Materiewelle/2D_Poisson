@@ -9,6 +9,10 @@
 #include "voltage.hpp"
 #include "wave_packet.hpp"
 
+#ifdef MOVIEMODE
+#include "movie.hpp"
+#endif
+
 class time_evolution {
 public:
     static constexpr auto dphi_threshold = 1e-8;
@@ -21,6 +25,10 @@ public:
     std::vector<charge_density> n;
     std::vector<voltage> V;
 
+#ifdef MOVIEMODE
+    movie argo;
+#endif
+
     inline time_evolution(const device & dd);
     inline time_evolution(const device & dd, const std::vector<voltage> & V);
 
@@ -31,6 +39,8 @@ private:
     sd_vec L;
     sd_vec q;
     sd_vec qsum;
+
+
 
     template<bool left>
     void get_tunnel_energies(arma::vec & E, arma::vec & W);
@@ -74,6 +84,17 @@ void time_evolution::solve() {
     psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
     psi[LT].init< true>(d, E_lt, W_lt, phi[0]);
     psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
+
+#ifdef MOVIEMODE
+    arma::vec E_ind[6];
+    // ToDo: Improve this right here to something more useful
+    for (int i = 0; i < 6; ++i) {
+        int nE = psi[i].E.n_rows;
+        E_ind[i] = arma::vec(1);
+        E_ind[i](0) = nE/2;
+    }
+    argo = movie(d, psi, E_ind);
+#endif
 
     // precalculate q-values
     calculate_q();
@@ -191,7 +212,17 @@ void time_evolution::solve() {
 
         // calculate current
         I[m] = current(d, psi, phi[0], phi[m]);
+
+#ifdef MOVIEMODE
+        movie.frame(m * t::dt, phi[m]);
+#endif
+
     }
+
+#ifdef MOVIEMODE
+    movie.mp4();
+#endif
+
 }
 
 template<bool left>

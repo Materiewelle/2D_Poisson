@@ -9,13 +9,14 @@
 
 #include "wave_packet.hpp"
 #include "gnuplot.hpp"
+#include "device.hpp"
 
 class movie {
 public:
     const string parent_folder = "/tmp/movie_tmpdir";
     const string folder = parent_folder + "/" + ctime(& time(0));
 
-    inline void frame(const double t);
+    inline void frame(const double t, const potential & phi);
     inline void mp4();
 
     movie(const wave_packet psi[6], const arma::uvec E_ind[6]);
@@ -29,13 +30,13 @@ private:
 
     const wave_packet psi_[6];
     const arma::uvec E_ind_[6];
-    const potential & phi_;
     const int frame_skip = 5;
 
     gnuplot gp;
+    device d;
 };
 
-movie::movie(const wave_packet psi[6], const arma::uvec E_ind[6], const potential & phi) : psi_(psi), E_ind_(E_ind), phi_(phi), gp() {
+movie::movie(device & dev, const wave_packet psi[6], const arma::uvec E_ind[6]) : d(dev), psi_(psi), E_ind_(E_ind), gp() {
 
     phimin = ((arma::min(psi_[0].E) < arma::min(psi_[1].E) ? arma::min(psi_[0].E) : arma::min(psi_[1].E))) - 0.2;
     phimax = ((arma::max(psi_[2].E) < arma::max(psi_[3].E) ? arma::max(psi_[2].E) : arma::max(psi_[3].E))) + 0.2;
@@ -52,7 +53,7 @@ movie::movie(const wave_packet psi[6], const arma::uvec E_ind[6], const potentia
     }
 
     // gnuplot setup
-    gp << "set terminal pngcairo rounded enhanced colour size 1366,768 font 'arial,16'\n";
+    gp << "set terminal pngcairo rounded enhanced colour size 960,540 font 'arial,16'\n";
     gp << "set style line 66 lc rgb RWTH_Schwarz_50 lt 1 lw 2\n";
     gp << "set border 3 ls 66\n";
     gp << "set tics nomirror\n";
@@ -62,29 +63,29 @@ movie::movie(const wave_packet psi[6], const arma::uvec E_ind[6], const potentia
     gp << "set style line 4 lc rgb RWTH_Blau\n";
 }
 
-void movie::frame(const double t) {
-    arma::vec E_line(d::N_x);
+void movie::frame(const double t, const potential & phi) {
+    arma::vec E_line(d.N_x);
     std::cout << "Producing movie-frames... ";
     std::flush(std::cout);
     using namespace arma;
 
     vec vband = phi.data;
-    vband(d::sc)  += -0.5 * d::E_gc;
-    vband(d::s)   += -0.5 * d::E_g;
-    vband(d::sox) += -0.5 * d::E_g;
-    vband(d::g)   += -0.5 * d::E_g;
-    vband(d::dox) += -0.5 * d::E_g;
-    vband(d::d)   += -0.5 * d::E_g;
-    vband(d::dc)  += -0.5 * d::E_gc;
+    vband(d.sc)  += -0.5 * d.E_gc;
+    vband(d.s)   += -0.5 * d.E_g;
+    vband(d.sox) += -0.5 * d.E_g;
+    vband(d.g)   += -0.5 * d.E_g;
+    vband(d.dox) += -0.5 * d.E_g;
+    vband(d.d)   += -0.5 * d.E_g;
+    vband(d.dc)  += -0.5 * d.E_gc;
 
     vec cband = phi.data;
-    cband(d::sc)  += +0.5 * d::E_gc;
-    cband(d::s)   += +0.5 * d::E_g;
-    cband(d::sox) += +0.5 * d::E_g;
-    cband(d::g)   += +0.5 * d::E_g;
-    cband(d::dox) += +0.5 * d::E_g;
-    cband(d::d)   += +0.5 * d::E_g;
-    cband(d::dc)  += +0.5 * d::E_gc;
+    cband(d.sc)  += +0.5 * d.E_gc;
+    cband(d.s)   += +0.5 * d.E_g;
+    cband(d.sox) += +0.5 * d.E_g;
+    cband(d.g)   += +0.5 * d.E_g;
+    cband(d.dox) += +0.5 * d.E_g;
+    cband(d.d)   += +0.5 * d.E_g;
+    cband(d.dc)  += +0.5 * d.E_gc;
 
     if ((calls++ % frame_skip) == 0) {
         for (int i = 0; i < 6; ++i) {
@@ -92,7 +93,7 @@ void movie::frame(const double t) {
 
                 // this is a line that indicates the wave's injection energy
                 E_line.fill(psi[i].E(E_indices_[i](j)));
-                E_line -= (i % 2 == 0) ? phi_.s() : phi_.d();
+                E_line -= (i % 2 == 0) ? phi.s() : phi.d();
 
                 // set correct output file
                 char filename[7];
@@ -123,7 +124,7 @@ void movie::frame(const double t) {
                 data[3] = -data[2];
                 for (unsigned p = 0; p < 4; ++p) {
                     for(unsigned k = 0; k < psi_[i].n_rows; ++k) {
-                        gp << d::x(k) << " " << data[p](k) << std::endl;
+                        gp << d.x(k) << " " << data[p](k) << std::endl;
                     }
                     gp << "e" << std::endl;
                 }
@@ -131,13 +132,16 @@ void movie::frame(const double t) {
                 // phi-plot:
                 gp << "set ylabel 'E / eV'\n";
                 gp << "set yrange [" << phimin << ":" << phimax << "]\n";
-                gp << "p '-' w l ls 3 lw 2 notitle, '-' w l ls 3 lw 2 notitle, '-' w l ls 2 lw 2 t 'injection energy'\n";
+                gp << "p "
+                      "'-' w l ls 3 lw 2 notitle, "
+                      "'-' w l ls 3 lw 2 notitle, "
+                      "'-' w l ls 2 lw 2 t 'injection energy'\n";
                 data[0] = cband;
                 data[1] = vband;
                 data[2] = arma::abs(psi[i].data.col(j));
                 for (unsigned p = 0; p < 3; ++p) {
                     for(unsigned k = 0; k < psi_[i].n_rows; ++k) {
-                        gp << d::x(k) << " " << data[p](k) << std::endl;
+                        gp << d.x(k) << " " << data[p](k) << std::endl;
                     }
                     gp << "e" << std::endl;
                 }
