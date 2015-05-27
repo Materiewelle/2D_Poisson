@@ -1,5 +1,5 @@
-#ifndef DEVICE_HPP
-#define DEVICE_HPP
+#ifndef DEVICE_TEST_HPP
+#define DEVICE_TEST_HPP
 
 #include <armadillo>
 #include <sstream>
@@ -115,20 +115,20 @@ std::string device::to_string() {
     stringstream ss;
 
     ss << "; material properties" << endl;
-    ss << "eps_cnt= " << eps_cnt << endl;
-    ss << "eps_ox="   << eps_ox  << endl;
-    ss << "E_g="      << E_g     << endl;
-    ss << "m_eff="    << m_eff   << endl;
-    ss << "E_gc="     << E_gc    << endl;
-    ss << "m_efc="    << m_efc   << endl;
-    ss << "F_s="      << F_s     << endl;
-    ss << "F_g="      << F_g     << endl;
-    ss << "F_d="      << F_d     << endl;
-    ss << "F_sc="     << F_sc    << endl;
-    ss << "F_dc="     << F_dc    << endl;
+    ss << "eps_cnt=" << eps_cnt << endl;
+    ss << "eps_ox="  << eps_ox  << endl;
+    ss << "E_g="     << E_g     << endl;
+    ss << "m_eff="   << m_eff   << endl;
+    ss << "E_gc="    << E_gc    << endl;
+    ss << "m_efc="   << m_efc   << endl;
+    ss << "F_s="     << F_s     << endl;
+    ss << "F_g="     << F_g     << endl;
+    ss << "F_d="     << F_d     << endl;
+    ss << "F_sc="    << F_sc    << endl;
+    ss << "F_dc="    << F_dc    << endl;
     ss << endl;
 
-    ss << "; geometry (everything in nm)" << endl
+    ss << "; geometry (everything in nm)" << endl;
     ss << "l_sc="  << l_sc  << endl;
     ss << "l_s="   << l_s   << endl;
     ss << "l_sox=" << l_sox << endl;

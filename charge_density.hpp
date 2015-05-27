@@ -344,6 +344,7 @@ arma::vec charge_density_impl::get_A(const potential & phi, const double E) {
     }
 
     return A;
+}
 
 #endif
 

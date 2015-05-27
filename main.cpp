@@ -13,6 +13,8 @@
 #include "steady_state.hpp"
 #include "potential.hpp"
 
+#include "device_test.hpp"
+
 using namespace arma;
 using namespace std;
 
@@ -21,6 +23,9 @@ int main() {
     //(i.e. set bits 15 and 6 in SSE control register MXCSR)
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+
+    device der_geraet;
+    cout << der_geraet.to_string() << endl;
 
     vec V_g;
     vec I;
