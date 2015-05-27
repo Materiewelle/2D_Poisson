@@ -12,6 +12,7 @@
 #include "gnuplot.hpp"
 #include "steady_state.hpp"
 #include "potential.hpp"
+#include "time_evolution.hpp"
 
 using namespace arma;
 using namespace std;

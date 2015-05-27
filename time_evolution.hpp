@@ -15,13 +15,14 @@ public:
     static constexpr auto max_iterations = 50;
     static constexpr auto tunnel_current_precision = 1e-3;
 
+    device d;
     std::vector<current> I;
     std::vector<potential> phi;
     std::vector<charge_density> n;
     std::vector<voltage> V;
 
-    inline time_evolution();
-    inline time_evolution(const std::vector<voltage> & V);
+    inline time_evolution(const device & dd);
+    inline time_evolution(const device & dd, const std::vector<voltage> & V);
 
     inline void solve();
 
@@ -38,12 +39,12 @@ private:
 
 //----------------------------------------------------------------------------------------------------------------------
 
-time_evolution::time_evolution()
-    : I(t::N_t), phi(t::N_t), n(t::N_t), V(t::N_t), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
+time_evolution::time_evolution(const device & dd)
+    : d(dd), I(t::N_t), phi(t::N_t), n(t::N_t), V(t::N_t), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
 }
 
-time_evolution::time_evolution(const std::vector<voltage> & VV)
-    : I(t::N_t), phi(t::N_t), n(t::N_t), V(VV), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
+time_evolution::time_evolution(const device & dd, const std::vector<voltage> & VV)
+    : d(dd), I(t::N_t), phi(t::N_t), n(t::N_t), V(VV), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
 }
 
 void time_evolution::solve() {
@@ -51,7 +52,7 @@ void time_evolution::solve() {
     using namespace std::complex_literals;
 
     // solve steady state
-    steady_state s(V[0]);
+    steady_state s(d, V[0]);
     s.solve<false>();
 
     // save results
@@ -67,21 +68,21 @@ void time_evolution::solve() {
 
     // get initial wavefunctions
     wave_packet psi[6];
-    psi[LV].init< true>(s.E[LV], s.W[LV], phi[0]);
-    psi[RV].init<false>(s.E[RV], s.W[RV], phi[0]);
-    psi[LC].init< true>(s.E[LC], s.W[LC], phi[0]);
-    psi[RC].init<false>(s.E[RC], s.W[RC], phi[0]);
-    psi[LT].init< true>(E_lt, W_lt, phi[0]);
-    psi[RT].init<false>(E_rt, W_rt, phi[0]);
+    psi[LV].init< true>(d, s.E[LV], s.W[LV], phi[0]);
+    psi[RV].init<false>(d, s.E[RV], s.W[RV], phi[0]);
+    psi[LC].init< true>(d, s.E[LC], s.W[LC], phi[0]);
+    psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
+    psi[LT].init< true>(d, E_lt, W_lt, phi[0]);
+    psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
 
     // precalculate q-values
     calculate_q();
 
     // build constant part of Hamiltonian
-    cx_mat H_eff(2*d::N_x, 2*d::N_x);
+    cx_mat H_eff(2*d.N_x, 2*d.N_x);
     H_eff.fill(0);
-    H_eff.diag(+1) = conv_to<cx_vec>::from(d::t_vec);
-    H_eff.diag(-1) = conv_to<cx_vec>::from(d::t_vec);
+    H_eff.diag(+1) = conv_to<cx_vec>::from(d.t_vec);
+    H_eff.diag(-1) = conv_to<cx_vec>::from(d.t_vec);
 
     anderson mr_neo;
     sd_vec affe;
@@ -92,7 +93,7 @@ void time_evolution::solve() {
     L.s.fill(1.0);
     L.d.fill(1.0);
 
-    const cx_mat cx_eye = eye<cx_mat>(2 * d::N_x, 2 * d::N_x);
+    const cx_mat cx_eye = eye<cx_mat>(2 * d.N_x, 2 * d.N_x);
 
     // main loop of timesteps
     for (unsigned m = 1; m < t::N_t; ++m) {
@@ -100,8 +101,10 @@ void time_evolution::solve() {
         // estimate charge density from previous values
         n[m].data = (m == 1) ? n[m-1].data : (2 * n[m-1].data - n[m-2].data);
 
+        vec R0 = potential_impl::get_R0(d, V[m]);
+
         // first guess for the potential
-        phi[m] = potential(V[m], n[m]);
+        phi[m] = potential(d, R0, n[m]);
         mr_neo.reset(phi[m].data);
 
         // current data becomes old data
@@ -114,15 +117,15 @@ void time_evolution::solve() {
         for (int it = 0; it < max_iterations; ++it) {
             // diagonal of H with self-energy
             H_eff.diag() = conv_to<cx_vec>::from(0.5 * (phi[m].twice + phi[m-1].twice));
-            H_eff(         0,         0) -= 1i * t::g * q.s(0);
-            H_eff(2*d::N_x-1,2*d::N_x-1) -= 1i * t::g * q.d(0);
+            H_eff(        0,        0) -= 1i * t::g * q.s(0);
+            H_eff(2*d.N_x-1,2*d.N_x-1) -= 1i * t::g * q.d(0);
 
             // crank-nicolson propagator
             U_eff = arma::solve(cx_eye + 1i * t::g * H_eff, cx_eye - 1i * t::g * H_eff);
 
             // inv
-            inv.s = inverse_col< true>(cx_vec(1i * t::g * d::t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
-            inv.d = inverse_col<false>(cx_vec(1i * t::g * d::t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
+            inv.s = inverse_col< true>(cx_vec(1i * t::g * d.t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
+            inv.d = inverse_col<false>(cx_vec(1i * t::g * d.t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
 
             // u
             u.s(m) = 0.5 * (phi[m].s() + phi[m - 1].s()) - phi[0].s();
@@ -137,7 +140,7 @@ void time_evolution::solve() {
             if (m == 1) {
                 for (int i = 0; i < 4; ++i) {
                     psi[i].memory_init();
-                    psi[i].source_init(u, q);
+                    psi[i].source_init(d, u, q);
                     psi[i].propagate(U_eff, inv);
                 }
             } else {
@@ -153,10 +156,10 @@ void time_evolution::solve() {
             }
 
             // update n
-            n[m].update(psi, phi[m]);
+            n[m].update(d, psi, phi[m]);
 
             // update potential
-            auto dphi = phi[m].update(V[m], n[m], mr_neo);
+            auto dphi = phi[m].update(d, R0, n[m], mr_neo);
 
             cout << m << ": iteration " << it << ": rel deviation is " << dphi / dphi_threshold << endl;
 
@@ -170,7 +173,7 @@ void time_evolution::solve() {
         if (m == 1) {
             for (int i = LT; i <= RT; ++i) {
                 psi[i].memory_init();
-                psi[i].source_init(u, q);
+                psi[i].source_init(d, u, q);
                 psi[i].propagate(U_eff, inv);
             }
         } else {
@@ -187,7 +190,7 @@ void time_evolution::solve() {
         }
 
         // calculate current
-        I[m] = current(psi, phi[0], phi[m]);
+        I[m] = current(d, psi, phi[0], phi[m]);
     }
 }
 
@@ -196,13 +199,13 @@ void time_evolution::get_tunnel_energies(arma::vec & E, arma::vec & W) {
     double max = 0.0;
     double sgn = left ? 1.0 : -1.0;
     for (unsigned i = 0; i < V.size(); ++i) {
-        double delta = (V[i].d + d::F_dc - V[i].s - d::F_sc) * sgn - 0.96 * d::E_gc;
+        double delta = (V[i].d + d.F_dc - V[i].s - d.F_sc) * sgn - 0.96 * d.E_gc;
         if (delta > max) {
             max = delta;
         }
     }
     if (max > 0) {
-        double E0 = (left ? (- V[0].s - d::F_sc) : (- V[0].d - d::F_dc)) - 0.48 * d::E_gc;
+        double E0 = (left ? (- V[0].s - d.F_sc) : (- V[0].d - d.F_dc)) - 0.48 * d.E_gc;
         int N = std::round(max / tunnel_current_precision);
         E = arma::linspace(E0 - max, E0, N);
         W = arma::vec(N);
@@ -218,15 +221,16 @@ void time_evolution::calculate_q() {
     using namespace std;
     using mat22 = cx_mat::fixed<2, 2>;
 
+    // shortcuts
+    double t1 = d.tc1;
+    double t12 = t1 * t1;
+    double t2 = d.tc2;
+    double t22 = t2 * t2;
+    static constexpr auto g = t::g;
+    static constexpr auto g2 = g * g;
+
     // get q values dependent on potential in lead
     auto get_q = [&] (double phi0) {
-        // shortcuts
-        static constexpr auto t1 = d::tc1;
-        static constexpr auto t12 = t1 * t1;
-        static constexpr auto t2 = d::tc2;
-        static constexpr auto t22 = t2 * t2;
-        static constexpr auto g = t::g;
-        static constexpr auto g2 = g * g;
         static const mat22 eye2 = { 1, 0, 0, 1 };
 
         // storage

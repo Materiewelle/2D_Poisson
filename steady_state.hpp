@@ -22,8 +22,8 @@ public:
     arma::vec E[4];
     arma::vec W[4];
 
-    inline steady_state(device dd, const voltage & V);
-    inline steady_state(device dd, const voltage & V, const charge_density & n0);
+    inline steady_state(const device & dd, const voltage & V);
+    inline steady_state(const device & dd, const voltage & V, const charge_density & n0);
 
     template<bool smooth = true>
     inline bool solve();
@@ -36,11 +36,11 @@ public:
 
 //----------------------------------------------------------------------------------------------------------------------
 
-steady_state::steady_state(device dd, const voltage & VV)
+steady_state::steady_state(const device & dd, const voltage & VV)
     : d(dd), V(VV), n() {
 }
 
-steady_state::steady_state(device dd, const voltage & VV, const charge_density & n0)
+steady_state::steady_state(const device & dd, const voltage & VV, const charge_density & n0)
     : d(dd), V(VV), n(n0) {
 }
 

@@ -73,7 +73,7 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
     for (unsigned i = 0; i < E.size(); ++i) {
         // calculate 1 column of green's function
         cx_double Sigma_s, Sigma_d;
-        cx_vec G = green_col<left>(phi, E(i), Sigma_s, Sigma_d);
+        cx_vec G = green_col<left>(d, phi, E(i), Sigma_s, Sigma_d);
 
         // calculate wave function
         if (left) {
