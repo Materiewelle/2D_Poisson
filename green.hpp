@@ -36,7 +36,7 @@ template<bool source>
 static inline arma::cx_vec green_col(const potential & phi, double E, arma::cx_double & Sigma_s, arma::cx_double & Sigma_d) {
     using namespace arma;
 
-    static const arma::vec t_vec_neg     = - d::t_vec;
+    static const arma::vec t_vec_neg = -d::t_vec;
 
     self_energy(phi, E, Sigma_s, Sigma_d);
 

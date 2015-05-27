@@ -38,6 +38,7 @@ int main() {
 
 
     gnuplot gpn;
+    s.n.update(s.phi, s.E, s.W);
     gpn.add(make_pair(d::x, s.n.data));
     wave_packet psi[4];
     psi[LV].init< true>(s.E[LV], s.W[LV], s.phi);

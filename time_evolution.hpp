@@ -153,7 +153,7 @@ void time_evolution::solve() {
             }
 
             // update n
-            n[m].update(psi);
+            n[m].update(psi, phi[m]);
 
             // update potential
             auto dphi = phi[m].update(V[m], n[m], mr_neo);

@@ -342,8 +342,7 @@ arma::vec charge_density_impl::get_A(const potential & phi, const double E) {
         A(i) = A_twice(2 * i) + A_twice(2 * i + 1);
     }
 
-    return A; // ToDo: maybe the weight with the fermi function (spacially resolved) directly here? That would be more general...
-}
+    return A;
 
 #endif
 
