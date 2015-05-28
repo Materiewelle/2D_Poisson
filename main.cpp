@@ -10,8 +10,9 @@
 
 #include "device.hpp"
 #include "gnuplot.hpp"
-#include "steady_state.hpp"
+#include "inverter.hpp"
 #include "potential.hpp"
+#include "steady_state.hpp"
 #include "time_evolution.hpp"
 
 using namespace arma;
@@ -23,27 +24,23 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device der_geraet("der Gerät");
-//    cout << der_geraet.to_string() << endl;
+    device n_fet("n_fet digga");
+    device p_fet("p_fet digga");
+    p_fet.F_s  = - p_fet.F_s;
+    p_fet.F_sc = - p_fet.F_sc;
+    p_fet.F_d  = - p_fet.F_d;
+    p_fet.F_dc = - p_fet.F_dc;
 
-//    vec V_g;
-//    vec I;
-//    steady_state::transfer(der_geraet, {0, -0.2, 0.6}, 0.8, 50, V_g, I);
+    inverter i(n_fet, p_fet);
 
-//    plot(make_pair(V_g, log(I)));
-//    return 0;
+    cout << "0.00 => " << i.solve({0, 0.1, 0.4}) << endl;
+    cout << "0.15 => " << i.solve({0, 0.15, 0.4}) << endl;
+    cout << "0.20 => " << i.solve({0, 0.2, 0.4}) << endl;
+    cout << "0.25 => " << i.solve({0, 0.25, 0.4}) << endl;
+    cout << "0.30 => " << i.solve({0, 0.3, 0.4}) << endl;
 
-    voltage V{0, 0, 1};
-    potential phi(der_geraet, V);
-
-    plot_phi2D(der_geraet, V);
-    plot_ldos(der_geraet, phi);
-
-    steady_state s(der_geraet, V);
-    s.solve();
-
-    plot_phi2D(der_geraet, V, s.n);
-    plot_ldos(der_geraet, s.phi);
+//    steady_state ss(p_fet, {0.8, 0, 1});
+//    ss.solve();
 
     return 0;
 }
