@@ -170,7 +170,7 @@ void charge_density::update(const device & d, const wave_packet psi[4], const po
             double f;
             if (i == LV || i == LC) { // source side
                 f = fermi(psi[i].E(j) - phi.s(), d.F_sc);
-            } else if (i == RV || i == RC) { // drain side
+            } else { // drain side
                 f = fermi(psi[i].E(j) - phi.d(), d.F_dc);
             }
 

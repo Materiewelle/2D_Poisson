@@ -85,7 +85,7 @@ void time_evolution::solve() {
     arma::uvec E_ind[6];
     // ToDo: Improve this right here to something more useful
     for (int i = 0; i < 6; ++i) {
-        int nE = psi[i].E.n_rows;
+        int nE = psi[i].E.size();
         E_ind[i] = arma::uvec(1);
         E_ind[i](0) = nE/2;
     }
@@ -210,13 +210,13 @@ void time_evolution::solve() {
         I[m] = current(d, psi, phi[0], phi[m]);
 
 #ifdef MOVIEMODE
-        argo.frame(m, phi[m]);
+        argo.frame(m, phi[m], psi);
 #endif
 
     }
 
 #ifdef MOVIEMODE
-    argo.mp4();
+    argo.mp4(psi);
 #endif
 
 }

@@ -5,7 +5,7 @@
 
 namespace t {
 
-    static constexpr auto T   = 2e-14;                          // total simulated timespan
+    static constexpr auto T   = 1e-15;                          // total simulated timespan
     static constexpr auto dt  = 1e-16;                          // timestep length
     static constexpr int  N_t = std::round(T / dt);             // number of steps
     static const     auto t   = arma::linspace(0, T - dt, N_t); // time lattice
