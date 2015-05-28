@@ -25,10 +25,6 @@ public:
     std::vector<charge_density> n;
     std::vector<voltage> V;
 
-#ifdef MOVIEMODE
-    movie argo;
-#endif
-
     inline time_evolution(const device & dd);
     inline time_evolution(const device & dd, const std::vector<voltage> & V);
 
@@ -86,14 +82,14 @@ void time_evolution::solve() {
     psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
 
 #ifdef MOVIEMODE
-    arma::vec E_ind[6];
+    arma::uvec E_ind[6];
     // ToDo: Improve this right here to something more useful
     for (int i = 0; i < 6; ++i) {
         int nE = psi[i].E.n_rows;
-        E_ind[i] = arma::vec(1);
+        E_ind[i] = arma::uvec(1);
         E_ind[i](0) = nE/2;
     }
-    argo = movie(d, psi, E_ind);
+    movie argo(d, psi, E_ind);
 #endif
 
     // precalculate q-values
@@ -214,13 +210,13 @@ void time_evolution::solve() {
         I[m] = current(d, psi, phi[0], phi[m]);
 
 #ifdef MOVIEMODE
-        movie.frame(m * t::dt, phi[m]);
+        argo.frame(m, phi[m]);
 #endif
 
     }
 
 #ifdef MOVIEMODE
-    movie.mp4();
+    argo.mp4();
 #endif
 
 }

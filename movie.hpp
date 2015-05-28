@@ -2,6 +2,8 @@
 #define MOVIE_HPP
 
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <ctime>
 #include <armadillo>
 #include <stdio.h>
@@ -10,45 +12,63 @@
 #include "wave_packet.hpp"
 #include "gnuplot.hpp"
 #include "device.hpp"
+#include "time_params.hpp"
+
+static auto now() {
+    using namespace std;
+    time_t rawtime;
+    struct tm* timeinfo;
+    char buffer[80];
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(buffer,80,"%Y-%m-%d-%H-%M-%S",timeinfo);
+    return string(buffer);
+}
 
 class movie {
 public:
-    const string parent_folder = "/tmp/movie_tmpdir";
-    const string folder = parent_folder + "/" + ctime(& time(0));
+    const std::string parent_folder = "/tmp/movie_tmpdir";
+    const std::string folder = parent_folder + "/" + now();
 
-    inline void frame(const double t, const potential & phi);
+    inline void frame(const int m, const potential & phi);
     inline void mp4();
 
-    movie(const wave_packet psi[6], const arma::uvec E_ind[6]);
+    movie(device & dev, wave_packet psi[6], arma::uvec E_ind[6]);
 
 private:
     int calls = 0;
     int frames = 0;
 
-    const double phimin;
-    const double phimax;
+    double phimin = -1.5;
+    double phimax = +0.5;
 
-    const wave_packet psi_[6];
-    const arma::uvec E_ind_[6];
+    wave_packet * psi_;
+    arma::uvec * E_ind_;
     const int frame_skip = 5;
 
     gnuplot gp;
     device d;
 };
 
-movie::movie(device & dev, const wave_packet psi[6], const arma::uvec E_ind[6]) : d(dev), psi_(psi), E_ind_(E_ind), gp() {
+movie::movie(device & dev, wave_packet psi[6], arma::uvec E_ind[6]) : gp(), d(dev) {
+
+    psi_ = psi;
+    E_ind_ = E_ind;
 
     phimin = ((arma::min(psi_[0].E) < arma::min(psi_[1].E) ? arma::min(psi_[0].E) : arma::min(psi_[1].E))) - 0.2;
     phimax = ((arma::max(psi_[2].E) < arma::max(psi_[3].E) ? arma::max(psi_[2].E) : arma::max(psi_[3].E))) + 0.2;
 
+    std::stringstream ss("");
+
     // produce folder tree
-    system("mkdir -p " + folder);
+    ss << "mkdir -p " << folder;
+    system(ss.str().c_str());
     for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < E_indices_[i].n_rows; ++j) {
-            system("mkdir -p "
-                   + folder
-                   + "E_lattice=" + std::to_string(i)
-                   + "/energy=" + std::to_string(psi_[i].E(j)));
+        if (psi_[i].E.n_elem < 1) continue;
+        for (unsigned j = 0; j < E_ind_[i].n_rows; ++j) {
+            ss.str("");
+            ss << "mkdir -p " << folder << "/E_lattice=" << i << "/energy=" << psi_[i].E(E_ind_[i](j));
+            system(ss.str().c_str());
         }
     }
 
@@ -63,11 +83,11 @@ movie::movie(device & dev, const wave_packet psi[6], const arma::uvec E_ind[6]) 
     gp << "set style line 4 lc rgb RWTH_Blau\n";
 }
 
-void movie::frame(const double t, const potential & phi) {
-    arma::vec E_line(d.N_x);
+void movie::frame(const int m, const potential & phi) {
+    using namespace arma;
+    vec E_line(d.N_x);
     std::cout << "Producing movie-frames... ";
     std::flush(std::cout);
-    using namespace arma;
 
     vec vband = phi.data;
     vband(d.sc)  += -0.5 * d.E_gc;
@@ -89,23 +109,24 @@ void movie::frame(const double t, const potential & phi) {
 
     if ((calls++ % frame_skip) == 0) {
         for (int i = 0; i < 6; ++i) {
-            for (int j = 0; j < E_indices_[i].n_rows; ++j) {
+            if (psi_[i].E.n_elem < 1) continue;
+            for (unsigned j = 0; j < E_ind_[i].n_rows; ++j) {
 
                 // this is a line that indicates the wave's injection energy
-                E_line.fill(psi[i].E(E_indices_[i](j)));
+                E_line.fill(psi_[i].E(E_ind_[i](j)));
                 E_line -= (i % 2 == 0) ? phi.s() : phi.d();
 
                 // set correct output file
-                char filename[7];
+                char filename[20];
                 snprintf(filename, 7, "%04d.png", calls);
-                gp << "set output " << folder
-                   << "E_lattice=" << std::to_string(i)
-                   << "/energy=" << std::to_string(psi_[i].E(j))
-                   << "/" << filename << "\n";
+                gp << "set output \"" << folder
+                   << "/E_lattice=" << i
+                   << "/energy=" << psi_[i].E(E_ind_[i](j))
+                   << "/" << filename << "\"\n";
 
-                char timestring[5];
-                snprintf(time, 5, "%1.4f", t * 1e12); // time in picoseconds
-                gp << "multiplot layout 1,2 title 't = " << timestring << " ps'\n";
+                char timestring[20];
+                snprintf(timestring, 5, "%1.4f", m * t::dt * 1e12); // time in picoseconds
+                gp << "set multiplot layout 1,2 title 't = " << timestring << " ps'\n";
 
                 // psi-plot:
                 gp << "set xlabel 'x / nm'\n";
@@ -123,7 +144,7 @@ void movie::frame(const double t, const potential & phi) {
                 data[2] = arma::abs(psi_[i].data.col(j));
                 data[3] = -data[2];
                 for (unsigned p = 0; p < 4; ++p) {
-                    for(unsigned k = 0; k < psi_[i].n_rows; ++k) {
+                    for(unsigned k = 0; k < d.N_x; ++k) {
                         gp << d.x(k) << " " << data[p](k) << std::endl;
                     }
                     gp << "e" << std::endl;
@@ -138,9 +159,9 @@ void movie::frame(const double t, const potential & phi) {
                       "'-' w l ls 2 lw 2 t 'injection energy'\n";
                 data[0] = cband;
                 data[1] = vband;
-                data[2] = arma::abs(psi[i].data.col(j));
+                data[2] = arma::abs(psi_[i].data.col(j));
                 for (unsigned p = 0; p < 3; ++p) {
-                    for(unsigned k = 0; k < psi_[i].n_rows; ++k) {
+                    for(unsigned k = 0; k < d.N_x; ++k) {
                         gp << d.x(k) << " " << data[p](k) << std::endl;
                     }
                     gp << "e" << std::endl;
@@ -154,12 +175,13 @@ void movie::frame(const double t, const potential & phi) {
 }
 
 void movie::mp4() {
+    std::stringstream ss;
     for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < E_indices_[i].n_rows; ++j) {
-            // change to the correct folder
-            system("cd " + folder
-                   + "E_lattice=" + std::to_string(i)
-                   + "/energy=" + std::to_string(psi_[i].E(j)));
+        if (psi_[i].E.n_elem < 1) continue;
+        for (unsigned j = 0; j < E_ind_[i].n_rows; ++j) {
+            ss.str("");
+            ss << "cd " << folder << "/E_lattice=" << i << "/energy=" << psi_[i].E(E_ind_[i](j));
+            system(ss.str().c_str());
 
             // run the command to make an mp4 out of all the stuff
             system("ffmpeg -framerate 40 -pattern_type glob -i 'tmpfs_dir/*.png' -c:v libx264 -r 30 -pix_fmt yuv420p movie.mp4");
