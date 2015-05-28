@@ -14,6 +14,11 @@
 #include "device.hpp"
 #include "time_params.hpp"
 
+static void shell(const std::stringstream & command) {
+    system(command.str().c_str());
+    return;
+}
+
 static auto now() {
     using namespace std;
     time_t rawtime;
@@ -23,6 +28,25 @@ static auto now() {
     timeinfo = localtime(&rawtime);
     strftime(buffer,80,"%Y-%m-%d-%H-%M-%S",timeinfo);
     return string(buffer);
+}
+
+static std::string lattice_name(int i) {
+    switch (i) {
+    case 0:
+        return("left_valence");
+    case 1:
+        return("right_valence");
+    case 2:
+        return("left_conduction");
+    case 3:
+        return("right_conduction");
+    case 4:
+        return("left_tunnel");
+    case 5:
+        return("right_tunnel");
+    default:
+        return("unknown");
+    }
 }
 
 class movie {
@@ -39,8 +63,8 @@ private:
     int calls = 0;
     int frames = 0;
 
-    double phimin = -1.5;
-    double phimax = +0.5;
+    const double phimin = -1.5;
+    const double phimax = +0.5;
 
     wave_packet * psi_;
     arma::uvec * E_ind_;
@@ -48,27 +72,25 @@ private:
 
     gnuplot gp;
     device d;
+    arma::vec band_offset;
+
+    inline std::string output_folder(const int lattice, const int E_number);
+    inline std::string output_file(const int lattice, const int E_number, const int frame_number);
 };
 
-movie::movie(device & dev, wave_packet psi[6], arma::uvec E_ind[6]) : gp(), d(dev) {
+movie::movie(device & dev, wave_packet psi[6], arma::uvec E_ind[6]) : gp(), d(dev), band_offset(d.N_x) {
 
     psi_ = psi;
     E_ind_ = E_ind;
 
-    phimin = ((arma::min(psi_[0].E) < arma::min(psi_[1].E) ? arma::min(psi_[0].E) : arma::min(psi_[1].E))) - 0.2;
-    phimax = ((arma::max(psi_[2].E) < arma::max(psi_[3].E) ? arma::max(psi_[2].E) : arma::max(psi_[3].E))) + 0.2;
-
     std::stringstream ss("");
-
     // produce folder tree
-    ss << "mkdir -p " << folder;
-    system(ss.str().c_str());
     for (int i = 0; i < 6; ++i) {
-        if (psi_[i].E.n_elem < 1) continue;
-        for (unsigned j = 0; j < E_ind_[i].n_rows; ++j) {
+        if (psi_[i].E.size() < 1) continue;
+        for (unsigned j = 0; j < E_ind_[i].size(); ++j) {
             ss.str("");
-            ss << "mkdir -p " << folder << "/E_lattice=" << i << "/energy=" << psi_[i].E(E_ind_[i](j));
-            system(ss.str().c_str());
+            ss << "mkdir -p " << output_folder(i, j);
+            shell(ss);
         }
     }
 
@@ -81,52 +103,38 @@ movie::movie(device & dev, wave_packet psi[6], arma::uvec E_ind[6]) : gp(), d(de
     gp << "set style line 2 lc rgb RWTH_Rot\n";
     gp << "set style line 3 lc rgb RWTH_Blau\n";
     gp << "set style line 4 lc rgb RWTH_Blau\n";
+
+
+    // band offsets for band drowing
+    band_offset(d.sc)  += -0.5 * d.E_gc;
+    band_offset(d.s)   += -0.5 * d.E_g;
+    band_offset(d.sox) += -0.5 * d.E_g;
+    band_offset(d.g)   += -0.5 * d.E_g;
+    band_offset(d.dox) += -0.5 * d.E_g;
+    band_offset(d.d)   += -0.5 * d.E_g;
+    band_offset(d.dc)  += -0.5 * d.E_gc;
 }
 
 void movie::frame(const int m, const potential & phi) {
     using namespace arma;
     vec E_line(d.N_x);
-    std::cout << "Producing movie-frames... ";
-    std::flush(std::cout);
-
-    vec vband = phi.data;
-    vband(d.sc)  += -0.5 * d.E_gc;
-    vband(d.s)   += -0.5 * d.E_g;
-    vband(d.sox) += -0.5 * d.E_g;
-    vband(d.g)   += -0.5 * d.E_g;
-    vband(d.dox) += -0.5 * d.E_g;
-    vband(d.d)   += -0.5 * d.E_g;
-    vband(d.dc)  += -0.5 * d.E_gc;
-
-    vec cband = phi.data;
-    cband(d.sc)  += +0.5 * d.E_gc;
-    cband(d.s)   += +0.5 * d.E_g;
-    cband(d.sox) += +0.5 * d.E_g;
-    cband(d.g)   += +0.5 * d.E_g;
-    cband(d.dox) += +0.5 * d.E_g;
-    cband(d.d)   += +0.5 * d.E_g;
-    cband(d.dc)  += +0.5 * d.E_gc;
 
     if ((calls++ % frame_skip) == 0) {
+        std::cout << "Producing movie-frames... ";
+        std::flush(std::cout);
         for (int i = 0; i < 6; ++i) {
-            if (psi_[i].E.n_elem < 1) continue;
-            for (unsigned j = 0; j < E_ind_[i].n_rows; ++j) {
+            if (psi_[i].E.size() < 1) continue;
+            for (unsigned j = 0; j < E_ind_[i].size(); ++j) {
+
+                double E = psi_[i].E(E_ind_[i](j)) - ((i % 2 == 0) ? phi.s() : phi.d());
 
                 // this is a line that indicates the wave's injection energy
-                E_line.fill(psi_[i].E(E_ind_[i](j)));
-                E_line -= (i % 2 == 0) ? phi.s() : phi.d();
+                E_line.fill(E);
 
                 // set correct output file
-                char filename[20];
-                snprintf(filename, 7, "%04d.png", calls);
-                gp << "set output \"" << folder
-                   << "/E_lattice=" << i
-                   << "/energy=" << psi_[i].E(E_ind_[i](j))
-                   << "/" << filename << "\"\n";
+                gp << "set output \"" << output_file(i, j, frames++) << "\"\n";
 
-                char timestring[20];
-                snprintf(timestring, 5, "%1.4f", m * t::dt * 1e12); // time in picoseconds
-                gp << "set multiplot layout 1,2 title 't = " << timestring << " ps'\n";
+                gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << m * t::dt << " ps'\n";
 
                 // psi-plot:
                 gp << "set xlabel 'x / nm'\n";
@@ -136,15 +144,15 @@ void movie::frame(const int m, const potential & phi) {
                 gp << "p "
                       "'-' w l ls 1 lw 2 t 'real', "
                       "'-' w l ls 2 lw 2 t 'imag', "
-                      "'-' w l ls 3 lw 2 t '+abs', "
-                      "'-' w l ls 3 lw 2 t '-abs'\n";
+                      "'-' w l ls 3 lw 2 t 'abs', "
+                      "'-' w l ls 3 lw 2 notitle\n";
                 arma::vec data[4];
                 data[0] = arma::real(psi_[i].data.col(j));
                 data[1] = arma::imag(psi_[i].data.col(j));
                 data[2] = arma::abs(psi_[i].data.col(j));
                 data[3] = -data[2];
                 for (unsigned p = 0; p < 4; ++p) {
-                    for(unsigned k = 0; k < d.N_x; ++k) {
+                    for(int k = 0; k < d.N_x; ++k) {
                         gp << d.x(k) << " " << data[p](k) << std::endl;
                     }
                     gp << "e" << std::endl;
@@ -157,11 +165,13 @@ void movie::frame(const int m, const potential & phi) {
                       "'-' w l ls 3 lw 2 notitle, "
                       "'-' w l ls 3 lw 2 notitle, "
                       "'-' w l ls 2 lw 2 t 'injection energy'\n";
-                data[0] = cband;
-                data[1] = vband;
+                data[0] = phi.data - band_offset;
+                data[1] = phi.data + band_offset;
                 data[2] = arma::abs(psi_[i].data.col(j));
+
+
                 for (unsigned p = 0; p < 3; ++p) {
-                    for(unsigned k = 0; k < d.N_x; ++k) {
+                    for(int k = 0; k < d.N_x; ++k) {
                         gp << d.x(k) << " " << data[p](k) << std::endl;
                     }
                     gp << "e" << std::endl;
@@ -170,23 +180,41 @@ void movie::frame(const int m, const potential & phi) {
                 gp << "unset multiplot\n";
             }
         }
+        std::cout << "done!" << std::endl;
     }
-    std::cout << "done!" << std::endl;
+
 }
 
 void movie::mp4() {
-    std::stringstream ss;
+    static const std::stringstream ffmpeg_call("ffmpeg "
+                                               "-framerate 40 "
+                                               "-pattern_type glob -i '*.png' "
+                                               "-c:v libx264 -r 30 -pix_fmt yuv420p"
+                                               " movie.mp4");
     for (int i = 0; i < 6; ++i) {
         if (psi_[i].E.n_elem < 1) continue;
         for (unsigned j = 0; j < E_ind_[i].n_rows; ++j) {
-            ss.str("");
-            ss << "cd " << folder << "/E_lattice=" << i << "/energy=" << psi_[i].E(E_ind_[i](j));
-            system(ss.str().c_str());
+            // change to output folder
+            std::stringstream ss("cd ");
+            ss << output_folder(i, j);
+            shell(ss);
 
             // run the command to make an mp4 out of all the stuff
-            system("ffmpeg -framerate 40 -pattern_type glob -i 'tmpfs_dir/*.png' -c:v libx264 -r 30 -pix_fmt yuv420p movie.mp4");
+            shell(ffmpeg_call);
         }
     }
+}
+
+std::string movie::output_folder(const int lattice, const int E_number) {
+    std::stringstream ss("");
+    ss << folder << "/" << lattice_name(lattice) << "/energy=" << psi_[lattice].E(E_ind_[lattice](E_number)) << "eV";
+    return ss.str();
+}
+
+std::string movie::output_file(const int lattice, const int E_number, const int frame_number) {
+    std::stringstream ss("");
+    ss << output_folder(lattice, E_number) << "/" << std::setfill('0') << std::setw(4) << frame_number << ".png";
+    return ss.str();
 }
 
 
