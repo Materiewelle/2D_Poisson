@@ -9,9 +9,13 @@
 #include "voltage.hpp"
 #include "wave_packet.hpp"
 
+#ifdef MOVIEMODE
+#include "movie.hpp"
+#endif
+
 class time_evolution {
 public:
-    static constexpr auto dphi_threshold = 1e-8;
+    static constexpr auto dphi_threshold = 1e-0;
     static constexpr auto max_iterations = 50;
     static constexpr auto tunnel_current_precision = 1e-3;
 
@@ -31,6 +35,8 @@ private:
     sd_vec L;
     sd_vec q;
     sd_vec qsum;
+
+
 
     template<bool left>
     void get_tunnel_energies(arma::vec & E, arma::vec & W);
@@ -74,6 +80,17 @@ void time_evolution::solve() {
     psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
     psi[LT].init< true>(d, E_lt, W_lt, phi[0]);
     psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
+
+#ifdef MOVIEMODE
+    arma::uvec E_ind[6];
+    // ToDo: Improve this right here to something more useful
+    for (int i = 0; i < 6; ++i) {
+        int nE = psi[i].E.n_rows;
+        E_ind[i] = arma::uvec(1);
+        E_ind[i](0) = nE/2;
+    }
+    movie argo(d, psi, E_ind);
+#endif
 
     // precalculate q-values
     calculate_q();
@@ -191,7 +208,17 @@ void time_evolution::solve() {
 
         // calculate current
         I[m] = current(d, psi, phi[0], phi[m]);
+
+#ifdef MOVIEMODE
+        argo.frame(m, phi[m]);
+#endif
+
     }
+
+#ifdef MOVIEMODE
+    argo.mp4();
+#endif
+
 }
 
 template<bool left>
