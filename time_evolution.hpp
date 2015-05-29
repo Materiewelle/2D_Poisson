@@ -85,7 +85,7 @@ void time_evolution::solve() {
 #ifdef MOVIEMODE
     std::vector<std::pair<int, int>> E_ind(1);
 
-    E_ind[0] = std::make_pair(LC, 300); //some wf in left cband
+    E_ind[0] = std::make_pair(LC, 900); //some wf in left cband
 
     std::cout << "MOVIEMODE is activated!" << std::endl;
     movie argo(d, psi, E_ind);
@@ -173,6 +173,8 @@ void time_evolution::solve() {
 
             // update n
             n[m].update(d, psi, phi[m]);
+
+            plot(std::make_pair(d.x, n[m].data));
 
             // update potential
             auto dphi = phi[m].update(d, R0, n[m], mr_neo);
