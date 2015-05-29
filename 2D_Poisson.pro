@@ -28,7 +28,8 @@ HEADERS += \
     voltage.hpp \
     sd_quantity.hpp \
     movie.hpp \
-    inverter.hpp
+    inverter.hpp \
+    brent.hpp
 
 LIBS += -lblas -lgomp -lsuperlu
 

@@ -48,12 +48,12 @@ current::current(const device & d, const potential & phi)
     auto i_rc = linspace(phi.d() + 0.5 * d.E_gc, phi.d() + charge_density_impl::E_max, 50);
 
     lv(0) = integral([&] (double E) {
-        return scale * transmission(E) * (1.0 - fermi(E - phi.s(), d.F_sc));
+        return scale * transmission(E) * (fermi(E - phi.s(), d.F_sc) - 1.0);
     }, 1, i_lv, charge_density_impl::rel_tol, c::epsilon(1e-10), E_lv, W_lv)(0);
     lv.fill(lv(0));
 
     rv(0) = integral([&] (double E) {
-        return - scale * transmission(E) * (1.0 - fermi(E - phi.d(), d.F_dc));
+        return - scale * transmission(E) * (fermi(E - phi.d(), d.F_dc) - 1.0);
     }, 1, i_rv, charge_density_impl::rel_tol, c::epsilon(1e-10), E_rv, W_rv)(0);
     rv.fill(rv(0));
 
