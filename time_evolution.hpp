@@ -1,6 +1,9 @@
 #ifndef TIME_EVOLUTION_HPP
 #define TIME_EVOLUTION_HPP
 
+#include <vector>
+#include <utility>
+
 #include "anderson.hpp"
 #include "gnuplot.hpp"
 #include "sd_quantity.hpp"
@@ -80,13 +83,11 @@ void time_evolution::solve() {
     psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
 
 #ifdef MOVIEMODE
-    arma::uvec E_ind[6];
-    // ToDo: Improve this right here to something more useful
-    for (int i = 0; i < 6; ++i) {
-        int nE = psi[i].E.size();
-        E_ind[i] = arma::uvec(1);
-        E_ind[i](0) = nE/2;
-    }
+    std::vector<std::pair<int, int>> E_ind(1);
+
+    E_ind[0] = std::make_pair(LC, 300); //some wf in left cband
+
+    std::cout << "MOVIEMODE is activated!" << std::endl;
     movie argo(d, psi, E_ind);
 #endif
 
@@ -246,6 +247,8 @@ void time_evolution::calculate_q() {
     using namespace std;
     using mat22 = cx_mat::fixed<2, 2>;
 
+    cout << "precalculating the q-values..."; flush(cout);
+
     // shortcuts
     const double t1 = d.tc1;
     const double t12 = t1 * t1;
@@ -317,6 +320,7 @@ void time_evolution::calculate_q() {
         qsum.s(i) = q.s(t::N_t - 1 - i) + q.s(t::N_t - 2 - i);
         qsum.d(i) = q.d(t::N_t - 1 - i) + q.d(t::N_t - 2 - i);
     }
+    cout << " done!" << endl;
 }
 
 #endif
