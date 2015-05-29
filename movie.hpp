@@ -109,7 +109,7 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
         for (unsigned i = 0; i < E_ind.size(); ++i) {
             int lattice = E_ind[i].first;
             double E = psi[lattice].E(E_ind[i].second);
-            double E_inj = E + ((i % 2 == 0) ? phi.s() : phi.d());
+            double E_inj = E;// + ((i % 2 == 0) ? phi.s() : phi.d());
 
             // this is a line that indicates the wave's injection energy
             vec E_line(d.N_x);
@@ -182,7 +182,7 @@ void movie::mp4(const wave_packet psi[6]) {
         int lattice = E_ind[i].first;
         double E = psi[lattice].E(E_ind[i].second);
         // run the command to make an mp4 out of all the stuff
-        system(ffmpeg1 + output_folder(lattice, E) + ffmpeg2 + output_folder(lattice, E) + "movie.mp4");
+        system(ffmpeg1 + output_folder(lattice, E) + ffmpeg2 + output_folder(lattice, E) + "/movie.mp4");
     }
     std::cout << " done!" << std::endl;
 }
