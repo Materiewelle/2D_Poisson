@@ -3,6 +3,7 @@
 
 #include <armadillo>
 
+#include "brent.hpp"
 #include "device.hpp"
 #include "voltage.hpp"
 #include "steady_state.hpp"
@@ -14,7 +15,7 @@ public:
 
     inline inverter(const device & n, const device & p);
 
-    inline double solve(const voltage & V);
+    inline bool solve(const voltage & V, double & V_o);
 
     inline void output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out);
 };
@@ -25,11 +26,7 @@ inverter::inverter(const device & n, const device & p)
     : n_fet(n), p_fet(p) {
 }
 
-double inverter::solve(const voltage & V) {
-    static constexpr double tol = 0.05;
-
-    double V_0 = -0.2;
-    double V_1 = 0.6;
+bool inverter::solve(const voltage & V, double & V_o) {
 
     auto delta_I = [&] (double V_o) {
 
@@ -43,8 +40,10 @@ double inverter::solve(const voltage & V) {
         std::flush(std::cout);
         s_p.solve();
 
-        return s_n.I.total(0) + s_p.I.total(0);
+        return s_n.I.total(0) - s_p.I.total(0);
     };
+
+    return brent(delta_I, -0.2, 0.6, 0.0005, V_o);
 
 //    arma::vec V_test = arma::linspace(V_0, V_1, 25);
 //    arma::vec I_testn(V_test.size());
@@ -69,37 +68,42 @@ double inverter::solve(const voltage & V) {
 //    plot(std::make_pair(V_test, I_testp));
 //    return 0;
 
-    double dI_0 = delta_I(V_0);
-    double dI_1 = delta_I(V_1);
+//    double dI_0 = delta_I(V_0);
+//    double dI_1 = delta_I(V_1);
 
-    double sgn = dI_0 > 0;
-    if ((sgn && (dI_1 > 0)) || (!sgn && (dI_1 < 0))) {
-        std::cout << "ERROR!" << std::endl;
-        return 0;
-    }
+//    double sgn = dI_0 > 0;
+//    if ((sgn && (dI_1 > 0)) || (!sgn && (dI_1 < 0))) {
+//        std::cout << "ERROR!" << std::endl;
+//        return 0;
+//    }
 
-    double dI_2 = 1000;
-    while ((V_1 - V_0 > tol) && (dI_2 > 1e-10)) {
-        double V_2 = V_0 - dI_0 * (V_1 - V_0) / (dI_1 - dI_0);
-        double dI_2 = delta_I(V_2);
+//    double dI_2 = 1000;
+//    while ((V_1 - V_0 > tol) && (dI_2 > 1e-10)) {
+//        double V_2 = V_0 - dI_0 * (V_1 - V_0) / (dI_1 - dI_0);
+//        double dI_2 = delta_I(V_2);
 
-        if ((sgn && (dI_2 > 0)) || (!sgn && (dI_2 < 0))) {
-            V_0 = V_2;
-            dI_0 = dI_2;
-        } else {
-            V_1 = V_2;
-            dI_1 = dI_2;
-        }
-    }
+//        if ((sgn && (dI_2 > 0)) || (!sgn && (dI_2 < 0))) {
+//            V_0 = V_2;
+//            dI_0 = dI_2;
+//        } else {
+//            V_1 = V_2;
+//            dI_1 = dI_2;
+//        }
+//    }
 
-    return V_0 - dI_0 * (V_1 - V_0) / (dI_1 - dI_0);
+//    return V_0 - dI_0 * (V_1 - V_0) / (dI_1 - dI_0);
 }
 
 void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out) {
     V_g = arma::linspace(V0.g, V_g1, N);
+    V_out = arma::vec(N);
 
     for (int i = 0; i < N; ++i) {
-        V_out(i) = solve({V0.s, V_g(i), V0.d});
+        if (solve({V0.s, V_g(i), V0.d}, V_out(i))) {
+            std::cout << V_g(i) << ": " << V_out(i) << std::endl;
+        } else {
+            std::cout << V_g(i) << ": ERROR!" << std::endl;
+        }
     }
 }
 

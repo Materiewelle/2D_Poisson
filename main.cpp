@@ -9,6 +9,7 @@
 
 #include <armadillo>
 
+#include "brent.hpp"
 #include "device.hpp"
 #include "gnuplot.hpp"
 #include "inverter.hpp"
@@ -25,34 +26,34 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-//    device n_fet("n_fet digga");
-//    device p_fet("p_fet digga");
-//    p_fet.F_s  = - p_fet.F_s;
-//    p_fet.F_sc = - p_fet.F_sc;
-//    p_fet.F_d  = - p_fet.F_d;
-//    p_fet.F_dc = - p_fet.F_dc;
+    device n_fet("n_fet digga");
+    device p_fet("p_fet digga");
+    p_fet.F_s  = - p_fet.F_s;
+    p_fet.F_sc = - p_fet.F_sc;
+    p_fet.F_d  = - p_fet.F_d;
+    p_fet.F_dc = - p_fet.F_dc;
 
-//    inverter i(n_fet, p_fet);
+    inverter i(n_fet, p_fet);
+    vec V_in;
+    vec V_out;
+    i.output({0, 0.17, 0.4}, 0.23, 20, V_in, V_out);
 
-//    cout << "0.00 => " << i.solve({0, 0.1, 0.4}) << endl;
-//    cout << "0.15 => " << i.solve({0, 0.15, 0.4}) << endl;
-//    cout << "0.20 => " << i.solve({0, 0.2, 0.4}) << endl;
-//    cout << "0.25 => " << i.solve({0, 0.25, 0.4}) << endl;
-//    cout << "0.30 => " << i.solve({0, 0.3, 0.4}) << endl;
+    plot(make_pair(V_in, V_out));
+//    vec V_d;
+//    vec I;
+//    steady_state::output(p_fet, {0.0, -0.2, -0.6}, 0.2, 250, V_d, I);
+//    plot(make_pair(V_d, I));
 
-////    steady_state ss(p_fet, {0.8, 0, 1});
-////    ss.solve();
+//    device der_geraet("der Gerät");
 
-    device der_geraet("der Gerät");
+//    voltage V0{0, .2, .5};
+//    vector<voltage> V(t::N_t);
+//    for (int i = 0; i < t::N_t; ++i) {
+//        V[i] = V0;
+//    }
 
-    voltage V0{0, .2, .5};
-    vector<voltage> V(t::N_t);
-    for (int i = 0; i < t::N_t; ++i) {
-        V[i] = V0;
-    }
-
-    time_evolution te(der_geraet, V);
-    te.solve();
+//    time_evolution te(der_geraet, V);
+//    te.solve();
 
     return 0;
 }

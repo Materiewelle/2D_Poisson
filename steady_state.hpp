@@ -112,6 +112,8 @@ void steady_state::output(const device & d, const voltage & V0, double V_d1, int
     I(0) = s.I.total(0);
 
     for (int i = 1; i < N; ++i) {
+        std::cout << "Step " << i+1 << "/" << N << ": V_d=" << V_d(i) << ": ";
+        std::flush(std::cout);
         voltage V = { V0.s, V0.g, V_d(i) };
         if (reuse && conv) {
             s = steady_state(d, V, s.n);
