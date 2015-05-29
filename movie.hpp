@@ -184,7 +184,7 @@ void movie::mp4(const wave_packet psi[6]) {
         int lattice = E_ind[i].first;
         double E = psi[lattice].E(E_ind[i].second);
         // run the command to make an mp4 out of all the stuff
-        system(ffmpeg1 + output_folder(lattice, E) + ffmpeg2 << output_folder(lattice, E) << "movie.mp4");
+        system(ffmpeg1 + output_folder(lattice, E) + ffmpeg2 + output_folder(lattice, E) + "movie.mp4");
     }
     std::cout << " done!" << std::endl;
 }
