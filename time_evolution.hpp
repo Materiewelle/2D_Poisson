@@ -39,8 +39,6 @@ private:
     sd_vec q;
     sd_vec qsum;
 
-
-
     template<bool left>
     void get_tunnel_energies(arma::vec & E, arma::vec & W);
     void calculate_q();
@@ -254,17 +252,16 @@ void time_evolution::calculate_q() {
     cout << "precalculating the q-values..."; flush(cout);
 
     // shortcuts
-    double t1 = d.tc1;
-    double t12 = t1 * t1;
-    double t2 = d.tc2;
-    double t22 = t2 * t2;
-    static constexpr auto g = t::g;
-    static constexpr auto g2 = g * g;
+    const double t1 = d.tc1;
+    const double t12 = t1 * t1;
+    const double t2 = d.tc2;
+    const double t22 = t2 * t2;
+    static constexpr double g = t::g;
+    static constexpr double g2 = g * g;
+    static const mat22 eye2 = { 1, 0, 0, 1 };
 
     // get q values dependent on potential in lead
     auto get_q = [&] (double phi0) {
-        static const mat22 eye2 = { 1, 0, 0, 1 };
-
         // storage
         cx_vec qq(t::N_t + 3);
         vector<mat22> p(t::N_t + 3);
