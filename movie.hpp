@@ -106,8 +106,6 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
     using namespace arma;
 
     if ((calls++ % frame_skip) == 0) {
-        std::cout << "Producing movie-frame for selected wavefunctions...";
-        std::flush(std::cout);
         for (unsigned i = 0; i < E_ind.size(); ++i) {
             int lattice = E_ind[i].first;
             double E = psi[lattice].E(E_ind[i].second);
@@ -166,7 +164,7 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
 
             gp << "unset multiplot\n";
         }
-        std::cout << " done!" << std::endl;
+        std::cout << "produced a movie-frame in this step!" << std::endl;
     }
 
 }
