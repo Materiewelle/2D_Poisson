@@ -33,12 +33,16 @@ int main() {
     p_fet.F_d  = - p_fet.F_d;
     p_fet.F_dc = - p_fet.F_dc;
 
-    inverter i(n_fet, p_fet);
-    vec V_in;
-    vec V_out;
-    i.output({0, 0.17, 0.4}, 0.23, 20, V_in, V_out);
+//    inverter i(n_fet, p_fet);
+//    vec V_in;
+//    vec V_out;
+//    i.output({0, 0.17, 0.4}, 0.23, 20, V_in, V_out);
 
-    plot(make_pair(V_in, V_out));
+//    plot(make_pair(V_in, V_out));
+
+    time_evolution te(n_fet);
+    std::fill(begin(te.V), end(te.V), voltage{0.0, 0.2, 0.5});
+    te.solve();
 //    vec V_d;
 //    vec I;
 //    steady_state::output(p_fet, {0.0, -0.2, -0.6}, 0.2, 250, V_d, I);
