@@ -129,7 +129,7 @@ void wave_packet::remember() {
 
 void wave_packet::update_sum(int m) {
     sum.s.row(m) = old_data.row(0) + data.row(0);
-    sum.s.row(m) = old_data.row(old_data.n_rows - 1) + data.row(data.n_rows - 1);
+    sum.d.row(m) = old_data.row(old_data.n_rows - 1) + data.row(data.n_rows - 1);
 }
 
 #endif
