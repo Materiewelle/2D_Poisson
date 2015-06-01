@@ -173,10 +173,14 @@ void time_evolution::solve() {
                 }
             }
 
+            if (m % 10 == 0) {
+                plot(psi[LC].E.col(psi[LC].E.n_cols * 7 / 8));
+            }
+
             // update n
             n[m].update(d, psi, phi[m], phi[0]);
 
-            plot(std::make_pair(d.x, n[m].data));
+            //plot(std::make_pair(d.x, n[m].data));
 
             // update potential
             auto dphi = phi[m].update(d, R0, n[m], mr_neo);
