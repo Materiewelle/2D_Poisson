@@ -78,7 +78,7 @@ movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std
     // produce folder tree
     for (unsigned i = 0; i < E_ind.size(); ++i) {
         int lattice = E_ind[i].first;
-        double E = psi[lattice].E(E_ind[i].second);
+        double E = psi[lattice].E0(E_ind[i].second);
             system("mkdir -p " + output_folder(lattice, E));
     }
 
@@ -108,12 +108,11 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
     if ((calls++ % frame_skip) == 0) {
         for (unsigned i = 0; i < E_ind.size(); ++i) {
             int lattice = E_ind[i].first;
-            double E = psi[lattice].E(E_ind[i].second);
-            double E_inj = E;// + ((i % 2 == 0) ? phi.s() : phi.d());
+            double E = psi[lattice].E0(E_ind[i].second);
 
             // this is a line that indicates the wave's injection energy
             vec E_line(d.N_x);
-            E_line.fill(E_inj);
+            E_line = psi[lattice].E.col(E_ind[i].second);
 
             // set correct output file
             gp << "set output \"" << output_file(lattice, E, frames++) << "\"\n";
@@ -180,7 +179,7 @@ void movie::mp4(const wave_packet psi[6]) {
 
     for (unsigned i = 0; i < E_ind.size(); ++i) {
         int lattice = E_ind[i].first;
-        double E = psi[lattice].E(E_ind[i].second);
+        double E = psi[lattice].E0(E_ind[i].second);
         // run the command to make an mp4 out of all the stuff
         system(ffmpeg1 + output_folder(lattice, E) + ffmpeg2 + output_folder(lattice, E) + "/movie.mp4");
     }

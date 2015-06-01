@@ -1,6 +1,6 @@
 //#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
-//#define MOVIEMODE
+#define MOVIEMODE
 
 #include <iostream>
 #include <algorithm>
