@@ -20,9 +20,10 @@ enum {
 
 class wave_packet {
 public:
-    arma::vec E;
+    arma::vec E0;
     arma::vec W;
     arma::cx_mat data;
+    arma::mat E;
 
     template<bool left>
     inline void init(const device & d, const arma::vec & E, const arma::vec & W, const potential & phi);
@@ -40,6 +41,8 @@ public:
 
     inline void update_sum(int m);
 
+    inline void update_E(const device & d, const potential & phi, const potential & phi0);
+
 private:
     sd_vec in;
     sd_vec out;
@@ -48,6 +51,8 @@ private:
 
     sd_vec source;
     sd_vec memory;
+
+    bool l;
 
     // from previous time step
     arma::cx_mat old_data;
@@ -60,20 +65,22 @@ template<bool left>
 void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec & WW, const potential & phi) {
     using namespace arma;
 
-    E = EE;
+    E0 = EE;
     W = WW;
-    data = cx_mat(d.N_x * 2, E.size());
-    in = sd_vec(E.size());
-    out = sd_vec(E.size());
-    sum = sd_mat(t::N_t, E.size());
-    source = sd_vec(E.size());
-    memory = sd_vec(E.size());
+    data = cx_mat(d.N_x * 2, E0.size());
+    E = mat(d.N_x, E0.size());
+    in = sd_vec(E0.size());
+    out = sd_vec(E0.size());
+    sum = sd_mat(t::N_t, E0.size());
+    source = sd_vec(E0.size());
+    memory = sd_vec(E0.size());
+    l = left;
 
     #pragma omp parallel for schedule(static)
-    for (unsigned i = 0; i < E.size(); ++i) {
+    for (unsigned i = 0; i < E0.size(); ++i) {
         // calculate 1 column of green's function
         cx_double Sigma_s, Sigma_d;
-        cx_vec G = green_col<left>(d, phi, E(i), Sigma_s, Sigma_d);
+        cx_vec G = green_col<left>(d, phi, E0(i), Sigma_s, Sigma_d);
 
         // calculate wave function
         if (left) {
@@ -88,9 +95,11 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
         in.d(i)  = G(G.size() - 1);
 
         // calculate first layer in the leads analytically
-        out.s(i) = ((E(i) - phi.s()) * in.s(i) - d.tc1 * G(           1)) / d.tc2;
-        out.d(i) = ((E(i) - phi.d()) * in.d(i) - d.tc1 * G(G.size() - 2)) / d.tc2;
+        out.s(i) = ((E0(i) - phi.s()) * in.s(i) - d.tc1 * G(           1)) / d.tc2;
+        out.d(i) = ((E0(i) - phi.d()) * in.d(i) - d.tc1 * G(G.size() - 2)) / d.tc2;
     }
+
+    update_E(d, phi, phi);
 }
 
 void wave_packet::memory_init() {
@@ -105,16 +114,16 @@ void wave_packet::memory_update(const sd_vec & affe, unsigned m) {
 
 void wave_packet::source_init(const device & d, const sd_vec & u, const sd_vec & q) {
     using namespace std::complex_literals;
-    source.s = - 2i * t::g * u.s(1) * (d.tc2 * out.s + 1i * t::g * q.s(0) * in.s) / (1.0 + 1i * t::g * E);
-    source.d = - 2i * t::g * u.d(1) * (d.tc2 * out.d + 1i * t::g * q.d(0) * in.d) / (1.0 + 1i * t::g * E);
+    source.s = - 2i * t::g * u.s(1) * (d.tc2 * out.s + 1i * t::g * q.s(0) * in.s) / (1.0 + 1i * t::g * E0);
+    source.d = - 2i * t::g * u.d(1) * (d.tc2 * out.d + 1i * t::g * q.d(0) * in.d) / (1.0 + 1i * t::g * E0);
 }
 
 void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m) {
     using namespace std::complex_literals;
     static constexpr auto g2 = t::g * t::g;
 
-    source.s = (old_source.s % (1 - 1i * t::g * E) * u.s(m) * u.s(m-1) + 2 * g2 * L.s(1) / u.s(m) * qsum.s(t::N_t-m) * in.s) / (1 + 1i * t::g * E);
-    source.d = (old_source.d % (1 - 1i * t::g * E) * u.d(m) * u.d(m-1) + 2 * g2 * L.d(1) / u.d(m) * qsum.d(t::N_t-m) * in.d) / (1 + 1i * t::g * E);
+    source.s = (old_source.s % (1 - 1i * t::g * E0) * u.s(m) * u.s(m-1) + 2 * g2 * L.s(1) / u.s(m) * qsum.s(t::N_t-m) * in.s) / (1 + 1i * t::g * E0);
+    source.d = (old_source.d % (1 - 1i * t::g * E0) * u.d(m) * u.d(m-1) + 2 * g2 * L.d(1) / u.d(m) * qsum.d(t::N_t-m) * in.d) / (1 + 1i * t::g * E0);
 }
 
 template<class T>
@@ -130,6 +139,32 @@ void wave_packet::remember() {
 void wave_packet::update_sum(int m) {
     sum.s.row(m) = old_data.row(0) + data.row(0);
     sum.d.row(m) = old_data.row(old_data.n_rows - 1) + data.row(data.n_rows - 1);
+}
+
+void wave_packet::update_E(const device & d, const potential & phi, const potential & phi0) {
+    using namespace std;
+
+    for (unsigned i = 0; i < E.n_cols; ++i) {
+        for (unsigned j = 1; j < E.n_rows - 1; ++j) {
+            double n = 1.0 / (norm(data(2 * j, i)) + norm(data(2 * j + 1, i)));
+            double m1 = 2 * (real(data(2 * j, i)) * real(data(2 * j + 1, i)) + imag(data(2 * j, i)) * imag(data(2 * j + 1, i)));
+            arma::cx_double m2 = conj(data(2 * j, i)) * data(2 * j - 1, i);
+            arma::cx_double m3 = conj(data(2 * j + 1, i)) * data(2 * j + 2, i);
+            E(j, i) = phi(j) + n * (d.t_vec(2 * j) * m1 + real(d.t_vec(2 * j - 1) * m2 + d.t_vec(2 * j + 1) * m3));
+        }
+    }
+
+    if (l) {
+        for (unsigned i = 0; i < E.n_cols; ++i) {
+            E(0, i) = E0(i) + phi.s() - phi0.s();
+            E(E.n_rows - 1, i) = E(E.n_rows - 2, i);
+        }
+    } else {
+        for (unsigned i = 0; i < E.n_cols; ++i) {
+            E(E.n_rows - 1, i) = E0(i) + phi.d() - phi0.d();
+            E(0, i) = E(1, i);
+        }
+    }
 }
 
 #endif

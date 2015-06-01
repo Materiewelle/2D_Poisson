@@ -158,6 +158,7 @@ void time_evolution::solve() {
                     psi[i].memory_init();
                     psi[i].source_init(d, u, q);
                     psi[i].propagate(U_eff, inv);
+                    psi[i].update_E(d, phi[m], phi[0]);
                 }
             } else {
                 affe.s = - t::g * t::g * L.s({1, m - 1}) % qsum.s({t::N_t-m, t::N_t-2}) / u.s({1, m - 1}) / u.s(m);
@@ -168,6 +169,7 @@ void time_evolution::solve() {
                     psi[i].memory_update(affe, m);
                     psi[i].source_update(u, L, qsum, m);
                     psi[i].propagate(U_eff, inv);
+                    psi[i].update_E(d, phi[m], phi[0]);
                 }
             }
 
@@ -193,12 +195,14 @@ void time_evolution::solve() {
                 psi[i].memory_init();
                 psi[i].source_init(d, u, q);
                 psi[i].propagate(U_eff, inv);
+                psi[i].update_E(d, phi[m], phi[0]);
             }
         } else {
             for (int i = LT; i <= RT; ++i) {
                 psi[i].memory_update(affe, m);
                 psi[i].source_update(u, L, qsum, m);
                 psi[i].propagate(U_eff, inv);
+                psi[i].update_E(d, phi[m], phi[0]);
             }
         }
 

@@ -33,6 +33,13 @@ int main() {
     p_fet.F_d  = - p_fet.F_d;
     p_fet.F_dc = - p_fet.F_dc;
 
+//    steady_state s(n_fet, {0, 0.2, 0.5});
+//    s.solve();
+//    wave_packet psi;
+//    psi.init< true>(n_fet, s.E[LC], s.W[LC], s.phi);
+
+//    image(psi.E);
+
 //    inverter i(n_fet, p_fet);
 //    vec V_in;
 //    vec V_out;
@@ -40,8 +47,11 @@ int main() {
 
 //    plot(make_pair(V_in, V_out));
 
+
+
     time_evolution te(n_fet);
-    std::fill(begin(te.V), end(te.V), voltage{0.0, 0.2, 0.5});
+    std::fill(begin(te.V), begin(te.V) + 5, voltage{0.0, 0.2, 0.5});
+    std::fill(begin(te.V) + 5, end(te.V), voltage{0.1, 0.2, 0.5});
     te.solve();
 //    vec V_d;
 //    vec I;

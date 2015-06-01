@@ -164,19 +164,19 @@ void charge_density::update(const device & d, const wave_packet psi[4], const po
         // matrix of unweighted absolute square of psi(x, E)
         mat M = get_abs(psi[i].data);
 
-        for (unsigned j = 0; j < psi[i].E.n_rows; ++j) {
+        for (unsigned j = 0; j < psi[i].E.n_cols; ++j) {
 
             // electron statistics for current energy
             double f;
             if (i == LV || i == LC) { // source side
-                f = fermi(psi[i].E(j) - phi.s(), d.F_sc);
+                f = fermi(psi[i].E0(j) - phi.s(), d.F_sc);
             } else { // drain side
-                f = fermi(psi[i].E(j) - phi.d(), d.F_dc);
+                f = fermi(psi[i].E0(j) - phi.d(), d.F_dc);
             }
 
             for (int k = 0; k < d.N_x; ++k) {
                 // count as e- if E above branching point, count as h+ otherwise
-                n[i](k) += psi[i].W(j) * ((psi[i].E(j) >= phi.data(k)) ? f : (f - 1)) * M(k, j);
+                n[i](k) += psi[i].W(j) * ((psi[i].E(k, j) >= phi.data(k)) ? f : (f - 1)) * M(k, j);
             }
         }
     }
