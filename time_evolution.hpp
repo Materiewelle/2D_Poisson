@@ -174,7 +174,7 @@ void time_evolution::solve() {
             }
 
             // update n
-            n[m].update(d, psi, phi[m]);
+            n[m].update(d, psi, phi[m], phi[0]);
 
             plot(std::make_pair(d.x, n[m].data));
 

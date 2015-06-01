@@ -20,7 +20,7 @@ public:
     inline charge_density();
 
     inline void update(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]);
-    inline void update(const device & d, const wave_packet psi[4], const potential & phi);
+    inline void update(const device & d, const wave_packet psi[4], const potential & phi, const potential & phi0);
 };
 
 // rest of includes
@@ -137,7 +137,7 @@ void charge_density::update(const device & d, const potential & phi, arma::vec E
     data = (n_sv + n_sc + n_dv + n_dc) * scale + get_n0(d);
 }
 
-void charge_density::update(const device & d, const wave_packet psi[4], const potential & phi) {
+void charge_density::update(const device & d, const wave_packet psi[4], const potential & phi, const potential & phi0) {
     using namespace arma;
     using namespace charge_density_impl;
 
@@ -169,14 +169,14 @@ void charge_density::update(const device & d, const wave_packet psi[4], const po
             // electron statistics for current energy
             double f;
             if (i == LV || i == LC) { // source side
-                f = fermi(psi[i].E0(j) - phi.s(), d.F_sc);
+                f = fermi(psi[i].E0(j) - phi0.s(), d.F_sc);
             } else { // drain side
-                f = fermi(psi[i].E0(j) - phi.d(), d.F_dc);
+                f = fermi(psi[i].E0(j) - phi0.d(), d.F_dc);
             }
 
             for (int k = 0; k < d.N_x; ++k) {
                 // count as e- if E above branching point, count as h+ otherwise
-                n[i](k) += psi[i].W(j) * ((psi[i].E(k, j) >= phi.data(k)) ? f : (f - 1)) * M(k, j);
+                n[i](k) += psi[i].W(j) * ((psi[i].E(k, j) >= phi(k)) ? f : (f - 1)) * M(k, j);
             }
         }
     }

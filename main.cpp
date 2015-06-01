@@ -50,8 +50,8 @@ int main() {
 
 
     time_evolution te(n_fet);
-    std::fill(begin(te.V), begin(te.V) + 5, voltage{0.0, 0.2, 0.5});
-    std::fill(begin(te.V) + 5, end(te.V), voltage{0.1, 0.2, 0.5});
+    std::fill(begin(te.V), begin(te.V) + 2, voltage{0.0, 0.2, 0.5});
+    std::fill(begin(te.V) + 2, end(te.V), voltage{0.1, 0.2, 0.5});
     te.solve();
 //    vec V_d;
 //    vec I;
