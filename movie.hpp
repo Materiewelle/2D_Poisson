@@ -115,8 +115,8 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
             E_line = psi[lattice].E.col(E_ind[i].second);
 
             // set correct output file
-            gp << "set output \"" << output_file(lattice, E, frames++) << "\"\n";
-            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << m * t::dt << " ps'\n";
+            gp << "set output \"" << output_file(lattice, E, frames) << "\"\n";
+            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << m * t::dt * 1e12 << " ps'\n";
 
 
             /* Having all the stuff we want to plot
@@ -163,9 +163,12 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
 
             gp << "unset multiplot\n";
         }
+        std::flush(gp);
         std::cout << "produced a movie-frame in this step!" << std::endl;
-    }
 
+        // update frame number
+        ++frames;
+    }
 }
 
 void movie::mp4(const wave_packet psi[6]) {

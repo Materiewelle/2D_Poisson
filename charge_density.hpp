@@ -143,7 +143,7 @@ void charge_density::update(const device & d, const wave_packet psi[4], const po
 
 
     // get abs(psi)²
-    auto get_abs = [] (const cx_mat & m) {
+    auto get_abs = [] (const cx_mat & m) -> mat {
         mat ret(m.n_rows / 2, m.n_cols);
         auto ptr0 = m.memptr();
         auto ptr1 = ret.memptr();
