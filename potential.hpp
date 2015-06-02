@@ -543,14 +543,14 @@ arma::vec potential_impl::get_R0(const device & d, const voltage & V) {
 
 arma::vec potential_impl::get_R(const device & d, const arma::vec & R0, const charge_density & n) {
     arma::vec R = R0;
-    R({arma::uword((d.M_cnt - 1) * d.N_x), arma::uword(d.M_cnt * d.N_x - 1)}) += n.data * d.r_cnt * 1e9; // 10^9 because of m->nm in epsilon_0
+    R({arma::uword((d.M_cnt - 1) * d.N_x), arma::uword(d.M_cnt * d.N_x - 1)}) += n.total * d.r_cnt * 1e9; // 10^9 because of m->nm in epsilon_0
     return R;
 }
 
 void plot_phi2D(const device & d, const voltage & V) {
     charge_density n;
-    n.data.resize(d.N_x);
-    n.data.fill(0);
+    n.total.resize(d.N_x);
+    n.total.fill(0);
     plot_phi2D(d, V, n);
 }
 

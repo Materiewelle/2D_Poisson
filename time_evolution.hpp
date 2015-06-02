@@ -19,7 +19,7 @@
 class time_evolution {
 public:
     static constexpr auto dphi_threshold = 1e-8;
-    static constexpr auto max_iterations = 50;
+    static constexpr auto max_iterations = 25;
     static constexpr auto tunnel_current_precision = 1e-3;
 
     device d;
@@ -117,7 +117,7 @@ void time_evolution::solve() {
     for (unsigned m = 1; m < t::N_t; ++m) {
 
         // estimate charge density from previous values
-        n[m].data = (m == 1) ? n[m-1].data : (2 * n[m-1].data - n[m-2].data);
+        n[m].total = (m == 1) ? n[m-1].total : (2 * n[m-1].total - n[m-2].total);
 
         vec R0 = potential_impl::get_R0(d, V[m]);
 
@@ -176,7 +176,7 @@ void time_evolution::solve() {
             }
 
             // update n
-            n[m].update(d, psi, phi[m], phi[0]);
+            n[m].update(d, psi, phi[m]);
 
             // update potential
             auto dphi = phi[m].update(d, R0, n[m], mr_neo);

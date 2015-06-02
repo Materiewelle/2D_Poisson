@@ -21,6 +21,7 @@ enum {
 class wave_packet {
 public:
     arma::vec E0;
+    arma::vec F0;
     arma::vec W;
     arma::cx_mat data;
     arma::mat E;
@@ -66,6 +67,11 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
     using namespace arma;
 
     E0 = EE;
+    if (left) {
+        F0 = fermi(E0 - phi.s(), d.F_sc);
+    } else {
+        F0 = fermi(E0 - phi.d(), d.F_dc);
+    }
     W = WW;
     data = cx_mat(d.N_x * 2, E0.size());
     E = mat(d.N_x, E0.size());

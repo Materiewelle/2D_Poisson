@@ -18,7 +18,7 @@ public:
 
     inline current();
     inline current(const device & d, const potential & phi);
-    inline current(const device & d, const wave_packet psi[6], const potential & phi0, const potential & phi);
+    inline current(const device & d, const wave_packet psi[4], const potential & phi);
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,8 +91,57 @@ current::current(const device & d, const potential & phi)
     total = lv + rv + lc + rc + lt + rt;
 }
 
-current::current(const device & d, const wave_packet psi[6], const potential & phi0, const potential & phi)
+current::current(const device & d, const wave_packet psi[6], const potential & phi)
     : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x), lt(d.N_x), rt(d.N_x) {
+    using namespace arma;
+
+    auto get_I = [&d, &phi] (const wave_packet & psi, vec & I) {
+        // initial value = 0
+        I.fill(0.0);
+
+        // loop over all energies
+        #pragma omp parallel for schedule(static)
+        for (unsigned i = 0; i < psi.E0.size(); ++i) {
+            // get fermi factor and weight
+            double f = psi.F0(i);
+            double W = psi.W(i);
+
+            // a: current from cell j-1 to j; b: current from cell j to j+1
+            double a;
+            double b = d.t_vec(1) * (std::conj(psi.data(2, i)) * psi.data(1, i)).imag();
+
+            int j = 0;
+
+            // first value: just take b (current from cell 0 to 1)
+            I(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+            for (j = 1; j < d.N_x - 1; ++j) {
+                a = b;
+                b = d.t_vec(j * 2 + 1) * (std::conj(psi.data(2 * j + 2, i)) * psi.data(2 * j + 1, i)).imag();
+
+                // average of a and b
+                I(j) += 0.5 * (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+            }
+            // last value: take old b (current from cell N_x - 2 to N_x - 1)
+            I(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+        }
+    };
+
+    // calculate currents for all areas
+    get_I(psi[LV], lv);
+    get_I(psi[RV], rv);
+    get_I(psi[LC], lc);
+    get_I(psi[RC], rc);
+
+    // scaling
+    static constexpr double scale = 4.0 * c::e * c::e / c::h_bar / M_PI;
+    lv *= scale;
+    rv *= scale;
+    lc *= scale;
+    rc *= scale;
+
+    // calculate total current
+    total = lv + rv + lc + rc;
+
 //    using namespace arma;
 
 //    // get imag(conj(psi) * psi)
@@ -123,6 +172,11 @@ current::current(const device & d, const wave_packet psi[6], const potential & p
 //    rc = scale * psi_I_rc * psi[RC].W;
 //    lt.fill(0.0);
 //    rt.fill(0.0);
+
+//    if (psi[LT].E0.size() > 0) {
+//        auto psi_I_lt = get_psi_I(psi[LT].data);
+
+//    }
 
 //    if (psi[LT].E.size() > 0) {
 //        auto psi_I_lt = get_psi_I(psi[LT].data);
