@@ -82,7 +82,7 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
     memory = sd_vec(E0.size());
     l = left;
 
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(static)
     for (unsigned i = 0; i < E0.size(); ++i) {
         // calculate 1 column of green's function
         cx_double Sigma_s, Sigma_d;

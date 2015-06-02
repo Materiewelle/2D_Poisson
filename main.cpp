@@ -1,4 +1,4 @@
-#define ARMA_NO_DEBUG    // no bound checks
+//#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 #define MOVIEMODE
 

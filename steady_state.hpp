@@ -63,7 +63,7 @@ bool steady_state::solve() {
     // repeat until potential does not change anymore or iteration limit has been reached
     for (it = 1; it <= max_iterations; ++it) {
         // update charge density
-        n.update(d, phi, E, W);
+        n = { d, phi, E, W };
 
         // update potential
         dphi = phi.update(d, R0, n, mr_neo);

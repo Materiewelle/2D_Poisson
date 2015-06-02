@@ -91,8 +91,8 @@ current::current(const device & d, const potential & phi)
     total = lv + rv + lc + rc + lt + rt;
 }
 
-current::current(const device & d, const wave_packet psi[6], const potential & phi)
-    : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x), lt(d.N_x), rt(d.N_x) {
+current::current(const device & d, const wave_packet psi[4], const potential & phi)
+    : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x) {
     using namespace arma;
 
     auto get_I = [&d, &phi] (const wave_packet & psi, vec & I) {
@@ -100,29 +100,40 @@ current::current(const device & d, const wave_packet psi[6], const potential & p
         I.fill(0.0);
 
         // loop over all energies
-        #pragma omp parallel for schedule(static)
-        for (unsigned i = 0; i < psi.E0.size(); ++i) {
-            // get fermi factor and weight
-            double f = psi.F0(i);
-            double W = psi.W(i);
+        #pragma omp parallel
+        {
+            vec I_thread(I.size());
+            I_thread.fill(0.0);
 
-            // a: current from cell j-1 to j; b: current from cell j to j+1
-            double a;
-            double b = d.t_vec(1) * (std::conj(psi.data(2, i)) * psi.data(1, i)).imag();
+            #pragma omp for schedule(static)
+            for (unsigned i = 0; i < psi.E0.size(); ++i) {
+                // get fermi factor and weight
+                double f = psi.F0(i);
+                double W = psi.W(i);
 
-            int j = 0;
+                // a: current from cell j-1 to j; b: current from cell j to j+1
+                double a;
+                double b = d.t_vec(1) * (std::conj(psi.data(2, i)) * psi.data(1, i)).imag();
 
-            // first value: just take b (current from cell 0 to 1)
-            I(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
-            for (j = 1; j < d.N_x - 1; ++j) {
-                a = b;
-                b = d.t_vec(j * 2 + 1) * (std::conj(psi.data(2 * j + 2, i)) * psi.data(2 * j + 1, i)).imag();
+                int j = 0;
 
-                // average of a and b
-                I(j) += 0.5 * (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                // first value: just take b (current from cell 0 to 1)
+                I_thread(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                for (j = 1; j < d.N_x - 1; ++j) {
+                    a = b;
+                    b = d.t_vec(j * 2 + 1) * (std::conj(psi.data(2 * j + 2, i)) * psi.data(2 * j + 1, i)).imag();
+
+                    // average of a and b
+                    I_thread(j) += 0.5 * (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                }
+                // last value: take old b (current from cell N_x - 2 to N_x - 1)
+                I_thread(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
             }
-            // last value: take old b (current from cell N_x - 2 to N_x - 1)
-            I(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+
+            #pragma omp critical
+            {
+                I += I_thread;
+            }
         }
     };
 

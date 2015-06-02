@@ -22,9 +22,8 @@ public:
     arma::vec total;
 
     inline charge_density();
-
-    inline void update(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]);
-    inline void update(const device & d, const wave_packet psi[4], const potential & phi);
+    inline charge_density(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]);
+    inline charge_density(const device & d, const wave_packet psi[4], const potential & phi);
 };
 
 // rest of includes
@@ -64,7 +63,7 @@ namespace charge_density_impl {
 charge_density::charge_density() {
 }
 
-void charge_density::update(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]) {
+charge_density::charge_density(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]) {
     using namespace arma;
     using namespace charge_density_impl;
 
@@ -146,7 +145,8 @@ void charge_density::update(const device & d, const potential & phi, arma::vec E
     total = lv + rv + lc + rc + get_n0(d);
 }
 
-void charge_density::update(const device & d, const wave_packet psi[4], const potential & phi) {
+charge_density::charge_density(const device & d, const wave_packet psi[4], const potential & phi)
+    : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x) {
     using namespace arma;
     using namespace charge_density_impl;
 
@@ -155,16 +155,28 @@ void charge_density::update(const device & d, const wave_packet psi[4], const po
         n.fill(0.0);
 
         // loop over all energies
-        #pragma omp parallel for schedule(static)
-        for (unsigned i = 0; i < psi.E0.size(); ++i) {
-            // get fermi factor and weight
-            double f = psi.F0(i);
-            double W = psi.W(i);
+        #pragma omp parallel
+        {
+            vec n_thread(n.size());
+            n_thread.fill(0.0);
 
-            for (int j = 0; j < d.N_x; ++j) {
-                double a = std::norm(psi.data(2 * j    , i));
-                double b = std::norm(psi.data(2 * j + 1, i));
-                n(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+            #pragma omp for schedule(static)
+            for (unsigned i = 0; i < psi.E0.size(); ++i) {
+                // get fermi factor and weight
+                double f = psi.F0(i);
+                double W = psi.W(i);
+
+                for (int j = 0; j < d.N_x; ++j) {
+                    double a = std::norm(psi.data(2 * j    , i));
+                    double b = std::norm(psi.data(2 * j + 1, i));
+                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                }
+            }
+            // implied omp barrier
+
+            #pragma omp critical
+            {
+                n += n_thread;
             }
         }
     };
