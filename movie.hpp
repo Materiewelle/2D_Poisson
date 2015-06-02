@@ -175,7 +175,7 @@ void movie::mp4(const wave_packet psi[6]) {
     std::cout << "producung mp4 video files from frames...";
     std::flush(std::cout);
     static const std::string ffmpeg1 = "ffmpeg "
-                                       "-framerate 5 "
+                                       "-framerate 30 "
                                        "-pattern_type glob -i '";
     static const std::string ffmpeg2 = "/*.png' "
                                        "-c:v libx264 -r 30 -pix_fmt yuv420p ";
