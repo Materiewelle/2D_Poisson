@@ -68,10 +68,10 @@ void time_evolution::solve() {
     n[0]   = s.n;
 
     // get tunnel energies
-    arma::vec E_lt, E_rt;
-    arma::vec W_lt, W_rt;
-    get_tunnel_energies< true>(E_lt, W_lt);
-    get_tunnel_energies<false>(E_rt, W_rt);
+//    arma::vec E_lt, E_rt;
+//    arma::vec W_lt, W_rt;
+//    get_tunnel_energies< true>(E_lt, W_lt);
+//    get_tunnel_energies<false>(E_rt, W_rt);
 
     // get initial wavefunctions
     wave_packet psi[6];
@@ -79,15 +79,15 @@ void time_evolution::solve() {
     psi[RV].init<false>(d, s.E[RV], s.W[RV], phi[0]);
     psi[LC].init< true>(d, s.E[LC], s.W[LC], phi[0]);
     psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
-    psi[LT].init< true>(d, E_lt, W_lt, phi[0]);
-    psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
+//    psi[LT].init< true>(d, E_lt, W_lt, phi[0]);
+//    psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
 
 #ifdef MOVIEMODE
     std::vector<std::pair<int, int>> E_ind(3);
 
     E_ind[0] = std::make_pair(LV, psi[LV].E.n_cols * 1 / 8);
-    E_ind[1] = std::make_pair(RC, psi[RC].E.n_cols * 7 / 8); //some wf in left cband
-    E_ind[2] = std::make_pair(LC, psi[LC].E.n_cols * 7 / 8);
+    E_ind[1] = std::make_pair(RC, psi[RC].E.n_cols * 1 / 8);
+    E_ind[2] = std::make_pair(LC, psi[LC].E.n_cols * 15 / 16);
 
     std::cout << "MOVIEMODE is activated!" << std::endl;
     movie argo(d, psi, E_ind);
@@ -190,21 +190,21 @@ void time_evolution::solve() {
         }
 
         // update wf in tunneling-region
-        if (m == 1) {
-            for (int i = LT; i <= RT; ++i) {
-                psi[i].memory_init();
-                psi[i].source_init(d, u, q);
-                psi[i].propagate(U_eff, inv);
-                psi[i].update_E(d, phi[m], phi[0]);
-            }
-        } else {
-            for (int i = LT; i <= RT; ++i) {
-                psi[i].memory_update(affe, m);
-                psi[i].source_update(u, L, qsum, m);
-                psi[i].propagate(U_eff, inv);
-                psi[i].update_E(d, phi[m], phi[0]);
-            }
-        }
+//        if (m == 1) {
+//            for (int i = LT; i <= RT; ++i) {
+//                psi[i].memory_init();
+//                psi[i].source_init(d, u, q);
+//                psi[i].propagate(U_eff, inv);
+//                psi[i].update_E(d, phi[m], phi[0]);
+//            }
+//        } else {
+//            for (int i = LT; i <= RT; ++i) {
+//                psi[i].memory_update(affe, m);
+//                psi[i].source_update(u, L, qsum, m);
+//                psi[i].propagate(U_eff, inv);
+//                psi[i].update_E(d, phi[m], phi[0]);
+//            }
+//        }
 
         // update sum
         for (int i = 0; i < 6; ++i) {
@@ -212,7 +212,7 @@ void time_evolution::solve() {
         }
 
         // calculate current
-        I[m] = current(d, psi, phi[0], phi[m]);
+//        I[m] = current(d, psi, phi[0], phi[m]);
 
 #ifdef MOVIEMODE
         argo.frame(m, phi[m], psi);

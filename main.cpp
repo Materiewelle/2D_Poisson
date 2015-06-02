@@ -55,6 +55,7 @@ int main() {
     }
     std::fill(begin(te.V) + 22, end(te.V), voltage{0.05, 0.2, 0.5});
     te.solve();
+
 //    vec V_d;
 //    vec I;
 //    steady_state::output(p_fet, {0.0, -0.2, -0.6}, 0.2, 250, V_d, I);

@@ -52,7 +52,7 @@ public:
     inline void frame(const int m, const potential & phi, const wave_packet psi[6]);
     inline void mp4(const wave_packet psi[6]);
 
-    inline movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> E_i);
+    inline movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> & E_i);
 
 private:
     int calls; // how many times has frame() been called?
@@ -72,7 +72,7 @@ private:
     inline std::string output_file(int lattice, double E, int frame_number);
 };
 
-movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> E_i)
+movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> & E_i)
     : calls(0), frames(0), d(dev), E_ind(E_i), band_offset(d.N_x) {
 
     // produce folder tree

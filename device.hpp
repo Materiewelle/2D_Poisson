@@ -25,11 +25,11 @@ public:
 
     // geometry (everything in nm)
     double l_sc     = 12;                                           // source contact length
-    double l_s      = 5;                                            // source length
-    double l_sox    = 5;                                            // source oxide length
-    double l_g      = 10;                                           // gate length
-    double l_dox    = 5;                                            // drain oxide length
-    double l_d      = 5;                                            // drain length
+    double l_s      = 2;                                            // source length
+    double l_sox    = 4;                                            // source oxide length
+    double l_g      = 9;                                           // gate length
+    double l_dox    = 4;                                            // drain oxide length
+    double l_d      = 2;                                            // drain length
     double l_dc     = 12;                                           // drain contact length
     double l        = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;// device length
     double r_cnt    = 1;                                            // CNT radius

@@ -40,7 +40,7 @@ namespace charge_density_impl {
     static constexpr int initial_waypoints = 30;
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
-    static constexpr double rel_tol  =7e-3;
+    static constexpr double rel_tol = 2e-2;
 
     static inline arma::vec get_bound_states(const device & d, const potential & phi);
     static inline arma::vec get_bound_states(const device & d, const potential & phi, double E0, double E1);
@@ -154,7 +154,7 @@ void charge_density::update(const device & d, const wave_packet psi[4], const po
     };
 
     vec n[4]; // charge density containers
-    #pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < 4; ++i) { // loop over all energy lattices
 
         // initialize result vector
