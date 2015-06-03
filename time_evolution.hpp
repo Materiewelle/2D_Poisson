@@ -19,8 +19,8 @@
 class time_evolution {
 public:
     static constexpr auto dphi_threshold = 1e-8;
-    static constexpr auto max_iterations = 50;
-    static constexpr auto tunnel_current_precision = 1e-3;
+    static constexpr auto max_iterations = 25;
+//    static constexpr auto tunnel_current_precision = 1e-3;
 
     device d;
     std::vector<current> I;
@@ -67,27 +67,20 @@ void time_evolution::solve() {
     phi[0] = s.phi;
     n[0]   = s.n;
 
-    // get tunnel energies
-//    arma::vec E_lt, E_rt;
-//    arma::vec W_lt, W_rt;
-//    get_tunnel_energies< true>(E_lt, W_lt);
-//    get_tunnel_energies<false>(E_rt, W_rt);
-
     // get initial wavefunctions
-    wave_packet psi[6];
+    wave_packet psi[4];
     psi[LV].init< true>(d, s.E[LV], s.W[LV], phi[0]);
     psi[RV].init<false>(d, s.E[RV], s.W[RV], phi[0]);
     psi[LC].init< true>(d, s.E[LC], s.W[LC], phi[0]);
     psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
-//    psi[LT].init< true>(d, E_lt, W_lt, phi[0]);
-//    psi[RT].init<false>(d, E_rt, W_rt, phi[0]);
 
 #ifdef MOVIEMODE
-    std::vector<std::pair<int, int>> E_ind(3);
+    std::vector<std::pair<int, int>> E_ind(4);
 
-    E_ind[0] = std::make_pair(LV, psi[LV].E.n_cols * 1 / 8);
-    E_ind[1] = std::make_pair(RC, psi[RC].E.n_cols * 1 / 8);
-    E_ind[2] = std::make_pair(LC, psi[LC].E.n_cols * 15 / 16);
+    E_ind[0] = std::make_pair(LV, psi[LV].E0.size() *  1 /  8);
+    E_ind[1] = std::make_pair(RV, psi[RV].E0.size() *  1 /  8);
+    E_ind[2] = std::make_pair(LC, psi[LC].E0.size() * 15 / 16);
+    E_ind[3] = std::make_pair(RC, psi[RC].E0.size() * 15 / 16);
 
     std::cout << "MOVIEMODE is activated!" << std::endl;
     movie argo(d, psi, E_ind);
@@ -117,7 +110,7 @@ void time_evolution::solve() {
     for (unsigned m = 1; m < t::N_t; ++m) {
 
         // estimate charge density from previous values
-        n[m].data = (m == 1) ? n[m-1].data : (2 * n[m-1].data - n[m-2].data);
+        n[m].total = (m == 1) ? n[m-1].total : (2 * n[m-1].total - n[m-2].total);
 
         vec R0 = potential_impl::get_R0(d, V[m]);
 
@@ -126,7 +119,7 @@ void time_evolution::solve() {
         mr_neo.reset(phi[m].data);
 
         // current data becomes old data
-        for (int i = 0; i < 6; ++i) {
+        for (int i = 0; i < 4; ++i) {
             psi[i].remember();
         }
         old_L = L;
@@ -176,7 +169,7 @@ void time_evolution::solve() {
             }
 
             // update n
-            n[m].update(d, psi, phi[m], phi[0]);
+            n[m] = {d, psi, phi[m] };
 
             // update potential
             auto dphi = phi[m].update(d, R0, n[m], mr_neo);
@@ -189,30 +182,13 @@ void time_evolution::solve() {
             }
         }
 
-        // update wf in tunneling-region
-//        if (m == 1) {
-//            for (int i = LT; i <= RT; ++i) {
-//                psi[i].memory_init();
-//                psi[i].source_init(d, u, q);
-//                psi[i].propagate(U_eff, inv);
-//                psi[i].update_E(d, phi[m], phi[0]);
-//            }
-//        } else {
-//            for (int i = LT; i <= RT; ++i) {
-//                psi[i].memory_update(affe, m);
-//                psi[i].source_update(u, L, qsum, m);
-//                psi[i].propagate(U_eff, inv);
-//                psi[i].update_E(d, phi[m], phi[0]);
-//            }
-//        }
-
         // update sum
-        for (int i = 0; i < 6; ++i) {
+        for (int i = 0; i < 4; ++i) {
             psi[i].update_sum(m);
         }
 
         // calculate current
-//        I[m] = current(d, psi, phi[0], phi[m]);
+        I[m] = current(d, psi, phi[m]);
 
 #ifdef MOVIEMODE
         argo.frame(m, phi[m], psi);
@@ -226,27 +202,27 @@ void time_evolution::solve() {
 
 }
 
-template<bool left>
-void time_evolution::get_tunnel_energies(arma::vec & E, arma::vec & W) {
-    double max = 0.0;
-    double sgn = left ? 1.0 : -1.0;
-    for (unsigned i = 0; i < V.size(); ++i) {
-        double delta = (V[i].d + d.F_dc - V[i].s - d.F_sc) * sgn - 0.96 * d.E_gc;
-        if (delta > max) {
-            max = delta;
-        }
-    }
-    if (max > 0) {
-        double E0 = (left ? (- V[0].s - d.F_sc) : (- V[0].d - d.F_dc)) - 0.48 * d.E_gc;
-        int N = std::round(max / tunnel_current_precision);
-        E = arma::linspace(E0 - max, E0, N);
-        W = arma::vec(N);
-        W.fill(E(1)-E(0));
-    } else {
-        E = arma::vec(arma::uword(0));
-        W = arma::vec(arma::uword(0));
-    }
-}
+//template<bool left>
+//void time_evolution::get_tunnel_energies(arma::vec & E, arma::vec & W) {
+//    double max = 0.0;
+//    double sgn = left ? 1.0 : -1.0;
+//    for (unsigned i = 0; i < V.size(); ++i) {
+//        double delta = (V[i].d + d.F_dc - V[i].s - d.F_sc) * sgn - 0.96 * d.E_gc;
+//        if (delta > max) {
+//            max = delta;
+//        }
+//    }
+//    if (max > 0) {
+//        double E0 = (left ? (- V[0].s - d.F_sc) : (- V[0].d - d.F_dc)) - 0.48 * d.E_gc;
+//        int N = std::round(max / tunnel_current_precision);
+//        E = arma::linspace(E0 - max, E0, N);
+//        W = arma::vec(N);
+//        W.fill(E(1)-E(0));
+//    } else {
+//        E = arma::vec(arma::uword(0));
+//        W = arma::vec(arma::uword(0));
+//    }
+//}
 
 void time_evolution::calculate_q() {
     using namespace arma;
