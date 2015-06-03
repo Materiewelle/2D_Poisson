@@ -154,13 +154,13 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
         // initial value = 0
         n.fill(0.0);
 
-        // loop over all energies
         #pragma omp parallel
         {
             vec n_thread(n.size());
             n_thread.fill(0.0);
 
-            #pragma omp for schedule(static)
+            // loop over all energies
+            #pragma omp for schedule(static) nowait
             for (unsigned i = 0; i < psi.E0.size(); ++i) {
                 // get fermi factor and weight
                 double f = psi.F0(i);
@@ -172,7 +172,6 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                     n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
                 }
             }
-            // implied omp barrier
 
             #pragma omp critical
             {
@@ -196,55 +195,6 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
 
     // calculate total charge density with doping
     total = lv + rv + lc + rc + get_n0(d);
-
-
-//    using namespace arma;
-//    using namespace charge_density_impl;
-
-//    // get abs(psi)²
-//    auto get_abs = [] (const cx_mat & m) -> mat {
-//        mat ret(m.n_rows / 2, m.n_cols);
-//        auto ptr0 = m.memptr();
-//        auto ptr1 = ret.memptr();
-//        for (unsigned i = 0; i < m.n_elem; i += 2) {
-//            (*ptr1++) = std::norm(ptr0[i]) + std::norm(ptr0[i + 1]);
-//        }
-//        return ret;
-//    };
-
-//    vec n[4]; // charge density containers
-//    #pragma omp parallel for schedule(dynamic)
-//    for (int i = 0; i < 4; ++i) { // loop over all energy lattices
-
-//        // initialize result vector
-//        n[i] = vec(d.N_x);
-//        n[i].fill(0);
-
-//        // matrix of unweighted absolute square of psi(x, E)
-//        mat M = get_abs(psi[i].data);
-
-//        for (unsigned j = 0; j < psi[i].E.n_cols; ++j) {
-
-//            // electron statistics for current energy
-//            double f;
-//            if (i == LV || i == LC) { // source side
-//                f = fermi(psi[i].E0(j) - phi0.s(), d.F_sc);
-//            } else { // drain side
-//                f = fermi(psi[i].E0(j) - phi0.d(), d.F_dc);
-//            }
-
-//            for (int k = 0; k < d.N_x; ++k) {
-//                // count as e- if E above branching point, count as h+ otherwise
-//                n[i](k) += psi[i].W(j) * ((psi[i].E(k, j) >= phi(k)) ? f : (f - 1)) * M(k, j);
-//            }
-//        }
-//    }
-
-//    // scaling factor
-//    double scale = - 0.5 * c::e / M_PI / M_PI / d.r_cnt / d.dr / d.dx;
-
-//    // scaling and doping
-//    data = (n[LV] + n[RV] + n[LC] + n[RC]) * scale + get_n0(d);
 }
 
 arma::vec charge_density_impl::get_bound_states(const device & d, const potential & phi) {

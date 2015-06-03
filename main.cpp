@@ -26,12 +26,8 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device n_fet("n_fet digga");
-    device p_fet("p_fet digga");
-    p_fet.F_s  = - p_fet.F_s;
-    p_fet.F_sc = - p_fet.F_sc;
-    p_fet.F_d  = - p_fet.F_d;
-    p_fet.F_dc = - p_fet.F_dc;
+    device nfet("nfet digga", nfet_model, standard_geometry);
+    device pfet("pfet digga", pfet_model, standard_geometry);
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
 //    s.solve();
@@ -47,7 +43,7 @@ int main() {
 
 //    plot(make_pair(V_in, V_out));
 
-    time_evolution te(n_fet);
+    time_evolution te(nfet);
     std::fill(begin(te.V), begin(te.V) + 2, voltage{0.0, 0.2, 0.5});
     vec ramp = linspace(0, 0.05, 20);
     for (int i = 2; i < 22; ++i) {

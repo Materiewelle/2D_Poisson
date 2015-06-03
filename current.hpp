@@ -99,13 +99,13 @@ current::current(const device & d, const wave_packet psi[4], const potential & p
         // initial value = 0
         I.fill(0.0);
 
-        // loop over all energies
         #pragma omp parallel
         {
             vec I_thread(I.size());
             I_thread.fill(0.0);
 
-            #pragma omp for schedule(static)
+            // loop over all energies
+            #pragma omp for schedule(static) nowait
             for (unsigned i = 0; i < psi.E0.size(); ++i) {
                 // get fermi factor and weight
                 double f = psi.F0(i);
