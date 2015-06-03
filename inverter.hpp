@@ -44,54 +44,6 @@ bool inverter::solve(const voltage & V, double & V_o) {
     };
 
     return brent(delta_I, -0.2, 0.6, 0.0005, V_o);
-
-//    arma::vec V_test = arma::linspace(V_0, V_1, 25);
-//    arma::vec I_testn(V_test.size());
-//    arma::vec I_testp(V_test.size());
-//    for (int i = 0; i < V_test.size(); ++i) {
-//        steady_state s_n(n_fet, {V.s, V.g, V_test(i)});
-//        steady_state s_p(p_fet, {V_test(i), V.g, V.d});
-//        std::cout << "n: " << V.s << ", " << V.g << ", " << V_test(i) << ": ";
-//        std::flush(std::cout);
-//        s_n.solve();
-//        std::cout << "p: " << V_test(i) << ", " << V.g << ", " << V.d << ": ";
-//        std::flush(std::cout);
-//        s_p.solve();
-//        I_testn(i) = s_n.I.total(0);
-//        I_testp(i) = s_p.I.total(0);
-//        if ((i == 0) || (i == V_test.size() - 1)) {
-//            plot_ldos(n_fet, s_n.phi);
-//            plot_ldos(p_fet, s_p.phi);
-//        }
-//    }
-//    plot(std::make_pair(V_test, I_testn));
-//    plot(std::make_pair(V_test, I_testp));
-//    return 0;
-
-//    double dI_0 = delta_I(V_0);
-//    double dI_1 = delta_I(V_1);
-
-//    double sgn = dI_0 > 0;
-//    if ((sgn && (dI_1 > 0)) || (!sgn && (dI_1 < 0))) {
-//        std::cout << "ERROR!" << std::endl;
-//        return 0;
-//    }
-
-//    double dI_2 = 1000;
-//    while ((V_1 - V_0 > tol) && (dI_2 > 1e-10)) {
-//        double V_2 = V_0 - dI_0 * (V_1 - V_0) / (dI_1 - dI_0);
-//        double dI_2 = delta_I(V_2);
-
-//        if ((sgn && (dI_2 > 0)) || (!sgn && (dI_2 < 0))) {
-//            V_0 = V_2;
-//            dI_0 = dI_2;
-//        } else {
-//            V_1 = V_2;
-//            dI_1 = dI_2;
-//        }
-//    }
-
-//    return V_0 - dI_0 * (V_1 - V_0) / (dI_1 - dI_0);
 }
 
 void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out) {

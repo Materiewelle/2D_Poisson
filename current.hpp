@@ -69,13 +69,6 @@ current::current(const device & d, const potential & phi)
     rc.fill(rc(0));
 
     total = lv + rv + lc + rc;
-
-    using namespace std;
-    cout << lv(0) << endl;
-    cout << rv(0) << endl;
-    cout << lc(0) << endl;
-    cout << rc(0) << endl;
-    cout << total(0) << endl;
 }
 
 current::current(const device & d, const wave_packet psi[4], const potential & phi)
