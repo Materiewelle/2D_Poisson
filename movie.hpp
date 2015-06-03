@@ -79,7 +79,7 @@ movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std
     for (unsigned i = 0; i < E_ind.size(); ++i) {
         int lattice = E_ind[i].first;
         double E = psi[lattice].E0(E_ind[i].second);
-            system("mkdir -p --mode=777" + output_folder(lattice, E));
+            system("mkdir -p --mode=777 " + output_folder(lattice, E));
     }
 
     // gnuplot setup
