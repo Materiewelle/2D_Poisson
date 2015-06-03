@@ -124,7 +124,7 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
              * a loop and kill some redundancy */
             arma::vec data[7];
 
-            arma::cx_vec wavefunction = psi[lattice].data.col(E_ind[i].second);
+            arma::cx_vec wavefunction = psi[lattice].data->col(E_ind[i].second);
             data[0] = arma::real(wavefunction);
             data[1] = arma::imag(wavefunction);
             data[2] = +arma::abs(wavefunction);

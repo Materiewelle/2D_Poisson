@@ -113,7 +113,7 @@ current::current(const device & d, const wave_packet psi[4], const potential & p
 
                 // a: current from cell j-1 to j; b: current from cell j to j+1
                 double a;
-                double b = d.t_vec(1) * (std::conj(psi.data(2, i)) * psi.data(1, i)).imag();
+                double b = d.t_vec(1) * (std::conj((*psi.data)(2, i)) * (*psi.data)(1, i)).imag();
 
                 int j = 0;
 
@@ -121,7 +121,7 @@ current::current(const device & d, const wave_packet psi[4], const potential & p
                 I_thread(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
                 for (j = 1; j < d.N_x - 1; ++j) {
                     a = b;
-                    b = d.t_vec(j * 2 + 1) * (std::conj(psi.data(2 * j + 2, i)) * psi.data(2 * j + 1, i)).imag();
+                    b = d.t_vec(j * 2 + 1) * (std::conj((*psi.data)(2 * j + 2, i)) * (*psi.data)(2 * j + 1, i)).imag();
 
                     // average of a and b
                     I_thread(j) += 0.5 * (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));

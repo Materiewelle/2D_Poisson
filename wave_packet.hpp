@@ -23,7 +23,7 @@ public:
     arma::vec E0;
     arma::vec F0;
     arma::vec W;
-    arma::cx_mat data;
+    arma::cx_mat * data;
     arma::mat E;
 
     template<bool left>
@@ -56,8 +56,11 @@ private:
     bool l;
 
     // from previous time step
-    arma::cx_mat old_data;
     sd_vec old_source;
+    arma::cx_mat * old_data;
+
+    arma::cx_mat data1;
+    arma::cx_mat data2;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,7 +76,8 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
         F0 = fermi(E0 - phi.d(), d.F_dc);
     }
     W = WW;
-    data = cx_mat(d.N_x * 2, E0.size());
+    data1 = cx_mat(d.N_x * 2, E0.size());
+    data = &data1;
     E = mat(d.N_x, E0.size());
     in = sd_vec(E0.size());
     out = sd_vec(E0.size());
@@ -96,7 +100,7 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
         }
 
         // extract data
-        data.col(i) = G;
+        data->col(i) = G;
         in.s(i)  = G(0);
         in.d(i)  = G(G.size() - 1);
 
@@ -134,17 +138,23 @@ void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec
 
 template<class T>
 void wave_packet::propagate(const T & U_eff, const sd_vec & inv) {
-    data = U_eff * old_data + arma::kron(source.s.st() + memory.s.st(), inv.s) + arma::kron(source.d.st() + memory.d.st(), inv.d);
+    *data = U_eff * (*old_data) + arma::kron(source.s.st() + memory.s.st(), inv.s) + arma::kron(source.d.st() + memory.d.st(), inv.d);
 }
 
 void wave_packet::remember() {
-    old_data = data;
+    if (data == &data1) {
+        data     = &data2;
+        old_data = &data1;
+    } else {
+        data     = &data1;
+        old_data = &data2;
+    }
     old_source = source;
 }
 
 void wave_packet::update_sum(int m) {
-    sum.s.row(m) = old_data.row(0) + data.row(0);
-    sum.d.row(m) = old_data.row(old_data.n_rows - 1) + data.row(data.n_rows - 1);
+    sum.s.row(m) = old_data->row(0) + data->row(0);
+    sum.d.row(m) = old_data->row(old_data->n_rows - 1) + data->row(data->n_rows - 1);
 }
 
 void wave_packet::update_E(const device & d, const potential & phi, const potential & phi0) {
@@ -152,10 +162,10 @@ void wave_packet::update_E(const device & d, const potential & phi, const potent
 
     for (unsigned i = 0; i < E.n_cols; ++i) {
         for (unsigned j = 1; j < E.n_rows - 1; ++j) {
-            double n = 1.0 / (norm(data(2 * j, i)) + norm(data(2 * j + 1, i)));
-            double m1 = 2 * (real(data(2 * j, i)) * real(data(2 * j + 1, i)) + imag(data(2 * j, i)) * imag(data(2 * j + 1, i)));
-            arma::cx_double m2 = conj(data(2 * j, i)) * data(2 * j - 1, i);
-            arma::cx_double m3 = conj(data(2 * j + 1, i)) * data(2 * j + 2, i);
+            double n = 1.0 / (norm((*data)(2 * j, i)) + norm((*data)(2 * j + 1, i)));
+            double m1 = 2 * (real((*data)(2 * j, i)) * real((*data)(2 * j + 1, i)) + imag((*data)(2 * j, i)) * imag((*data)(2 * j + 1, i)));
+            arma::cx_double m2 = conj((*data)(2 * j, i)) * (*data)(2 * j - 1, i);
+            arma::cx_double m3 = conj((*data)(2 * j + 1, i)) * (*data)(2 * j + 2, i);
             E(j, i) = phi(j) + n * (d.t_vec(2 * j) * m1 + real(d.t_vec(2 * j - 1) * m2 + d.t_vec(2 * j + 1) * m3));
         }
     }

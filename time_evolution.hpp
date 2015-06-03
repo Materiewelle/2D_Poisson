@@ -20,7 +20,6 @@ class time_evolution {
 public:
     static constexpr auto dphi_threshold = 1e-8;
     static constexpr auto max_iterations = 25;
-//    static constexpr auto tunnel_current_precision = 1e-3;
 
     device d;
     std::vector<current> I;
@@ -39,8 +38,6 @@ private:
     sd_vec q;
     sd_vec qsum;
 
-    template<bool left>
-    void get_tunnel_energies(arma::vec & E, arma::vec & W);
     void calculate_q();
 };
 
@@ -201,28 +198,6 @@ void time_evolution::solve() {
 #endif
 
 }
-
-//template<bool left>
-//void time_evolution::get_tunnel_energies(arma::vec & E, arma::vec & W) {
-//    double max = 0.0;
-//    double sgn = left ? 1.0 : -1.0;
-//    for (unsigned i = 0; i < V.size(); ++i) {
-//        double delta = (V[i].d + d.F_dc - V[i].s - d.F_sc) * sgn - 0.96 * d.E_gc;
-//        if (delta > max) {
-//            max = delta;
-//        }
-//    }
-//    if (max > 0) {
-//        double E0 = (left ? (- V[0].s - d.F_sc) : (- V[0].d - d.F_dc)) - 0.48 * d.E_gc;
-//        int N = std::round(max / tunnel_current_precision);
-//        E = arma::linspace(E0 - max, E0, N);
-//        W = arma::vec(N);
-//        W.fill(E(1)-E(0));
-//    } else {
-//        E = arma::vec(arma::uword(0));
-//        W = arma::vec(arma::uword(0));
-//    }
-//}
 
 void time_evolution::calculate_q() {
     using namespace arma;

@@ -167,8 +167,8 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                 double W = psi.W(i);
 
                 for (int j = 0; j < d.N_x; ++j) {
-                    double a = std::norm(psi.data(2 * j    , i));
-                    double b = std::norm(psi.data(2 * j + 1, i));
+                    double a = std::norm((*psi.data)(2 * j    , i));
+                    double b = std::norm((*psi.data)(2 * j + 1, i));
                     n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
                 }
             }
