@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <vector>
 #include <utility>
+#include <unistd.h>
 
 #include "wave_packet.hpp"
 #include "gnuplot.hpp"
@@ -46,8 +47,8 @@ static inline const std::string & lattice_name(int i) {
 
 class movie {
 public:
-    const std::string parent_folder = "/tmp/movie_tmpdir";
-    const std::string folder = parent_folder + "/" + now();
+    std::string parent_folder;
+    std::string folder;
 
     inline void frame(const int m, const potential & phi, const wave_packet psi[6]);
     inline void mp4(const wave_packet psi[6]);
@@ -74,12 +75,19 @@ private:
 
 movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> & E_i)
     : calls(0), frames(0), d(dev), E_ind(E_i), band_offset(d.N_x) {
+    using namespace std::string_literals;
+
+    char buf[32];
+    getlogin_r(buf, sizeof(buf));
+
+    parent_folder = "/tmp/movie_tmpdir_"s + buf;
+    folder = parent_folder + "/" + now();
 
     // produce folder tree
     for (unsigned i = 0; i < E_ind.size(); ++i) {
         int lattice = E_ind[i].first;
         double E = psi[lattice].E0(E_ind[i].second);
-            system("mkdir -p --mode=777 " + output_folder(lattice, E));
+            system("mkdir -p " + output_folder(lattice, E));
     }
 
     // gnuplot setup
