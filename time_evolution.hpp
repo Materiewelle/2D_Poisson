@@ -27,6 +27,7 @@ public:
     std::vector<charge_density> n;
     std::vector<voltage> V;
     unsigned m;
+    wave_packet psi[4];
 
     inline time_evolution(const steady_state & s);
     inline time_evolution(const device & dd, const voltage & V);
@@ -41,7 +42,6 @@ private:
     sd_vec q;
     sd_vec qsum;
 
-    wave_packet psi[4];
     arma::cx_mat H_eff;
     sd_vec old_L;
     arma::cx_mat cx_eye;
