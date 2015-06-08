@@ -26,11 +26,14 @@ public:
     std::vector<potential> phi;
     std::vector<charge_density> n;
     std::vector<voltage> V;
+    unsigned m;
 
-    inline time_evolution(const device & dd);
+    inline time_evolution(const steady_state & s);
+    inline time_evolution(const device & dd, const voltage & V);
     inline time_evolution(const device & dd, const std::vector<voltage> & V);
 
     inline void solve();
+    inline void step();
 
 private:
     sd_vec u;
@@ -38,21 +41,52 @@ private:
     sd_vec q;
     sd_vec qsum;
 
-    void calculate_q();
+    wave_packet psi[4];
+    arma::cx_mat H_eff;
+    sd_vec old_L;
+    arma::cx_mat cx_eye;
+
+    inline void init(const steady_state & s);
+    inline void calculate_q();
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 
-time_evolution::time_evolution(const device & dd)
+time_evolution::time_evolution(const steady_state & s)
+    : d(s.d), I(t::N_t), phi(t::N_t), n(t::N_t), V(t::N_t), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
+    std::fill(std::begin(V), std::end(V), s.V);
+
+    // initialize
+    init(s);
+}
+
+time_evolution::time_evolution(const device & dd, const voltage & VV)
     : d(dd), I(t::N_t), phi(t::N_t), n(t::N_t), V(t::N_t), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
+    std::fill(std::begin(V), std::end(V), VV);
+
+    // solve steady state
+    steady_state s(d, VV);
+    s.solve<true>();
+
+    // initialize
+    init(s);
 }
 
 time_evolution::time_evolution(const device & dd, const std::vector<voltage> & VV)
     : d(dd), I(t::N_t), phi(t::N_t), n(t::N_t), V(VV), u(t::N_t), L(t::N_t), q(t::N_t), qsum(t::N_t - 1) {
+    // solve steady state
+    steady_state s(d, VV[0]);
+    s.solve<true>();
+
+    // initialize
+    init(s);
 }
 
 void time_evolution::solve() {
-    using namespace arma;
+    while (m < t::N_t) {
+        step();
+    }
+    /*using namespace arma;
     using namespace std::complex_literals;
 
     // solve steady state
@@ -195,8 +229,136 @@ void time_evolution::solve() {
 
 #ifdef MOVIEMODE
     argo.mp4(psi);
-#endif
+#endif*/
 
+}
+
+void time_evolution::step() {
+    using namespace arma;
+    using namespace std::complex_literals;
+
+    // estimate charge density from previous values
+    n[m].total = (m == 1) ? n[0].total : (2 * n[m-1].total - n[m-2].total);
+
+    // prepare right side of poisson equation
+    vec R0 = potential_impl::get_R0(d, V[m]);
+
+    // first guess for the potential
+    phi[m] = potential(d, R0, n[m]);
+
+    // prepare anderson
+    anderson mr_neo(phi[m].data);
+
+    // current data becomes old data
+    for (int i = 0; i < 4; ++i) {
+        psi[i].remember();
+    }
+    old_L = L;
+
+    // self-consistency loop
+    for (int it = 0; it < max_iterations; ++it) {
+        // diagonal of H with self-energy
+        H_eff.diag() = conv_to<cx_vec>::from(0.5 * (phi[m].twice + phi[m-1].twice));
+        H_eff(        0,        0) -= 1i * t::g * q.s(0);
+        H_eff(2*d.N_x-1,2*d.N_x-1) -= 1i * t::g * q.d(0);
+
+        // crank-nicolson propagator
+        arma::cx_mat U_eff = arma::solve(cx_eye + 1i * t::g * H_eff, cx_eye - 1i * t::g * H_eff);
+
+        // inv
+        sd_vec inv;
+        inv.s = inverse_col< true>(cx_vec(1i * t::g * d.t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
+        inv.d = inverse_col<false>(cx_vec(1i * t::g * d.t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
+
+        // u
+        u.s(m) = 0.5 * (phi[m].s() + phi[m - 1].s()) - phi[0].s();
+        u.d(m) = 0.5 * (phi[m].d() + phi[m - 1].d()) - phi[0].d();
+        u.s(m) = (1.0 - 0.5i * t::g * u.s(m)) / (1.0 + 0.5i * t::g * u.s(m));
+        u.d(m) = (1.0 - 0.5i * t::g * u.d(m)) / (1.0 + 0.5i * t::g * u.d(m));
+
+        // Lambda
+        L.s({1, m}) = old_L.s({1, m}) * u.s(m) * u.s(m);
+        L.d({1, m}) = old_L.d({1, m}) * u.d(m) * u.d(m);
+
+        if (m == 1) {
+            for (int i = 0; i < 4; ++i) {
+                psi[i].memory_init();
+                psi[i].source_init(d, u, q);
+                psi[i].propagate(U_eff, inv);
+                psi[i].update_E(d, phi[m], phi[0]);
+            }
+        } else {
+            sd_vec affe;
+            affe.s = - t::g * t::g * L.s({1, m - 1}) % qsum.s({t::N_t-m, t::N_t-2}) / u.s({1, m - 1}) / u.s(m);
+            affe.d = - t::g * t::g * L.d({1, m - 1}) % qsum.d({t::N_t-m, t::N_t-2}) / u.d({1, m - 1}) / u.d(m);
+
+            // propagate wave functions of modes inside bands
+            for (int i = 0; i < 4; ++i) {
+                psi[i].memory_update(affe, m);
+                psi[i].source_update(u, L, qsum, m);
+                psi[i].propagate(U_eff, inv);
+                psi[i].update_E(d, phi[m], phi[0]);
+            }
+        }
+
+        // update n
+        n[m] = {d, psi, phi[m] };
+
+        // update potential
+        auto dphi = phi[m].update(d, R0, n[m], mr_neo);
+
+        cout << m << ": iteration " << it << ": rel deviation is " << dphi / dphi_threshold << endl;
+
+        // check if dphi is small enough
+        if (dphi < dphi_threshold) {
+            break;
+        }
+    }
+
+    // update sum
+    for (int i = 0; i < 4; ++i) {
+        psi[i].update_sum(m);
+    }
+
+    // calculate current
+    I[m] = current(d, psi, phi[m]);
+
+    // increase m for next time step
+    ++m;
+}
+
+void time_evolution::init(const steady_state & s) {
+    using namespace arma;
+
+    // save results from steady state
+    I[0]   = s.I;
+    phi[0] = s.phi;
+    n[0]   = s.n;
+
+    // get initial wavefunctions
+    psi[LV].init< true>(d, s.E[LV], s.W[LV], phi[0]);
+    psi[RV].init<false>(d, s.E[RV], s.W[RV], phi[0]);
+    psi[LC].init< true>(d, s.E[LC], s.W[LC], phi[0]);
+    psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
+
+    // precalculate q-values
+    calculate_q();
+
+    // build constant part of Hamiltonian
+    H_eff = cx_mat(2 * d.N_x, 2 * d.N_x);
+    H_eff.fill(0);
+    H_eff.diag(+1) = conv_to<cx_vec>::from(d.t_vec);
+    H_eff.diag(-1) = conv_to<cx_vec>::from(d.t_vec);
+
+    // setup lambda
+    L.s.fill(1.0);
+    L.d.fill(1.0);
+
+    // complex unity matrix
+    cx_eye = eye<cx_mat>(2 * d.N_x, 2 * d.N_x);
+
+    // step 0 is steady state
+    m = 1;
 }
 
 void time_evolution::calculate_q() {

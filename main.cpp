@@ -43,8 +43,7 @@ int main() {
 
 //    plot(make_pair(V_in, V_out));
 
-    time_evolution te(nfet);
-    std::fill(begin(te.V), begin(te.V) + 2, voltage{0.0, 0.2, 0.5});
+    time_evolution te(nfet, voltage { 0.0, 0.2, 0.5 });
     vec ramp = linspace(0, 0.05, 20);
     for (int i = 2; i < 22; ++i) {
         te.V[i] = {ramp(i-2), 0.2, 0.5};
