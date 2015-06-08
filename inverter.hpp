@@ -7,6 +7,7 @@
 #include "device.hpp"
 #include "voltage.hpp"
 #include "steady_state.hpp"
+#include "time_evolution.hpp"
 
 class inverter {
 public:
@@ -18,14 +19,14 @@ public:
 
     inline bool solve(const voltage & V, double & V_o);
 
-    inline void solve(const std::vector<voltage> & V, std::vector<voltage> & V_out);
+    inline void solve(const std::vector<voltage> & V, std::vector<double> & V_out);
 
     inline void output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out);
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 
-inverter::inverter(const device & n, const device & p)
+inverter::inverter(const device & n, const device & p, double c)
     : n_fet(n), p_fet(p), capacitance(c) {
 }
 
@@ -49,7 +50,7 @@ bool inverter::solve(const voltage & V, double & V_o) {
     return brent(delta_I, -0.2, 0.6, 0.0005, V_o);
 }
 
-void inverter::solve(const std::vector<voltage> & V, const std::vector<voltage> & V_out) {
+void inverter::solve(const std::vector<voltage> & V, std::vector<double> & V_out) {
     V_out.resize(V.size());
 
     // solve steady state
@@ -60,10 +61,10 @@ void inverter::solve(const std::vector<voltage> & V, const std::vector<voltage> 
         s_n = steady_state(n_fet, { V[0].s, V[0].g, V_o    });
         s_p = steady_state(p_fet, { V_o   , V[0].g, V[0].d });
 
-        std::cout << "n: " << V.s << ", " << V.g << ", " << V_o << ": ";
+        std::cout << "n: " << V[0].s << ", " << V[0].g << ", " << V_o << ": ";
         std::flush(std::cout);
         s_n.solve();
-        std::cout << "p: " << V_o << ", " << V.g << ", " << V.d << ": ";
+        std::cout << "p: " << V_o << ", " << V[0].g << ", " << V[0].d << ": ";
         std::flush(std::cout);
         s_p.solve();
 
@@ -76,7 +77,7 @@ void inverter::solve(const std::vector<voltage> & V, const std::vector<voltage> 
 
     unsigned & m = te_n.m;
     while (m < V.size()) {
-        V_out[m] = V_out[m - 1] + (te_n.I.d() - te_p.I.s()) * t::dt / capacitance;
+        V_out[m] = V_out[m - 1] + (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * t::dt / capacitance;
         te_n.V[m] = { te_n.V[m - 1].s, te_n.V[m - 1].g,        V_out[m] };
         te_p.V[m] = {        V_out[m], te_p.V[m - 1].g, te_p.V[m - 1].d };
         te_n.step();

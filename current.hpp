@@ -17,6 +17,9 @@ public:
     inline current();
     inline current(const device & d, const potential & phi);
     inline current(const device & d, const wave_packet psi[4], const potential & phi);
+
+    inline double s() const;
+    inline double d() const;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -132,6 +135,14 @@ current::current(const device & d, const wave_packet psi[4], const potential & p
 
     // calculate total current
     total = lv + rv + lc + rc;
+}
+
+double current::s() const {
+    return total(0);
+}
+
+double current::d() const {
+    return total(total.size() - 1);
 }
 
 #endif
