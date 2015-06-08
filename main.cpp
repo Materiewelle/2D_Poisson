@@ -16,6 +16,8 @@
 #include "potential.hpp"
 #include "steady_state.hpp"
 #include "time_evolution.hpp"
+#include <string>
+#include <sstream>
 
 using namespace arma;
 using namespace std;
@@ -30,10 +32,13 @@ int main() {
 
     vec V_g;
     vec I;
-    steady_state::transfer(tfet, {0.0, -0.2, 0.4}, 0.6, 250, V_g, I);
-
-    mat res = join_horiz(V_g, I);
-    res.save("tfet_transfer", raw_ascii);
+    for (double V_d = 0.2; V_d < 0.6; V_d += 0.05) {
+        steady_state::transfer(tfet, {0.0, -0.2, 0.4}, 0.6, 3, V_g, I);
+        mat res = join_horiz(V_g, I);
+        std::stringstream ss;
+        ss << "tfet_transfer_Vd=" << std::setprecision(2) << V_d;
+        res.save(ss.str(), raw_ascii);
+    }
 
 //    time_evolution te(nfet);
 //    std::fill(begin(te.V), begin(te.V) + 2, voltage{0.0, 0.2, 0.5});
