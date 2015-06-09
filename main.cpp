@@ -50,6 +50,12 @@ int main() {
 //        te.V[i] = {ramp(i-2), 0.2, 0.5};
 //    }
 
+    vec E = linspace(-1.0, 1.0, 5000);
+    vec f0 = fermi<false>(E, tfet.F_d, 0.5);
+    vec f1 = fermi<true>(E, tfet.F_d, 0.5, 500);
+    plot(make_pair(E, f0), make_pair(E, f1));
+    return 0;
+
     vec V_g;
     vec I;
     for (double V_d = 0.2; V_d < 0.6; V_d += 0.05) {

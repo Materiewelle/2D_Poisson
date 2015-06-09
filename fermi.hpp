@@ -44,11 +44,11 @@ inline arma::vec fermi(const arma::vec & E, double F, double E0, double slope = 
         auto E0_it = std::lower_bound(std::begin(E), std::end(E), E0);
         unsigned i = 0;
         for (auto E_it = std::begin(E); E_it != E0_it; ++E_it) {
-            ret(i) = fermi(*E_it, F);
+            ret(i) = fermi(*E_it, F) - 1.0;
             ++i;
         }
         for (auto E_it = E0_it; E_it != std::end(E); ++E_it) {
-            ret(i) = fermi(*E_it, F) - 1.0;
+            ret(i) = fermi(*E_it, F);
             ++i;
         }
     }
