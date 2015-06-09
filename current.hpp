@@ -46,14 +46,16 @@ current::current(const device & d, const potential & phi)
     auto I_s = [&] (double E) -> double {
         double ret = transmission(E) * scale;
         double f = fermi(E - phi.s(), d.F_sc);
-        ret *= (E >= phi.d()) ? f : (f - 1);
+//        ret *= (E >= phi.d()) ? f : (f - 1);
+        ret *= fermi<true>(f, E - phi.d());
         return ret;
     };
 
     auto I_d = [&] (double E) -> double {
         double ret = transmission(E) * scale;
         double f = fermi(E - phi.d(), d.F_dc);
-        ret *= (E >= phi.d()) ? f : (f - 1);
+//        ret *= (E >= phi.d()) ? f : (f - 1);
+        ret *= fermi<true>(f, E - phi.d());
         return ret;
     };
 
@@ -107,11 +109,14 @@ current::current(const device & d, const wave_packet psi[4], const potential & p
                     b = d.t_vec(j * 2 + 1) * (std::conj((*psi.data)(2 * j + 2, i)) * (*psi.data)(2 * j + 1, i)).imag();
 
                     // average of a and b
-                    I_thread(j) += 0.5 * (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+//                    I_thread(j) += 0.5 * (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                    I_thread(j) += 0.5 * (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
                 }
                 // last value: take old b (current from cell N_x - 2 to N_x - 1)
-                I_thread(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+//                I_thread(j) += b * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                I_thread(j) += b * W * fermi<true>(f, psi.E(j, i) - phi(j));
             }
+            // no implied barrier (nowait clause)
 
             #pragma omp critical
             {

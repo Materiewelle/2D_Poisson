@@ -55,11 +55,11 @@ int main() {
     vec l_g = {9, 18, 41, 320};
     for (auto it = l_g.begin(); it != l_g.end(); ++it) {
         nfet.l_g = *it;
-        nfet.update();
-        steady_state::transfer(nfet, {0.0, -0.2, 0.4}, 0.6, 300, V_g, I);
-        mat res = join_horiz(V_g, I);
         std::stringstream ss;
         ss << "nfet_transfer_lg=" << std::setprecision(2) << *it;
+        nfet.update(ss.str());
+        steady_state::transfer<false>(nfet, {0.0, -0.2, 0.4}, 0.6, 300, V_g, I);
+        mat res = join_horiz(V_g, I);
         res.save(ss.str(), raw_ascii);
     }
 

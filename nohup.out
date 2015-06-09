@@ -1,0 +1,934 @@
+14 iterations, reldev=0.220522, converged!
+MOVIEMODE is activated!
+precalculating the q-values... done!
+1: iteration 0: rel deviation is 0.0107508
+produced a movie-frame in this step!
+2: iteration 0: rel deviation is 0.0107505
+produced a movie-frame in this step!
+3: iteration 0: rel deviation is 2.73307
+3: iteration 1: rel deviation is 1.36651
+3: iteration 2: rel deviation is 0.000226907
+produced a movie-frame in this step!
+4: iteration 0: rel deviation is 10.3007
+4: iteration 1: rel deviation is 5.15018
+4: iteration 2: rel deviation is 0.000814437
+produced a movie-frame in this step!
+5: iteration 0: rel deviation is 18.196
+5: iteration 1: rel deviation is 9.09756
+5: iteration 2: rel deviation is 0.0013088
+produced a movie-frame in this step!
+6: iteration 0: rel deviation is 28.7532
+6: iteration 1: rel deviation is 14.3758
+6: iteration 2: rel deviation is 0.00253436
+produced a movie-frame in this step!
+7: iteration 0: rel deviation is 45.8075
+7: iteration 1: rel deviation is 22.9024
+7: iteration 2: rel deviation is 0.00423621
+produced a movie-frame in this step!
+8: iteration 0: rel deviation is 73.2704
+8: iteration 1: rel deviation is 36.6269
+8: iteration 2: rel deviation is 0.00592092
+produced a movie-frame in this step!
+9: iteration 0: rel deviation is 110.625
+9: iteration 1: rel deviation is 55.3037
+9: iteration 2: rel deviation is 0.00750237
+produced a movie-frame in this step!
+10: iteration 0: rel deviation is 156.262
+10: iteration 1: rel deviation is 78.1181
+10: iteration 2: rel deviation is 0.00902928
+produced a movie-frame in this step!
+11: iteration 0: rel deviation is 208.889
+11: iteration 1: rel deviation is 104.428
+11: iteration 2: rel deviation is 0.0108305
+produced a movie-frame in this step!
+12: iteration 0: rel deviation is 266.917
+12: iteration 1: rel deviation is 133.439
+12: iteration 2: rel deviation is 0.0130745
+produced a movie-frame in this step!
+13: iteration 0: rel deviation is 328.549
+13: iteration 1: rel deviation is 164.251
+13: iteration 2: rel deviation is 0.0148128
+produced a movie-frame in this step!
+14: iteration 0: rel deviation is 391.92
+14: iteration 1: rel deviation is 195.935
+14: iteration 2: rel deviation is 0.015992
+produced a movie-frame in this step!
+15: iteration 0: rel deviation is 461.114
+15: iteration 1: rel deviation is 230.529
+15: iteration 2: rel deviation is 0.0172854
+produced a movie-frame in this step!
+16: iteration 0: rel deviation is 531.211
+16: iteration 1: rel deviation is 265.574
+16: iteration 2: rel deviation is 0.0191706
+produced a movie-frame in this step!
+17: iteration 0: rel deviation is 597.95
+17: iteration 1: rel deviation is 298.941
+17: iteration 2: rel deviation is 0.0202488
+produced a movie-frame in this step!
+18: iteration 0: rel deviation is 665.154
+18: iteration 1: rel deviation is 332.539
+18: iteration 2: rel deviation is 0.0223688
+produced a movie-frame in this step!
+19: iteration 0: rel deviation is 733.102
+19: iteration 1: rel deviation is 366.51
+19: iteration 2: rel deviation is 0.0246855
+produced a movie-frame in this step!
+20: iteration 0: rel deviation is 792.933
+20: iteration 1: rel deviation is 396.422
+20: iteration 2: rel deviation is 0.0259492
+produced a movie-frame in this step!
+21: iteration 0: rel deviation is 855.041
+21: iteration 1: rel deviation is 427.472
+21: iteration 2: rel deviation is 0.0286044
+produced a movie-frame in this step!
+22: iteration 0: rel deviation is 912.448
+22: iteration 1: rel deviation is 456.171
+22: iteration 2: rel deviation is 0.0312887
+produced a movie-frame in this step!
+23: iteration 0: rel deviation is 958.739
+23: iteration 1: rel deviation is 479.316
+23: iteration 2: rel deviation is 0.0326843
+produced a movie-frame in this step!
+24: iteration 0: rel deviation is 1013.55
+24: iteration 1: rel deviation is 506.713
+24: iteration 2: rel deviation is 0.0346503
+produced a movie-frame in this step!
+25: iteration 0: rel deviation is 1055.48
+25: iteration 1: rel deviation is 527.675
+25: iteration 2: rel deviation is 0.0373365
+produced a movie-frame in this step!
+26: iteration 0: rel deviation is 1094
+26: iteration 1: rel deviation is 546.936
+26: iteration 2: rel deviation is 0.0423392
+produced a movie-frame in this step!
+27: iteration 0: rel deviation is 1133.68
+27: iteration 1: rel deviation is 566.767
+27: iteration 2: rel deviation is 0.0511427
+produced a movie-frame in this step!
+28: iteration 0: rel deviation is 1158.89
+28: iteration 1: rel deviation is 579.369
+28: iteration 2: rel deviation is 0.0594891
+produced a movie-frame in this step!
+29: iteration 0: rel deviation is 1192.66
+29: iteration 1: rel deviation is 596.257
+29: iteration 2: rel deviation is 0.066568
+produced a movie-frame in this step!
+30: iteration 0: rel deviation is 1217.12
+30: iteration 1: rel deviation is 608.48
+30: iteration 2: rel deviation is 0.0716962
+produced a movie-frame in this step!
+31: iteration 0: rel deviation is 1233.75
+31: iteration 1: rel deviation is 616.799
+31: iteration 2: rel deviation is 0.0745792
+produced a movie-frame in this step!
+32: iteration 0: rel deviation is 1258.68
+32: iteration 1: rel deviation is 629.255
+32: iteration 2: rel deviation is 0.0753999
+produced a movie-frame in this step!
+33: iteration 0: rel deviation is 1268.2
+33: iteration 1: rel deviation is 634.013
+33: iteration 2: rel deviation is 0.0774295
+produced a movie-frame in this step!
+34: iteration 0: rel deviation is 1285.39
+34: iteration 1: rel deviation is 642.61
+34: iteration 2: rel deviation is 0.0788433
+produced a movie-frame in this step!
+35: iteration 0: rel deviation is 1296.48
+35: iteration 1: rel deviation is 648.152
+35: iteration 2: rel deviation is 0.0781786
+produced a movie-frame in this step!
+36: iteration 0: rel deviation is 1300.17
+36: iteration 1: rel deviation is 650.002
+36: iteration 2: rel deviation is 0.0759217
+produced a movie-frame in this step!
+37: iteration 0: rel deviation is 1313.42
+37: iteration 1: rel deviation is 656.625
+37: iteration 2: rel deviation is 0.0726166
+produced a movie-frame in this step!
+38: iteration 0: rel deviation is 1310.46
+38: iteration 1: rel deviation is 655.141
+38: iteration 2: rel deviation is 0.0688704
+produced a movie-frame in this step!
+39: iteration 0: rel deviation is 1322.07
+39: iteration 1: rel deviation is 660.952
+39: iteration 2: rel deviation is 0.0662879
+produced a movie-frame in this step!
+40: iteration 0: rel deviation is 1321.74
+40: iteration 1: rel deviation is 660.784
+40: iteration 2: rel deviation is 0.0628243
+produced a movie-frame in this step!
+41: iteration 0: rel deviation is 1325.71
+41: iteration 1: rel deviation is 662.774
+41: iteration 2: rel deviation is 0.058966
+produced a movie-frame in this step!
+42: iteration 0: rel deviation is 1328.16
+42: iteration 1: rel deviation is 663.995
+42: iteration 2: rel deviation is 0.055576
+produced a movie-frame in this step!
+43: iteration 0: rel deviation is 1327.34
+43: iteration 1: rel deviation is 663.595
+43: iteration 2: rel deviation is 0.0527797
+produced a movie-frame in this step!
+44: iteration 0: rel deviation is 1332.17
+44: iteration 1: rel deviation is 666.002
+44: iteration 2: rel deviation is 0.0498999
+produced a movie-frame in this step!
+45: iteration 0: rel deviation is 1328.56
+45: iteration 1: rel deviation is 664.205
+45: iteration 2: rel deviation is 0.0487853
+produced a movie-frame in this step!
+46: iteration 0: rel deviation is 1336.71
+46: iteration 1: rel deviation is 668.278
+46: iteration 2: rel deviation is 0.0466773
+produced a movie-frame in this step!
+47: iteration 0: rel deviation is 1332.54
+47: iteration 1: rel deviation is 666.197
+47: iteration 2: rel deviation is 0.0461734
+produced a movie-frame in this step!
+48: iteration 0: rel deviation is 1342.7
+48: iteration 1: rel deviation is 671.272
+48: iteration 2: rel deviation is 0.0458832
+produced a movie-frame in this step!
+49: iteration 0: rel deviation is 1338.64
+49: iteration 1: rel deviation is 669.251
+49: iteration 2: rel deviation is 0.0448076
+produced a movie-frame in this step!
+50: iteration 0: rel deviation is 1351.05
+50: iteration 1: rel deviation is 675.449
+50: iteration 2: rel deviation is 0.046195
+produced a movie-frame in this step!
+51: iteration 0: rel deviation is 1348.03
+51: iteration 1: rel deviation is 673.933
+51: iteration 2: rel deviation is 0.0457614
+produced a movie-frame in this step!
+52: iteration 0: rel deviation is 1361.36
+52: iteration 1: rel deviation is 680.603
+52: iteration 2: rel deviation is 0.0463174
+produced a movie-frame in this step!
+53: iteration 0: rel deviation is 1360.87
+53: iteration 1: rel deviation is 680.354
+53: iteration 2: rel deviation is 0.0470403
+produced a movie-frame in this step!
+54: iteration 0: rel deviation is 1371.55
+54: iteration 1: rel deviation is 685.699
+54: iteration 2: rel deviation is 0.0466499
+produced a movie-frame in this step!
+55: iteration 0: rel deviation is 1373.81
+55: iteration 1: rel deviation is 686.824
+55: iteration 2: rel deviation is 0.0476636
+produced a movie-frame in this step!
+56: iteration 0: rel deviation is 1381.06
+56: iteration 1: rel deviation is 690.455
+56: iteration 2: rel deviation is 0.0468128
+produced a movie-frame in this step!
+57: iteration 0: rel deviation is 1385.95
+57: iteration 1: rel deviation is 692.89
+57: iteration 2: rel deviation is 0.0477222
+produced a movie-frame in this step!
+58: iteration 0: rel deviation is 1389.96
+58: iteration 1: rel deviation is 694.902
+58: iteration 2: rel deviation is 0.0457801
+produced a movie-frame in this step!
+59: iteration 0: rel deviation is 1395.25
+59: iteration 1: rel deviation is 697.539
+59: iteration 2: rel deviation is 0.0482852
+produced a movie-frame in this step!
+60: iteration 0: rel deviation is 1394.79
+60: iteration 1: rel deviation is 697.318
+60: iteration 2: rel deviation is 0.0463763
+produced a movie-frame in this step!
+61: iteration 0: rel deviation is 1403.21
+61: iteration 1: rel deviation is 701.518
+61: iteration 2: rel deviation is 0.0470807
+produced a movie-frame in this step!
+62: iteration 0: rel deviation is 1398.4
+62: iteration 1: rel deviation is 699.106
+62: iteration 2: rel deviation is 0.0470969
+produced a movie-frame in this step!
+63: iteration 0: rel deviation is 1406.81
+63: iteration 1: rel deviation is 703.321
+63: iteration 2: rel deviation is 0.0476361
+produced a movie-frame in this step!
+64: iteration 0: rel deviation is 1402.93
+64: iteration 1: rel deviation is 701.374
+64: iteration 2: rel deviation is 0.0489524
+produced a movie-frame in this step!
+65: iteration 0: rel deviation is 1408.14
+65: iteration 1: rel deviation is 703.986
+65: iteration 2: rel deviation is 0.0471805
+produced a movie-frame in this step!
+66: iteration 0: rel deviation is 1405.5
+66: iteration 1: rel deviation is 702.66
+66: iteration 2: rel deviation is 0.0485777
+produced a movie-frame in this step!
+67: iteration 0: rel deviation is 1402.78
+67: iteration 1: rel deviation is 701.307
+67: iteration 2: rel deviation is 0.0490021
+produced a movie-frame in this step!
+68: iteration 0: rel deviation is 1404.83
+68: iteration 1: rel deviation is 702.324
+68: iteration 2: rel deviation is 0.0485585
+produced a movie-frame in this step!
+69: iteration 0: rel deviation is 1397.34
+69: iteration 1: rel deviation is 698.588
+69: iteration 2: rel deviation is 0.0491351
+produced a movie-frame in this step!
+70: iteration 0: rel deviation is 1409.52
+70: iteration 1: rel deviation is 704.658
+70: iteration 2: rel deviation is 0.0478697
+produced a movie-frame in this step!
+71: iteration 0: rel deviation is 1439.41
+71: iteration 1: rel deviation is 719.605
+71: iteration 2: rel deviation is 0.0493403
+produced a movie-frame in this step!
+72: iteration 0: rel deviation is 1460.95
+72: iteration 1: rel deviation is 730.369
+72: iteration 2: rel deviation is 0.0484232
+produced a movie-frame in this step!
+73: iteration 0: rel deviation is 1492.6
+73: iteration 1: rel deviation is 746.194
+73: iteration 2: rel deviation is 0.050227
+produced a movie-frame in this step!
+74: iteration 0: rel deviation is 1511.97
+74: iteration 1: rel deviation is 755.873
+74: iteration 2: rel deviation is 0.0499364
+produced a movie-frame in this step!
+75: iteration 0: rel deviation is 1555.71
+75: iteration 1: rel deviation is 777.747
+75: iteration 2: rel deviation is 0.0501873
+produced a movie-frame in this step!
+76: iteration 0: rel deviation is 1567.34
+76: iteration 1: rel deviation is 783.567
+76: iteration 2: rel deviation is 0.0511841
+produced a movie-frame in this step!
+77: iteration 0: rel deviation is 1610.73
+77: iteration 1: rel deviation is 805.25
+77: iteration 2: rel deviation is 0.0504503
+produced a movie-frame in this step!
+78: iteration 0: rel deviation is 1628.22
+78: iteration 1: rel deviation is 813.999
+78: iteration 2: rel deviation is 0.0525814
+produced a movie-frame in this step!
+79: iteration 0: rel deviation is 1673.03
+79: iteration 1: rel deviation is 836.394
+79: iteration 2: rel deviation is 0.0520294
+produced a movie-frame in this step!
+80: iteration 0: rel deviation is 1694.13
+80: iteration 1: rel deviation is 846.945
+80: iteration 2: rel deviation is 0.0520243
+produced a movie-frame in this step!
+81: iteration 0: rel deviation is 1736.97
+81: iteration 1: rel deviation is 868.357
+81: iteration 2: rel deviation is 0.0516907
+produced a movie-frame in this step!
+82: iteration 0: rel deviation is 1762.65
+82: iteration 1: rel deviation is 881.203
+82: iteration 2: rel deviation is 0.0540698
+produced a movie-frame in this step!
+83: iteration 0: rel deviation is 1802.68
+83: iteration 1: rel deviation is 901.209
+83: iteration 2: rel deviation is 0.0510973
+produced a movie-frame in this step!
+84: iteration 0: rel deviation is 1838.33
+84: iteration 1: rel deviation is 919.037
+84: iteration 2: rel deviation is 0.0526595
+produced a movie-frame in this step!
+85: iteration 0: rel deviation is 1868.3
+85: iteration 1: rel deviation is 934.012
+85: iteration 2: rel deviation is 0.0522608
+produced a movie-frame in this step!
+86: iteration 0: rel deviation is 1911.14
+86: iteration 1: rel deviation is 955.434
+86: iteration 2: rel deviation is 0.0532515
+produced a movie-frame in this step!
+87: iteration 0: rel deviation is 1937.9
+87: iteration 1: rel deviation is 968.805
+87: iteration 2: rel deviation is 0.0520131
+produced a movie-frame in this step!
+88: iteration 0: rel deviation is 1983.7
+88: iteration 1: rel deviation is 991.705
+88: iteration 2: rel deviation is 0.0559565
+produced a movie-frame in this step!
+89: iteration 0: rel deviation is 2011.07
+89: iteration 1: rel deviation is 1005.4
+89: iteration 2: rel deviation is 0.0532591
+produced a movie-frame in this step!
+90: iteration 0: rel deviation is 2059.46
+90: iteration 1: rel deviation is 1029.58
+90: iteration 2: rel deviation is 0.0535666
+produced a movie-frame in this step!
+91: iteration 0: rel deviation is 2087.79
+91: iteration 1: rel deviation is 1043.75
+91: iteration 2: rel deviation is 0.0571313
+produced a movie-frame in this step!
+92: iteration 0: rel deviation is 2131.14
+92: iteration 1: rel deviation is 1065.41
+92: iteration 2: rel deviation is 0.0566881
+produced a movie-frame in this step!
+93: iteration 0: rel deviation is 2169.92
+93: iteration 1: rel deviation is 1084.81
+93: iteration 2: rel deviation is 0.0557613
+produced a movie-frame in this step!
+94: iteration 0: rel deviation is 2200.88
+94: iteration 1: rel deviation is 1100.28
+94: iteration 2: rel deviation is 0.0596962
+produced a movie-frame in this step!
+95: iteration 0: rel deviation is 2244.13
+95: iteration 1: rel deviation is 1121.91
+95: iteration 2: rel deviation is 0.0574208
+produced a movie-frame in this step!
+96: iteration 0: rel deviation is 2269.03
+96: iteration 1: rel deviation is 1134.35
+96: iteration 2: rel deviation is 0.0617064
+produced a movie-frame in this step!
+97: iteration 0: rel deviation is 2320.93
+97: iteration 1: rel deviation is 1160.3
+97: iteration 2: rel deviation is 0.0599245
+produced a movie-frame in this step!
+98: iteration 0: rel deviation is 2333.11
+98: iteration 1: rel deviation is 1166.39
+98: iteration 2: rel deviation is 0.0663804
+produced a movie-frame in this step!
+99: iteration 0: rel deviation is 2393.28
+99: iteration 1: rel deviation is 1196.47
+99: iteration 2: rel deviation is 0.0621875
+produced a movie-frame in this step!
+100: iteration 0: rel deviation is 2413.82
+100: iteration 1: rel deviation is 1206.74
+100: iteration 2: rel deviation is 0.0650062
+produced a movie-frame in this step!
+101: iteration 0: rel deviation is 2464.53
+101: iteration 1: rel deviation is 1232.09
+101: iteration 2: rel deviation is 0.0640722
+produced a movie-frame in this step!
+102: iteration 0: rel deviation is 2490.42
+102: iteration 1: rel deviation is 1245.04
+102: iteration 2: rel deviation is 0.0677237
+produced a movie-frame in this step!
+103: iteration 0: rel deviation is 2534.47
+103: iteration 1: rel deviation is 1267.05
+103: iteration 2: rel deviation is 0.065511
+produced a movie-frame in this step!
+104: iteration 0: rel deviation is 2569.86
+104: iteration 1: rel deviation is 1284.75
+104: iteration 2: rel deviation is 0.0671189
+produced a movie-frame in this step!
+105: iteration 0: rel deviation is 2602
+105: iteration 1: rel deviation is 1300.82
+105: iteration 2: rel deviation is 0.0708345
+produced a movie-frame in this step!
+106: iteration 0: rel deviation is 2649.75
+106: iteration 1: rel deviation is 1324.69
+106: iteration 2: rel deviation is 0.0701489
+produced a movie-frame in this step!
+107: iteration 0: rel deviation is 2671.33
+107: iteration 1: rel deviation is 1335.48
+107: iteration 2: rel deviation is 0.0741772
+produced a movie-frame in this step!
+108: iteration 0: rel deviation is 2726.39
+108: iteration 1: rel deviation is 1363.01
+108: iteration 2: rel deviation is 0.0703327
+produced a movie-frame in this step!
+109: iteration 0: rel deviation is 2743.47
+109: iteration 1: rel deviation is 1371.54
+109: iteration 2: rel deviation is 0.0721808
+produced a movie-frame in this step!
+110: iteration 0: rel deviation is 2802.33
+110: iteration 1: rel deviation is 1400.97
+110: iteration 2: rel deviation is 0.0716895
+produced a movie-frame in this step!
+111: iteration 0: rel deviation is 2825.12
+111: iteration 1: rel deviation is 1412.36
+111: iteration 2: rel deviation is 0.0728407
+produced a movie-frame in this step!
+112: iteration 0: rel deviation is 2880.39
+112: iteration 1: rel deviation is 1439.99
+112: iteration 2: rel deviation is 0.0731224
+produced a movie-frame in this step!
+113: iteration 0: rel deviation is 2908.45
+113: iteration 1: rel deviation is 1454.02
+113: iteration 2: rel deviation is 0.0756527
+produced a movie-frame in this step!
+114: iteration 0: rel deviation is 2961.64
+114: iteration 1: rel deviation is 1480.61
+114: iteration 2: rel deviation is 0.0746299
+produced a movie-frame in this step!
+115: iteration 0: rel deviation is 2994.24
+115: iteration 1: rel deviation is 1496.91
+115: iteration 2: rel deviation is 0.0789365
+produced a movie-frame in this step!
+116: iteration 0: rel deviation is 3040.81
+116: iteration 1: rel deviation is 1520.19
+116: iteration 2: rel deviation is 0.0772446
+produced a movie-frame in this step!
+117: iteration 0: rel deviation is 3083.41
+117: iteration 1: rel deviation is 1541.49
+117: iteration 2: rel deviation is 0.0777435
+produced a movie-frame in this step!
+118: iteration 0: rel deviation is 3120.56
+118: iteration 1: rel deviation is 1560.06
+118: iteration 2: rel deviation is 0.0803009
+produced a movie-frame in this step!
+119: iteration 0: rel deviation is 3169.89
+119: iteration 1: rel deviation is 1584.72
+119: iteration 2: rel deviation is 0.0798367
+produced a movie-frame in this step!
+120: iteration 0: rel deviation is 3202.32
+120: iteration 1: rel deviation is 1600.93
+120: iteration 2: rel deviation is 0.0830149
+produced a movie-frame in this step!
+121: iteration 0: rel deviation is 3259.39
+121: iteration 1: rel deviation is 1629.46
+121: iteration 2: rel deviation is 0.0826051
+produced a movie-frame in this step!
+122: iteration 0: rel deviation is 3283.09
+122: iteration 1: rel deviation is 1641.31
+122: iteration 2: rel deviation is 0.0859262
+produced a movie-frame in this step!
+123: iteration 0: rel deviation is 3346.78
+123: iteration 1: rel deviation is 1673.15
+123: iteration 2: rel deviation is 0.0854056
+produced a movie-frame in this step!
+124: iteration 0: rel deviation is 3367.81
+124: iteration 1: rel deviation is 1683.67
+124: iteration 2: rel deviation is 0.0861501
+produced a movie-frame in this step!
+125: iteration 0: rel deviation is 3436.09
+125: iteration 1: rel deviation is 1717.8
+125: iteration 2: rel deviation is 0.0883079
+produced a movie-frame in this step!
+126: iteration 0: rel deviation is 3462.33
+126: iteration 1: rel deviation is 1730.92
+126: iteration 2: rel deviation is 0.0890608
+produced a movie-frame in this step!
+127: iteration 0: rel deviation is 3523.69
+127: iteration 1: rel deviation is 1761.59
+127: iteration 2: rel deviation is 0.0908453
+produced a movie-frame in this step!
+128: iteration 0: rel deviation is 3560.98
+128: iteration 1: rel deviation is 1780.23
+128: iteration 2: rel deviation is 0.0909692
+produced a movie-frame in this step!
+129: iteration 0: rel deviation is 3610.37
+129: iteration 1: rel deviation is 1804.93
+129: iteration 2: rel deviation is 0.114529
+produced a movie-frame in this step!
+130: iteration 0: rel deviation is 3657.22
+130: iteration 1: rel deviation is 1828.35
+130: iteration 2: rel deviation is 0.0933566
+produced a movie-frame in this step!
+131: iteration 0: rel deviation is 3700.55
+131: iteration 1: rel deviation is 1850.01
+131: iteration 2: rel deviation is 0.0953271
+produced a movie-frame in this step!
+132: iteration 0: rel deviation is 3750.65
+132: iteration 1: rel deviation is 1875.06
+132: iteration 2: rel deviation is 0.0951978
+produced a movie-frame in this step!
+133: iteration 0: rel deviation is 3789.34
+133: iteration 1: rel deviation is 1894.4
+133: iteration 2: rel deviation is 0.0976176
+produced a movie-frame in this step!
+134: iteration 0: rel deviation is 3849.1
+134: iteration 1: rel deviation is 1924.27
+134: iteration 2: rel deviation is 0.100839
+produced a movie-frame in this step!
+135: iteration 0: rel deviation is 4089.9
+135: iteration 1: rel deviation is 2044.85
+135: iteration 2: rel deviation is 0.137424
+produced a movie-frame in this step!
+136: iteration 0: rel deviation is 3946.26
+136: iteration 1: rel deviation is 1972.84
+136: iteration 2: rel deviation is 0.101662
+produced a movie-frame in this step!
+137: iteration 0: rel deviation is 3965.85
+137: iteration 1: rel deviation is 1982.64
+137: iteration 2: rel deviation is 0.105457
+produced a movie-frame in this step!
+138: iteration 0: rel deviation is 4039.99
+138: iteration 1: rel deviation is 2019.7
+138: iteration 2: rel deviation is 0.10421
+produced a movie-frame in this step!
+139: iteration 0: rel deviation is 4071.32
+139: iteration 1: rel deviation is 2035.36
+139: iteration 2: rel deviation is 0.106905
+produced a movie-frame in this step!
+140: iteration 0: rel deviation is 4135.95
+140: iteration 1: rel deviation is 2067.67
+140: iteration 2: rel deviation is 0.107882
+produced a movie-frame in this step!
+141: iteration 0: rel deviation is 4174.72
+141: iteration 1: rel deviation is 2087.05
+141: iteration 2: rel deviation is 0.106872
+produced a movie-frame in this step!
+142: iteration 0: rel deviation is 4229.02
+142: iteration 1: rel deviation is 2114.2
+142: iteration 2: rel deviation is 0.110963
+produced a movie-frame in this step!
+143: iteration 0: rel deviation is 4280.14
+143: iteration 1: rel deviation is 2139.75
+143: iteration 2: rel deviation is 0.113626
+produced a movie-frame in this step!
+144: iteration 0: rel deviation is 4319.62
+144: iteration 1: rel deviation is 2159.49
+144: iteration 2: rel deviation is 0.111107
+produced a movie-frame in this step!
+145: iteration 0: rel deviation is 4384.01
+145: iteration 1: rel deviation is 2191.68
+145: iteration 2: rel deviation is 0.111789
+produced a movie-frame in this step!
+146: iteration 0: rel deviation is 4407.75
+146: iteration 1: rel deviation is 2203.55
+146: iteration 2: rel deviation is 0.114551
+produced a movie-frame in this step!
+147: iteration 0: rel deviation is 4485.82
+147: iteration 1: rel deviation is 2242.57
+147: iteration 2: rel deviation is 0.117103
+produced a movie-frame in this step!
+148: iteration 0: rel deviation is 4501.54
+148: iteration 1: rel deviation is 2250.43
+148: iteration 2: rel deviation is 0.119796
+produced a movie-frame in this step!
+149: iteration 0: rel deviation is 4585.48
+149: iteration 1: rel deviation is 2292.39
+149: iteration 2: rel deviation is 0.116663
+produced a movie-frame in this step!
+150: iteration 0: rel deviation is 4614.33
+150: iteration 1: rel deviation is 2306.82
+150: iteration 2: rel deviation is 0.125384
+produced a movie-frame in this step!
+151: iteration 0: rel deviation is 4681.58
+151: iteration 1: rel deviation is 2340.44
+151: iteration 2: rel deviation is 0.129215
+produced a movie-frame in this step!
+152: iteration 0: rel deviation is 4725.56
+152: iteration 1: rel deviation is 2362.42
+152: iteration 2: rel deviation is 0.143173
+produced a movie-frame in this step!
+153: iteration 0: rel deviation is 4776.32
+153: iteration 1: rel deviation is 2387.8
+153: iteration 2: rel deviation is 0.127678
+produced a movie-frame in this step!
+154: iteration 0: rel deviation is 4833.77
+154: iteration 1: rel deviation is 2416.52
+154: iteration 2: rel deviation is 0.132322
+produced a movie-frame in this step!
+155: iteration 0: rel deviation is 4867.65
+155: iteration 1: rel deviation is 2433.46
+155: iteration 2: rel deviation is 0.130778
+produced a movie-frame in this step!
+156: iteration 0: rel deviation is 4940.92
+156: iteration 1: rel deviation is 2470.08
+156: iteration 2: rel deviation is 0.123824
+produced a movie-frame in this step!
+157: iteration 0: rel deviation is 4956
+157: iteration 1: rel deviation is 2477.63
+157: iteration 2: rel deviation is 0.131284
+produced a movie-frame in this step!
+158: iteration 0: rel deviation is 5044.78
+158: iteration 1: rel deviation is 2522
+158: iteration 2: rel deviation is 0.138417
+produced a movie-frame in this step!
+159: iteration 0: rel deviation is 5063.74
+159: iteration 1: rel deviation is 2531.48
+159: iteration 2: rel deviation is 0.130519
+produced a movie-frame in this step!
+160: iteration 0: rel deviation is 5147.05
+160: iteration 1: rel deviation is 2573.13
+160: iteration 2: rel deviation is 0.13772
+produced a movie-frame in this step!
+161: iteration 0: rel deviation is 5181.03
+161: iteration 1: rel deviation is 2590.11
+161: iteration 2: rel deviation is 0.140713
+produced a movie-frame in this step!
+162: iteration 0: rel deviation is 5247.25
+162: iteration 1: rel deviation is 2623.22
+162: iteration 2: rel deviation is 0.142351
+produced a movie-frame in this step!
+163: iteration 0: rel deviation is 5296.9
+163: iteration 1: rel deviation is 2648.04
+163: iteration 2: rel deviation is 0.144969
+produced a movie-frame in this step!
+164: iteration 0: rel deviation is 5341.16
+164: iteration 1: rel deviation is 2670.17
+164: iteration 2: rel deviation is 0.149162
+produced a movie-frame in this step!
+165: iteration 0: rel deviation is 5407.62
+165: iteration 1: rel deviation is 2703.39
+165: iteration 2: rel deviation is 0.149039
+produced a movie-frame in this step!
+166: iteration 0: rel deviation is 5425.86
+166: iteration 1: rel deviation is 2712.52
+166: iteration 2: rel deviation is 0.150757
+produced a movie-frame in this step!
+167: iteration 0: rel deviation is 5508.79
+167: iteration 1: rel deviation is 2753.96
+167: iteration 2: rel deviation is 0.193713
+produced a movie-frame in this step!
+168: iteration 0: rel deviation is 5511.96
+168: iteration 1: rel deviation is 2755.54
+168: iteration 2: rel deviation is 0.152008
+produced a movie-frame in this step!
+169: iteration 0: rel deviation is 5599.24
+169: iteration 1: rel deviation is 2799.18
+169: iteration 2: rel deviation is 0.157604
+produced a movie-frame in this step!
+170: iteration 0: rel deviation is 5619.48
+170: iteration 1: rel deviation is 2809.29
+170: iteration 2: rel deviation is 0.154917
+produced a movie-frame in this step!
+171: iteration 0: rel deviation is 5683.9
+171: iteration 1: rel deviation is 2841.51
+171: iteration 2: rel deviation is 0.159423
+produced a movie-frame in this step!
+172: iteration 0: rel deviation is 5721.32
+172: iteration 1: rel deviation is 2860.2
+172: iteration 2: rel deviation is 0.21552
+produced a movie-frame in this step!
+173: iteration 0: rel deviation is 6589.9
+173: iteration 1: rel deviation is 3294.78
+173: iteration 2: rel deviation is 0.236811
+produced a movie-frame in this step!
+174: iteration 0: rel deviation is 5821.67
+174: iteration 1: rel deviation is 2910.37
+174: iteration 2: rel deviation is 0.163955
+produced a movie-frame in this step!
+175: iteration 0: rel deviation is 5843.7
+175: iteration 1: rel deviation is 2921.4
+175: iteration 2: rel deviation is 0.212475
+produced a movie-frame in this step!
+176: iteration 0: rel deviation is 5918.44
+176: iteration 1: rel deviation is 2958.74
+176: iteration 2: rel deviation is 0.224456
+produced a movie-frame in this step!
+177: iteration 0: rel deviation is 6805.7
+177: iteration 1: rel deviation is 3402.67
+177: iteration 2: rel deviation is 0.246275
+produced a movie-frame in this step!
+178: iteration 0: rel deviation is 6011.83
+178: iteration 1: rel deviation is 3005.43
+178: iteration 2: rel deviation is 0.168589
+produced a movie-frame in this step!
+179: iteration 0: rel deviation is 6020.27
+179: iteration 1: rel deviation is 3009.64
+179: iteration 2: rel deviation is 0.177823
+produced a movie-frame in this step!
+180: iteration 0: rel deviation is 6102.5
+180: iteration 1: rel deviation is 3050.76
+180: iteration 2: rel deviation is 0.177485
+produced a movie-frame in this step!
+181: iteration 0: rel deviation is 6130.26
+181: iteration 1: rel deviation is 3064.62
+181: iteration 2: rel deviation is 0.181031
+produced a movie-frame in this step!
+182: iteration 0: rel deviation is 6189.92
+182: iteration 1: rel deviation is 3094.47
+182: iteration 2: rel deviation is 0.183621
+produced a movie-frame in this step!
+183: iteration 0: rel deviation is 6237.41
+183: iteration 1: rel deviation is 3118.19
+183: iteration 2: rel deviation is 0.184747
+produced a movie-frame in this step!
+184: iteration 0: rel deviation is 6272.36
+184: iteration 1: rel deviation is 3135.69
+184: iteration 2: rel deviation is 0.194002
+produced a movie-frame in this step!
+185: iteration 0: rel deviation is 6338.96
+185: iteration 1: rel deviation is 3168.96
+185: iteration 2: rel deviation is 0.180104
+produced a movie-frame in this step!
+186: iteration 0: rel deviation is 6349.38
+186: iteration 1: rel deviation is 3174.2
+186: iteration 2: rel deviation is 0.18835
+produced a movie-frame in this step!
+187: iteration 0: rel deviation is 6436.14
+187: iteration 1: rel deviation is 3217.54
+187: iteration 2: rel deviation is 0.22787
+produced a movie-frame in this step!
+188: iteration 0: rel deviation is 6429.55
+188: iteration 1: rel deviation is 3214.23
+188: iteration 2: rel deviation is 0.181291
+produced a movie-frame in this step!
+189: iteration 0: rel deviation is 8963.28
+189: iteration 1: rel deviation is 4481.42
+189: iteration 2: rel deviation is 0.323706
+produced a movie-frame in this step!
+190: iteration 0: rel deviation is 6539.73
+190: iteration 1: rel deviation is 3269.31
+190: iteration 2: rel deviation is 0.194949
+produced a movie-frame in this step!
+191: iteration 0: rel deviation is 6610.39
+191: iteration 1: rel deviation is 3304.67
+191: iteration 2: rel deviation is 0.189187
+produced a movie-frame in this step!
+192: iteration 0: rel deviation is 6643.01
+192: iteration 1: rel deviation is 3320.95
+192: iteration 2: rel deviation is 0.195947
+produced a movie-frame in this step!
+193: iteration 0: rel deviation is 6687.64
+193: iteration 1: rel deviation is 3343.29
+193: iteration 2: rel deviation is 0.198232
+produced a movie-frame in this step!
+194: iteration 0: rel deviation is 6739.54
+194: iteration 1: rel deviation is 3369.2
+194: iteration 2: rel deviation is 0.195321
+produced a movie-frame in this step!
+195: iteration 0: rel deviation is 6756.53
+195: iteration 1: rel deviation is 3377.73
+195: iteration 2: rel deviation is 0.22491
+produced a movie-frame in this step!
+196: iteration 0: rel deviation is 6827.66
+196: iteration 1: rel deviation is 3413.26
+196: iteration 2: rel deviation is 0.205325
+produced a movie-frame in this step!
+197: iteration 0: rel deviation is 6876.06
+197: iteration 1: rel deviation is 3437.49
+197: iteration 2: rel deviation is 0.195813
+produced a movie-frame in this step!
+198: iteration 0: rel deviation is 6961.27
+198: iteration 1: rel deviation is 3480.1
+198: iteration 2: rel deviation is 0.220237
+produced a movie-frame in this step!
+199: iteration 0: rel deviation is 7142.22
+199: iteration 1: rel deviation is 3570.55
+199: iteration 2: rel deviation is 0.217337
+produced a movie-frame in this step!
+200: iteration 0: rel deviation is 7245.02
+200: iteration 1: rel deviation is 3621.96
+200: iteration 2: rel deviation is 0.206622
+produced a movie-frame in this step!
+201: iteration 0: rel deviation is 7410.73
+201: iteration 1: rel deviation is 3704.78
+201: iteration 2: rel deviation is 0.209688
+produced a movie-frame in this step!
+202: iteration 0: rel deviation is 7532.2
+202: iteration 1: rel deviation is 3765.52
+202: iteration 2: rel deviation is 0.217319
+produced a movie-frame in this step!
+203: iteration 0: rel deviation is 7679.8
+203: iteration 1: rel deviation is 3839.29
+203: iteration 2: rel deviation is 0.232238
+produced a movie-frame in this step!
+204: iteration 0: rel deviation is 7827.61
+204: iteration 1: rel deviation is 3913.2
+204: iteration 2: rel deviation is 0.247191
+produced a movie-frame in this step!
+205: iteration 0: rel deviation is 7956.29
+205: iteration 1: rel deviation is 3977.51
+205: iteration 2: rel deviation is 0.259438
+produced a movie-frame in this step!
+206: iteration 0: rel deviation is 8128.26
+206: iteration 1: rel deviation is 4063.5
+206: iteration 2: rel deviation is 0.222432
+produced a movie-frame in this step!
+207: iteration 0: rel deviation is 8234.78
+207: iteration 1: rel deviation is 4116.76
+207: iteration 2: rel deviation is 165.556
+207: iteration 3: rel deviation is 0.143627
+produced a movie-frame in this step!
+208: iteration 0: rel deviation is 8433.03
+208: iteration 1: rel deviation is 4215.79
+208: iteration 2: rel deviation is 197.342
+208: iteration 3: rel deviation is 0.113213
+produced a movie-frame in this step!
+209: iteration 0: rel deviation is 8529.96
+209: iteration 1: rel deviation is 4264.33
+209: iteration 2: rel deviation is 0.228542
+produced a movie-frame in this step!
+210: iteration 0: rel deviation is 8742.7
+210: iteration 1: rel deviation is 4370.66
+210: iteration 2: rel deviation is 0.229701
+produced a movie-frame in this step!
+211: iteration 0: rel deviation is 8863.85
+211: iteration 1: rel deviation is 4431.25
+211: iteration 2: rel deviation is 0.231365
+produced a movie-frame in this step!
+212: iteration 0: rel deviation is 9053.76
+212: iteration 1: rel deviation is 4526.17
+212: iteration 2: rel deviation is 0.226232
+produced a movie-frame in this step!
+213: iteration 0: rel deviation is 9201.49
+213: iteration 1: rel deviation is 4600.04
+213: iteration 2: rel deviation is 0.229411
+produced a movie-frame in this step!
+214: iteration 0: rel deviation is 9367.77
+214: iteration 1: rel deviation is 4683.15
+214: iteration 2: rel deviation is 0.285479
+produced a movie-frame in this step!
+215: iteration 0: rel deviation is 9543.63
+215: iteration 1: rel deviation is 4771.08
+215: iteration 2: rel deviation is 0.233575
+produced a movie-frame in this step!
+216: iteration 0: rel deviation is 9680.75
+216: iteration 1: rel deviation is 4839.61
+216: iteration 2: rel deviation is 0.254305
+produced a movie-frame in this step!
+217: iteration 0: rel deviation is 9886.97
+217: iteration 1: rel deviation is 4942.72
+217: iteration 2: rel deviation is 0.271393
+produced a movie-frame in this step!
+218: iteration 0: rel deviation is 9994.73
+218: iteration 1: rel deviation is 4996.58
+218: iteration 2: rel deviation is 0.245362
+produced a movie-frame in this step!
+219: iteration 0: rel deviation is 10587
+219: iteration 1: rel deviation is 5293.17
+219: iteration 2: rel deviation is 0.328899
+produced a movie-frame in this step!
+220: iteration 0: rel deviation is 10347.3
+220: iteration 1: rel deviation is 5172.87
+220: iteration 2: rel deviation is 0.305578
+produced a movie-frame in this step!
+221: iteration 0: rel deviation is 10577.9
+221: iteration 1: rel deviation is 5288.15
+221: iteration 2: rel deviation is 0.312339
+produced a movie-frame in this step!
+222: iteration 0: rel deviation is 10722.4
+222: iteration 1: rel deviation is 5360.36
+222: iteration 2: rel deviation is 0.406247
+produced a movie-frame in this step!
+223: iteration 0: rel deviation is 12643.4
+223: iteration 1: rel deviation is 6321.4
+223: iteration 2: rel deviation is 0.414074
+produced a movie-frame in this step!
+224: iteration 0: rel deviation is 11099.8
+224: iteration 1: rel deviation is 5549.06
+224: iteration 2: rel deviation is 0.28417
+produced a movie-frame in this step!
+225: iteration 0: rel deviation is 11267.2
+225: iteration 1: rel deviation is 5632.71
+225: iteration 2: rel deviation is 0.266345
+produced a movie-frame in this step!
+226: iteration 0: rel deviation is 11477.5
+226: iteration 1: rel deviation is 5737.84
+226: iteration 2: rel deviation is 0.295207
+produced a movie-frame in this step!
+227: iteration 0: rel deviation is 11610.4
+227: iteration 1: rel deviation is 5804.3
+227: iteration 2: rel deviation is 0.290729
+produced a movie-frame in this step!
+228: iteration 0: rel deviation is 11855.6
+228: iteration 1: rel deviation is 5926.89
+228: iteration 2: rel deviation is 0.319827
+produced a movie-frame in this step!
+229: iteration 0: rel deviation is 11959.1
+229: iteration 1: rel deviation is 5978.66
+229: iteration 2: rel deviation is 0.371419
+produced a movie-frame in this step!
+230: iteration 0: rel deviation is 12233.7
+230: iteration 1: rel deviation is 6115.9
+230: iteration 2: rel deviation is 0.415858
+produced a movie-frame in this step!
+231: iteration 0: rel deviation is 12371
+231: iteration 1: rel deviation is 6184.56
+231: iteration 2: rel deviation is 0.289657
+produced a movie-frame in this step!
+232: iteration 0: rel deviation is 12611
+14 iterations, reldev=0.207104, converged!
+MOVIEMODE is activated!
+precalculating the q-values... done!
+1: iteration 0: rel deviation is 0.0100695
+produced a movie-frame in this step!
+2: iteration 0: rel deviation is 0.0100693
+produced a movie-frame in this step!
+

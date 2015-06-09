@@ -40,10 +40,10 @@ public:
 
 namespace charge_density_impl {
 
-    static constexpr int initial_waypoints = 30;
+    static constexpr int initial_waypoints = 50;
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
-    static constexpr double rel_tol = 1e-2;
+    static constexpr double rel_tol = 5e-3;
 
     static inline arma::vec get_bound_states(const device & d, const potential & phi);
     static inline arma::vec get_bound_states(const device & d, const potential & phi, double E0, double E1);
@@ -116,7 +116,8 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
         vec A = get_A<true>(d, phi, E);
         double f = fermi(E - phi.s(), d.F_sc);
         for (int i = 0; i < d.N_x; ++i) {
-            A(i) *= (E >= phi.data(i)) ? f : (f - 1);
+            A(i) *= fermi<true>(f, E - phi(i));
+//             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
         }
         return A;
     };
@@ -124,7 +125,8 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
         vec A = get_A<false>(d, phi, E);
         double f = fermi(E - phi.d(), d.F_dc);
         for (int i = 0; i < d.N_x; ++i) {
-            A(i) *= (E >= phi.data(i)) ? f : (f - 1);
+            A(i) *= fermi<true>(f, E - phi(i));
+//             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
         }
         return A;
     };
@@ -169,7 +171,8 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                 for (int j = 0; j < d.N_x; ++j) {
                     double a = std::norm((*psi.data)(2 * j    , i));
                     double b = std::norm((*psi.data)(2 * j + 1, i));
-                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+//                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
                 }
             }
 

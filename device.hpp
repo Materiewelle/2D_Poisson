@@ -113,7 +113,7 @@ public:
 
     inline device(const std::string & n, const model & m, const geometry & g);
     //inline device(const std::string & filename);
-    inline void update();
+    inline void update(const std::string & n);
     inline std::string to_string();
 
 };
@@ -167,8 +167,7 @@ static const device::model tfet_model {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-device::device(const std::string & n, const model & m, const geometry & g)
-    : name(n) {
+device::device(const std::string & n, const model & m, const geometry & g) {
     eps_cnt = g.eps_cnt;
     eps_ox  = g.eps_ox;
     l_sc    = g.l_sc;
@@ -192,13 +191,14 @@ device::device(const std::string & n, const model & m, const geometry & g)
     F_g   = m.F_g;
     F_d   = m.F_d;
 
-    update();
+    update(n);
 }
 
 //device::device(const std::string & filename) {
 //}
 
-void device::update() {
+void device::update(const std::string & n) {
+    name = n;
     F_sc = F_s;
     F_dc = F_d;
 
