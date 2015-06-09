@@ -29,6 +29,16 @@ int main() {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     device tfet("tfet", tfet_model, standard_geometry);
+    device nfet("nfet", nfet_model, standard_geometry);
+
+    steady_state s(nfet, {0.0, 0.0, 0.8});
+    s.solve();
+    cout << s.E[LV].size() + s.E[LC].size() + s.E[RV].size() + s.E[RC].size() << endl;
+    vec test = s.phi.data;
+
+    plot(test);
+
+    return 0;
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
 //    s.solve();
@@ -49,12 +59,6 @@ int main() {
 //    for (int i = 2; i < 22; ++i) {
 //        te.V[i] = {ramp(i-2), 0.2, 0.5};
 //    }
-
-    vec E = linspace(-1.0, 1.0, 5000);
-    vec f0 = fermi<false>(E, tfet.F_d, 0.5);
-    vec f1 = fermi<true>(E, tfet.F_d, 0.5, 500);
-    plot(make_pair(E, f0), make_pair(E, f1));
-    return 0;
 
     vec V_g;
     vec I;

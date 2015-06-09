@@ -116,7 +116,8 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
         vec A = get_A<true>(d, phi, E);
         double f = fermi(E - phi.s(), d.F_sc);
         for (int i = 0; i < d.N_x; ++i) {
-            A(i) *= (E >= phi.data(i)) ? f : (f - 1);
+            A(i) *= fermi<true>(f, E - phi(i));
+//             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
         }
         return A;
     };
@@ -124,7 +125,8 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
         vec A = get_A<false>(d, phi, E);
         double f = fermi(E - phi.d(), d.F_dc);
         for (int i = 0; i < d.N_x; ++i) {
-            A(i) *= (E >= phi.data(i)) ? f : (f - 1);
+            A(i) *= fermi<true>(f, E - phi(i));
+//             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
         }
         return A;
     };
@@ -169,7 +171,8 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                 for (int j = 0; j < d.N_x; ++j) {
                     double a = std::norm((*psi.data)(2 * j    , i));
                     double b = std::norm((*psi.data)(2 * j + 1, i));
-                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+//                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
                 }
             }
 
