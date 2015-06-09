@@ -28,7 +28,7 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device tfet("tfet", tfet_model, standard_geometry);
+    device nfet("nfet", nfet_model, standard_geometry);
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
 //    s.solve();
@@ -52,11 +52,14 @@ int main() {
 
     vec V_g;
     vec I;
-    for (double V_d = 0.2; V_d < 0.6; V_d += 0.05) {
-        steady_state::transfer(tfet, {0.0, -0.2, 0.4}, 0.6, 3, V_g, I);
+    vec l_g = {9, 18, 41, 320};
+    for (auto it = l_g.begin(); it != l_g.end(); ++it) {
+        nfet.l_g = *it;
+        nfet.update();
+        steady_state::transfer(nfet, {0.0, -0.2, 0.4}, 0.6, 300, V_g, I);
         mat res = join_horiz(V_g, I);
         std::stringstream ss;
-        ss << "tfet_transfer_Vd=" << std::setprecision(2) << V_d;
+        ss << "nfet_transfer_lg=" << std::setprecision(2) << *it;
         res.save(ss.str(), raw_ascii);
     }
 
