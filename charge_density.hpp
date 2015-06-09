@@ -116,8 +116,8 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
         vec A = get_A<true>(d, phi, E);
         double f = fermi(E - phi.s(), d.F_sc);
         for (int i = 0; i < d.N_x; ++i) {
-            A(i) *= fermi<true>(f, E - phi(i));
 //             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
+            A(i) *= fermi<true>(f, E - phi(i));
         }
         return A;
     };
@@ -125,8 +125,8 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
         vec A = get_A<false>(d, phi, E);
         double f = fermi(E - phi.d(), d.F_dc);
         for (int i = 0; i < d.N_x; ++i) {
-            A(i) *= fermi<true>(f, E - phi(i));
 //             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
+            A(i) *= fermi<true>(f, E - phi(i));
         }
         return A;
     };
@@ -175,6 +175,7 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                     n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
                 }
             }
+            // no implied barrier (nowait clause)
 
             #pragma omp critical
             {
