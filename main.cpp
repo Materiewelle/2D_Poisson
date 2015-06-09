@@ -44,33 +44,26 @@ int main() {
 
 //    plot(make_pair(V_in, V_out));
 
-//    time_evolution te(nfet, voltage { 0.0, 0.2, 0.5 });
-//    vec ramp = linspace(0, 0.05, 20);
-//    for (int i = 2; i < 22; ++i) {
-//        te.V[i] = {ramp(i-2), 0.2, 0.5};
-//    }
-
-    vec V_g;
-    vec I;
-    vec l_g = {9, 18, 41, 320};
-    for (auto it = l_g.begin(); it != l_g.end(); ++it) {
-        nfet.l_g = *it;
-        std::stringstream ss;
-        ss << "nfet_transfer_lg=" << std::setprecision(2) << *it;
-        nfet.update(ss.str());
-        steady_state::transfer<false>(nfet, {0.0, -0.2, 0.4}, 0.6, 300, V_g, I);
-        mat res = join_horiz(V_g, I);
-        res.save(ss.str(), raw_ascii);
+    time_evolution te(nfet, voltage { 0.0, 0.25, 0.4 });
+    vec ramp = linspace(0, 0.15, 40);
+    for (int i = 2; i < 42; ++i) {
+        te.V[i] = {ramp(i-2), 0.2, 0.5};
     }
+    te.solve();
 
-//    time_evolution te(nfet);
-//    std::fill(begin(te.V), begin(te.V) + 2, voltage{0.0, 0.2, 0.5});
-//    vec ramp = linspace(0, 0.05, 20);
-//    for (int i = 2; i < 22; ++i) {
-//        te.V[i] = {ramp(i-2), 0.2, 0.5};
+//    vec V_g;
+//    vec I;
+//    vec l_g = {9, 18, 41, 320};
+//    for (auto it = l_g.begin(); it != l_g.end(); ++it) {
+//        nfet.l_g = *it;
+//        std::stringstream ss;
+//        ss << "nfet_transfer_lg=" << std::setprecision(2) << *it;
+//        nfet.update(ss.str());
+//        steady_state::transfer<false>(nfet, {0.0, -0.2, 0.4}, 0.6, 300, V_g, I);
+//        mat res = join_horiz(V_g, I);
+//        res.save(ss.str(), raw_ascii);
 //    }
-//    std::fill(begin(te.V) + 22, end(te.V), voltage{0.05, 0.2, 0.5});
-//    te.solve();
+
 
     return 0;
 }
