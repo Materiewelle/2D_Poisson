@@ -197,7 +197,6 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
     lc *= scale;
     rc *= scale;
 
-    // calculate total charge density with doping
     total = lv + rv + lc + rc + get_n0(d);
 }
 

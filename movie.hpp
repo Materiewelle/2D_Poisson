@@ -15,6 +15,7 @@
 #include "gnuplot.hpp"
 #include "device.hpp"
 #include "time_params.hpp"
+#include "time_evolution.hpp"
 
 static inline void shell(const std::stringstream & command) {
     system(command.str().c_str());
@@ -50,31 +51,34 @@ public:
     std::string parent_folder;
     std::string folder;
 
-    inline void frame(const int m, const potential & phi, const wave_packet psi[6]);
-    inline void mp4(const wave_packet psi[6]);
+    inline void action();
 
-    inline movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> & E_i);
+    // provide an initialized time_evolution object with solved steady-state
+    inline movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i);
 
 private:
-    int calls; // how many times has frame() been called?
+    int m;
     int frames; // the current number of frames that have been produced
-    const int frame_skip = 1;
+    static constexpr int frame_skip = 1;
 
-    const double phimin = -1.5;
-    const double phimax = +0.5;
+    static constexpr double phimin = -1.5;
+    static constexpr double phimax = +0.5;
 
-    device d;
-    const std::vector<std::pair<int, int>> E_ind;
+    time_evolution & te;
+    std::vector<std::pair<int, int>> E_ind;
 
     gnuplot gp;
     arma::vec band_offset;
+
+    inline void frame();
+    inline void mp4();
 
     inline std::string output_folder(int lattice, double E);
     inline std::string output_file(int lattice, double E, int frame_number);
 };
 
-movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std::pair<int, int>> & E_i)
-    : calls(0), frames(0), d(dev), E_ind(E_i), band_offset(d.N_x) {
+movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i)
+    : m(0), frames(0), te(t_ev), E_ind(E_i), band_offset(te.d.N_x) {
     using namespace std::string_literals;
 
     char buf[32];
@@ -86,8 +90,8 @@ movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std
     // produce folder tree
     for (unsigned i = 0; i < E_ind.size(); ++i) {
         int lattice = E_ind[i].first;
-        double E = psi[lattice].E0(E_ind[i].second);
-            system("mkdir -p " + output_folder(lattice, E));
+        double E = te.psi[lattice].E0(E_ind[i].second);
+        system("mkdir -p " + output_folder(lattice, E));
     }
 
     // gnuplot setup
@@ -101,26 +105,34 @@ movie::movie(const device & dev, const wave_packet psi[6], const std::vector<std
     gp << "set style line 4 lc rgb RWTH_Blau\n";
 
     // band offsets for band drawing
-    band_offset(d.sc).fill(0.5 * d.E_gc);
-    band_offset(d.s).fill(0.5 * d.E_g);
-    band_offset(d.sox).fill(0.5 * d.E_g);
-    band_offset(d.g).fill(0.5 * d.E_g);
-    band_offset(d.dox).fill(0.5 * d.E_g);
-    band_offset(d.d).fill(0.5 * d.E_g);
-    band_offset(d.dc).fill(0.5 * d.E_gc);
+    band_offset(te.d.sc).fill(0.5 * te.d.E_gc);
+    band_offset(te.d.s).fill(0.5 * te.d.E_g);
+    band_offset(te.d.sox).fill(0.5 * te.d.E_g);
+    band_offset(te.d.g).fill(0.5 * te.d.E_g);
+    band_offset(te.d.dox).fill(0.5 * te.d.E_g);
+    band_offset(te.d.d).fill(0.5 * te.d.E_g);
+    band_offset(te.d.dc).fill(0.5 * te.d.E_gc);
 }
 
-void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) {
+void movie::action() {
+    for (m = 0; m < t::N_t; ++m) {
+        te.step();
+        frame();
+    }
+    mp4();
+}
+
+void movie::frame() {
     using namespace arma;
 
-    if ((calls++ % frame_skip) == 0) {
+    if ((m % frame_skip) == 0) {
         for (unsigned i = 0; i < E_ind.size(); ++i) {
             int lattice = E_ind[i].first;
-            double E = psi[lattice].E0(E_ind[i].second);
+            double E = te.psi[lattice].E0(E_ind[i].second);
 
             // this is a line that indicates the wave's injection energy
-            vec E_line(d.N_x);
-            E_line = psi[lattice].E.col(E_ind[i].second);
+            vec E_line(te.d.N_x);
+            E_line = te.psi[lattice].E.col(E_ind[i].second);
 
             // set correct output file
             gp << "set output \"" << output_file(lattice, E, frames) << "\"\n";
@@ -132,14 +144,14 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
              * a loop and kill some redundancy */
             arma::vec data[7];
 
-            arma::cx_vec wavefunction = psi[lattice].data->col(E_ind[i].second);
+            arma::cx_vec wavefunction = te.psi[lattice].data->col(E_ind[i].second);
             data[0] = arma::real(wavefunction);
             data[1] = arma::imag(wavefunction);
             data[2] = +arma::abs(wavefunction);
             data[3] = -arma::abs(wavefunction);
 
-            data[4] = phi.data - band_offset;
-            data[5] = phi.data + band_offset;
+            data[4] = te.phi[m].data - band_offset;
+            data[5] = te.phi[m].data + band_offset;
             data[6] = E_line;
 
             // setup psi-plot:
@@ -155,7 +167,7 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
 
             // pipe data to gnuplot
             for (unsigned p = 0; p < 7; ++p) {
-                for(int k = 0; k < d.N_x; ++k) {
+                for(int k = 0; k < te.d.N_x; ++k) {
                     if (p == 4) { // setup bands-plot
                         gp << "set ylabel 'E / eV'\n";
                         gp << "set yrange [" << phimin << ":" << phimax << "]\n";
@@ -164,7 +176,7 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
                               "'-' w l ls 3 lw 2 notitle, "
                               "'-' w l ls 2 lw 2 t 'injection energy'\n";
                     }
-                    gp << d.x(k) << " " << ((p < 4) ? data[p](2 * k) : data[p](k)) << std::endl;
+                    gp << te.d.x(k) << " " << ((p < 4) ? data[p](2 * k) : data[p](k)) << std::endl;
                 }
                 gp << "e" << std::endl;
             }
@@ -179,7 +191,7 @@ void movie::frame(const int m, const potential & phi, const wave_packet psi[6]) 
     }
 }
 
-void movie::mp4(const wave_packet psi[6]) {
+void movie::mp4() {
     std::cout << "producung mp4 video files from frames...";
     std::flush(std::cout);
     static const std::string ffmpeg1 = "ffmpeg "
@@ -190,22 +202,22 @@ void movie::mp4(const wave_packet psi[6]) {
 
     for (unsigned i = 0; i < E_ind.size(); ++i) {
         int lattice = E_ind[i].first;
-        double E = psi[lattice].E0(E_ind[i].second);
+        double E = te.psi[lattice].E0(E_ind[i].second);
         // run the command to make an mp4 out of all the stuff
         system(ffmpeg1 + output_folder(lattice, E) + ffmpeg2 + output_folder(lattice, E) + "/movie.mp4");
     }
     std::cout << " done!" << std::endl;
 }
 
-std::string movie::output_folder(int lattice, double E) {
-    std::stringstream ss;
-    ss << folder << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
-    return ss.str();
-}
-
 std::string movie::output_file(int lattice, double E, int frame_number) {
     std::stringstream ss;
     ss << output_folder(lattice, E) << "/" << std::setfill('0') << std::setw(4) << frame_number << ".png";
+    return ss.str();
+}
+
+std::string movie::output_folder(int lattice, double E) {
+    std::stringstream ss;
+    ss << folder << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
     return ss.str();
 }
 
