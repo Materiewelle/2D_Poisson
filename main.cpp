@@ -47,7 +47,7 @@ int main() {
     time_evolution te(nfet, voltage { 0.0, 0.25, 0.4 });
     vec ramp = linspace(0, 0.15, 40);
     for (int i = 2; i < 42; ++i) {
-        te.V[i] = {ramp(i-2), 0.2, 0.5};
+        te.V[i] = {ramp(i-2), 0.25, 0.4};
     }
     te.solve();
 

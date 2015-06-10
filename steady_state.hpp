@@ -11,7 +11,7 @@
 
 class steady_state {
 public:
-    static constexpr auto dphi_threshold = 1e-12;
+    static constexpr auto dphi_threshold = 1e-15;
     static constexpr auto max_iterations = 400;
 
     device d;

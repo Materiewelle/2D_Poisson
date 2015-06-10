@@ -4,6 +4,9 @@
 #include <armadillo>
 #include <stack>
 #include <unordered_map>
+#include <limits>
+#include <cmath>
+#include <cfloat>
 
 // forward declarations
 #ifndef POTENTIAL_HPP
@@ -197,7 +200,6 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
     lc *= scale;
     rc *= scale;
 
-    // calculate total charge density with doping
     total = lv + rv + lc + rc + get_n0(d);
 }
 
