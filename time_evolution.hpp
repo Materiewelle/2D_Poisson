@@ -12,10 +12,6 @@
 #include "voltage.hpp"
 #include "wave_packet.hpp"
 
-#ifdef MOVIEMODE
-#include "movie.hpp"
-#endif
-
 class time_evolution {
 public:
     static constexpr auto dphi_threshold = 1e-8;
