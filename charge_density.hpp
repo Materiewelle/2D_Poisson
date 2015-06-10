@@ -4,9 +4,6 @@
 #include <armadillo>
 #include <stack>
 #include <unordered_map>
-#include <limits>
-#include <cmath>
-#include <cfloat>
 
 // forward declarations
 #ifndef POTENTIAL_HPP
