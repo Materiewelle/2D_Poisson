@@ -25,11 +25,11 @@ public:
         double eps_cnt;
         double eps_ox;
         double l_sc;
+        double l_s;
         double l_sox;
-        double l_sg;
         double l_g;
-        double l_dg;
         double l_dox;
+        double l_d;
         double l_dc;
         double r_cnt;
         double d_ox;
@@ -55,11 +55,11 @@ public:
     double eps_cnt;  // relative permittivity of nanotube
     double eps_ox;   // relative permittivity of oxide
     double l_sc;     // source contact length
+    double l_s;      // source length
     double l_sox;    // source oxide length
-    double l_sg;     // length between source and gate
     double l_g;      // gate length
-    double l_dg;     // length between drain and gate
     double l_dox;    // drain oxide length
+    double l_d;      // drain length
     double l_dc;     // drain contact length
     double r_cnt;    // nanotube radius
     double d_ox;     // oxide thickness
@@ -71,11 +71,11 @@ public:
 
     // lattice in x direction
     int N_sc;        // # of points in source contact
+    int N_s;         // # of points in source
     int N_sox;       // # of points in source oxide
-    int N_sg;        // # of points between source and gate
     int N_g;         // # of points in gate
-    int N_dg;        // # of points between drain and gate
     int N_dox;       // # of points in drain oxide
+    int N_d;         // # of points in drain
     int N_dc;        // # of points in drain contact
     int N_x;         // total # of points
     arma::vec x;     // x lattice points
@@ -89,18 +89,18 @@ public:
 
     // x ranges
     arma::span sc;   // source contact area
+    arma::span s;    // source area
     arma::span sox;  // source oxide area
-    arma::span sg;   // area between source and gate
-    arma::span g;    // gate area;
-    arma::span dg;   // area between drain and gate
+    arma::span g;    // gate area
     arma::span dox;  // drain oxide area
+    arma::span d;    // drain area
     arma::span dc;   // drain contact area
     arma::span sc2;  // source contact area twice
-    arma::span sox2; // source oxide area twice;
-    arma::span sg2;  // area between source and gate
+    arma::span s2;   // source area twice
+    arma::span sox2; // source oxide area twice
     arma::span g2;   // gate area twice
-    arma::span dg2;  // area between drain and gate twice
     arma::span dox2; // drain oxide area twice
+    arma::span d2;   // drain area twice
     arma::span dc2;  // drain contact twice
 
     // hopping parameters
@@ -118,32 +118,15 @@ public:
 
 };
 
-static const device::geometry fet_geometry {
+static const device::geometry standard_geometry {
     10.0, // eps_cnt
     25.0, // eps_ox
     12.0, // l_sc
-    12.0, // l_sox
-    12.0, // l_sg
-    12.0, // l_g
-    12.0, // l_dg
-    12.0, // l_dox
-    12.0, // l_dc
-     1.2, // r_cnt
-     0.8, // d_ox
-     1.2, // r_ext
-     0.1, // dx
-     0.1  // dr
-};
-
-static const device::geometry tfet_geometry {
-    10.0, // eps_cnt
-    25.0, // eps_ox
-    12.0, // l_sc
-    10.0, // l_sox
-     4.0, // l_sg
-    10.0, // l_g
-    14.0, // l_dg
-     0.0, // l_dox
+     2.0, // l_s
+     4.0, // l_sox
+     9.0, // l_g
+     4.0, // l_dox
+     2.0, // l_d
     12.0, // l_dc
      1.0, // r_cnt
      2.0, // d_ox
@@ -188,11 +171,11 @@ device::device(const std::string & n, const model & m, const geometry & g) {
     eps_cnt = g.eps_cnt;
     eps_ox  = g.eps_ox;
     l_sc    = g.l_sc;
+    l_s     = g.l_s;
     l_sox   = g.l_sox;
-    l_sg    = g.l_sg;
     l_g     = g.l_g;
-    l_dg    = g.l_dg;
     l_dox   = g.l_dox;
+    l_d     = g.l_d;
     l_dc    = g.l_dc;
     r_cnt   = g.r_cnt;
     d_ox    = g.d_ox;
@@ -219,17 +202,17 @@ void device::update(const std::string & n) {
     F_sc = F_s;
     F_dc = F_d;
 
-    l = l_sc + l_sox + l_sg + l_g + l_dg + l_dox + l_dc;
+    l = l_sc + l_s + l_sox + l_g + l_dox + l_d + l_dc;
     R = r_cnt + d_ox + r_ext;
 
     N_sc  = round(l_sc  / dx);
+    N_s   = round(l_s   / dx);
     N_sox = round(l_sox / dx);
-    N_sg  = round(l_sg  / dx);
     N_g   = round(l_g   / dx);
-    N_dg  = round(l_dg  / dx);
     N_dox = round(l_dox / dx);
+    N_d   = round(l_d   / dx);
     N_dc  = round(l_dc  / dx);
-    N_x   = N_sc + N_sox + N_sg + N_g + N_dg + N_dox + N_dc;
+    N_x   = N_sc + N_s + N_sox + N_g + N_dox + N_d + N_dc;
     x     = arma::linspace(0.5 * dx, l - 0.5 * dx, N_x);
 
     M_cnt = round(r_cnt / dr);
@@ -239,18 +222,18 @@ void device::update(const std::string & n) {
     r     = arma::linspace(0.5 * dr, R - 0.5 * dr, M_r);
 
     sc   = arma::span(        0,   - 1 + N_sc );
-    sox  = arma::span( sc.b + 1,  sc.b + N_sox);
-    sg   = arma::span(sox.b + 1, sox.b + N_sg );
-    g    = arma::span( sg.b + 1,  sg.b + N_g  );
-    dg   = arma::span(  g.b + 1,   g.b + N_dg );
-    dox  = arma::span( dg.b + 1,  dg.b + N_dox);
-    dc   = arma::span(dox.b + 1, dox.b + N_dc );
+    s    = arma::span( sc.b + 1,  sc.b + N_s  );
+    sox  = arma::span(  s.b + 1,   s.b + N_sox);
+    g    = arma::span(sox.b + 1, sox.b + N_g  );
+    dox  = arma::span(  g.b + 1,   g.b + N_dox);
+    d    = arma::span(dox.b + 1, dox.b + N_d  );
+    dc   = arma::span(  d.b + 1,   d.b + N_dc );
     sc2  = arma::span( sc.a * 2,  sc.b * 2 + 1);
+    s2   = arma::span(  s.a * 2,   s.b * 2 + 1);
     sox2 = arma::span(sox.a * 2, sox.b * 2 + 1);
-    sg2  = arma::span( sg.a * 2,  sg.b * 2 + 1);
     g2   = arma::span(  g.a * 2,   g.b * 2 + 1);
-    dg2  = arma::span( dg.a * 2,  dg.b * 2 + 1);
     dox2 = arma::span(dox.a * 2, dox.b * 2 + 1);
+    d2   = arma::span(  d.a * 2,   d.b * 2 + 1);
     dc2  = arma::span( dc.a * 2,  dc.b * 2 + 1);
 
     t1  = 0.25 * E_g  * (1 + sqrt(1 + 2 * c::h_bar2 / (dx*dx * 1E-18 * m_eff * E_g  * c::e)));
@@ -267,11 +250,11 @@ void device::update(const std::string & n) {
     }
     t_vec(sc2.b) = tcc;
     b = true;
-    for (unsigned i = sox2.a; i < dox2.b; ++i) {
+    for (unsigned i = s2.a; i < d2.b; ++i) {
         t_vec(i) = b ? t1 : t2;
         b = !b;
     }
-    t_vec(dox2.b) = tcc;
+    t_vec(d2.b) = tcc;
     b = true;
     for (unsigned i = dc2.a; i < dc2.b; ++i) {
         t_vec(i) = b ? tc1 : tc2;
@@ -284,33 +267,33 @@ std::string device::to_string() {
 
     stringstream ss;
 
-    ss << "name    = " << name    << endl;
+    ss << "name=" << name << endl;
     ss << endl;
 
     ss << "; model" << endl;
-    ss << "E_g     = " << E_g     << endl;
-    ss << "m_eff   = " << m_eff   << endl;
-    ss << "E_gc    = " << E_gc    << endl;
-    ss << "m_efc   = " << m_efc   << endl;
-    ss << "F_s     = " << F_s     << endl;
-    ss << "F_g     = " << F_g     << endl;
-    ss << "F_d     = " << F_d     << endl;
+    ss << "E_g=" << E_g << endl;
+    ss << "m_eff=" << m_eff << endl;
+    ss << "E_gc=" << E_gc << endl;
+    ss << "m_efc=" << m_efc << endl;
+    ss << "F_s=" << F_s << endl;
+    ss << "F_g=" << F_g << endl;
+    ss << "F_d=" << F_d << endl;
 
     ss << "; geometry" << endl;
-    ss << "eps_cnt = " << eps_cnt << endl;
-    ss << "eps_ox  = " << eps_ox  << endl;
-    ss << "l_sc    = " << l_sc    << endl;
-    ss << "l_sox   = " << l_sox   << endl;
-    ss << "l_sg    = " << l_sg    << endl;
-    ss << "l_g     = " << l_g     << endl;
-    ss << "l_dg    = " << l_dg    << endl;
-    ss << "l_dox   = " << l_dox   << endl;
-    ss << "l_dc    = " << l_dc    << endl;
-    ss << "r_cnt   = " << r_cnt   << endl;
-    ss << "d_ox    = " << d_ox    << endl;
-    ss << "r_ext   = " << r_ext   << endl;
-    ss << "dx      = " << dx      << endl;
-    ss << "dr      = " << dr      << endl;
+    ss << "eps_cnt=" << eps_cnt << endl;
+    ss << "eps_ox=" << eps_ox << endl;
+    ss << "l_sc=" << l_sc << endl;
+    ss << "l_s=" << l_s << endl;
+    ss << "l_sox=" << l_sox << endl;
+    ss << "l_g=" << l_g << endl;
+    ss << "l_dox=" << l_dox << endl;
+    ss << "l_d=" << l_d << endl;
+    ss << "l_dc=" << l_dc << endl;
+    ss << "r_cnt=" << r_cnt << endl;
+    ss << "d_ox=" << d_ox << endl;
+    ss << "r_ext=" << r_ext << endl;
+    ss << "dx=" << dx << endl;
+    ss << "dr=" << dr << endl;
 
     return ss.str();
 }

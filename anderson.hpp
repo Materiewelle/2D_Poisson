@@ -2,6 +2,7 @@
 #define ANDERSON_HPP
 
 #include <armadillo>
+
 #include "gnuplot.hpp"
 
 class anderson {

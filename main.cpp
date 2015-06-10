@@ -1,11 +1,14 @@
 //#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
-#define MOVIEMODE
+//#define MOVIEMODE
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <omp.h>
 #include <xmmintrin.h>
+#include <string>
+#include <sstream>
 
 #include <armadillo>
 
@@ -16,8 +19,6 @@
 #include "potential.hpp"
 #include "steady_state.hpp"
 #include "time_evolution.hpp"
-#include <string>
-#include <sstream>
 
 using namespace arma;
 using namespace std;
@@ -28,7 +29,10 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device nfet("nfet", nfet_model, standard_geometry);
+    device nfet("nfet", nfet_model, fet_geometry);
+
+    plot_phi2D(nfet, { -0.8, -0.2, 0.8 });
+    return 0;
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
 //    s.solve();

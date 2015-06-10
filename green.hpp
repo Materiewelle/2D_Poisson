@@ -78,62 +78,62 @@ static inline arma::mat get_lDOS(const device & d, const potential & phi, int N_
 }
 
 static inline void plot_ldos(const device & d, const potential & phi, const unsigned N_grid = 1000) {
-    gnuplot gp;
+//    gnuplot gp;
 
-    gp << "set title \"Logarithmic lDOS\"\n";
-    gp << "set xlabel \"x / nm\"\n";
-    gp << "set ylabel \"E / eV\"\n";
-    gp << "set zlabel \"log(lDOS)\"\n";
-    gp << "unset key\n";
-    gp << "unset colorbox\n";
-    //gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
-    //gp << "set output 'lDOS.pdf'\n";
+//    gp << "set title \"Logarithmic lDOS\"\n";
+//    gp << "set xlabel \"x / nm\"\n";
+//    gp << "set ylabel \"E / eV\"\n";
+//    gp << "set zlabel \"log(lDOS)\"\n";
+//    gp << "unset key\n";
+//    gp << "unset colorbox\n";
+//    //gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
+//    //gp << "set output 'lDOS.pdf'\n";
 
-    arma::vec E;
-    arma::mat lDOS = get_lDOS(d, phi, N_grid, E);
-    gp.set_background(d.x, E, arma::log(lDOS));
+//    arma::vec E;
+//    arma::mat lDOS = get_lDOS(d, phi, N_grid, E);
+//    gp.set_background(d.x, E, arma::log(lDOS));
 
-    arma::vec vband = phi.data;
-    vband(d.sc)  += -0.5 * d.E_gc;
-    vband(d.s)   += -0.5 * d.E_g;
-    vband(d.sox) += -0.5 * d.E_g;
-    vband(d.g)   += -0.5 * d.E_g;
-    vband(d.dox) += -0.5 * d.E_g;
-    vband(d.d)   += -0.5 * d.E_g;
-    vband(d.dc)  += -0.5 * d.E_gc;
+//    arma::vec vband = phi.data;
+//    vband(d.sc)  += -0.5 * d.E_gc;
+//    vband(d.s)   += -0.5 * d.E_g;
+//    vband(d.sox) += -0.5 * d.E_g;
+//    vband(d.g)   += -0.5 * d.E_g;
+//    vband(d.dox) += -0.5 * d.E_g;
+//    vband(d.d)   += -0.5 * d.E_g;
+//    vband(d.dc)  += -0.5 * d.E_gc;
 
-    arma::vec cband = phi.data;
-    cband(d.sc)  += +0.5 * d.E_gc;
-    cband(d.s)   += +0.5 * d.E_g;
-    cband(d.sox) += +0.5 * d.E_g;
-    cband(d.g)   += +0.5 * d.E_g;
-    cband(d.dox) += +0.5 * d.E_g;
-    cband(d.d)   += +0.5 * d.E_g;
-    cband(d.dc)  += +0.5 * d.E_gc;
+//    arma::vec cband = phi.data;
+//    cband(d.sc)  += +0.5 * d.E_gc;
+//    cband(d.s)   += +0.5 * d.E_g;
+//    cband(d.sox) += +0.5 * d.E_g;
+//    cband(d.g)   += +0.5 * d.E_g;
+//    cband(d.dox) += +0.5 * d.E_g;
+//    cband(d.d)   += +0.5 * d.E_g;
+//    cband(d.dc)  += +0.5 * d.E_gc;
 
-    gp.add(d.x, vband);
-    gp.add(d.x, cband);
-    gp.add(d.x, phi.data);
+//    gp.add(d.x, vband);
+//    gp.add(d.x, cband);
+//    gp.add(d.x, phi.data);
 
-    unsigned N_s = std::round(d.N_sc + 0.5 * d.N_s);
-    arma::vec fermi_l(N_s);
-    fermi_l.fill(d.F_sc + phi.s());
-    arma::vec x_l = d.x(arma::span(0, N_s-1));
-    gp.add(x_l, fermi_l);
+//    unsigned N_s = std::round(d.N_sc + 0.5 * d.N_s);
+//    arma::vec fermi_l(N_s);
+//    fermi_l.fill(d.F_sc + phi.s());
+//    arma::vec x_l = d.x(arma::span(0, N_s-1));
+//    gp.add(x_l, fermi_l);
 
-    unsigned N_d = std::round(d.N_dc + 0.5 * d.N_d);
-    arma::vec fermi_r(N_d);
-    fermi_r.fill(d.F_dc + phi.d());
-    arma::vec x_r = d.x(arma::span(d.N_x-N_d, d.N_x-1));
-    gp.add(x_r, fermi_r);
+//    unsigned N_d = std::round(d.N_dc + 0.5 * d.N_d);
+//    arma::vec fermi_r(N_d);
+//    fermi_r.fill(d.F_dc + phi.d());
+//    arma::vec x_r = d.x(arma::span(d.N_x-N_d, d.N_x-1));
+//    gp.add(x_r, fermi_r);
 
-    gp << "set style line 1 lt 1 lc rgb RWTH_Orange lw 2\n";
-    gp << "set style line 2 lt 1 lc rgb RWTH_Orange lw 2\n";
-    gp << "set style line 3 lt 1 lc rgb RWTH_Rot lw 2\n";
-    gp << "set style line 4 lc rgb RWTH_Schwarz lw 1 lt 3\n";
-    gp << "set style line 5 lc rgb RWTH_Schwarz lw 1 lt 3\n";
+//    gp << "set style line 1 lt 1 lc rgb RWTH_Orange lw 2\n";
+//    gp << "set style line 2 lt 1 lc rgb RWTH_Orange lw 2\n";
+//    gp << "set style line 3 lt 1 lc rgb RWTH_Rot lw 2\n";
+//    gp << "set style line 4 lc rgb RWTH_Schwarz lw 1 lt 3\n";
+//    gp << "set style line 5 lc rgb RWTH_Schwarz lw 1 lt 3\n";
 
-    gp.plot();
+//    gp.plot();
 }
 
 #endif

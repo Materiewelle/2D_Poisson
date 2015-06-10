@@ -13,12 +13,10 @@ HEADERS += \
     charge_density.hpp \
     constant.hpp \
     current.hpp \
-    device.hpp \
     fermi.hpp \
     green.hpp \
     integral.hpp \
     inverse.hpp \
-    potential.hpp \
     steady_state.hpp \
     wave_packet.hpp \
     gnuplot.hpp \
@@ -29,7 +27,11 @@ HEADERS += \
     sd_quantity.hpp \
     movie.hpp \
     inverter.hpp \
-    brent.hpp
+    brent.hpp \
+    device_old.hpp \
+    potential_old.hpp \
+    device.hpp \
+    potential.hpp
 
 LIBS += -lblas -lgomp -lsuperlu
 
@@ -37,4 +39,5 @@ QMAKE_CXXFLAGS = -std=c++14 -march=native -fopenmp
 
 # optimize as hard as possible in release mode
 QMAKE_CXXFLAGS_RELEASE = -Ofast -fno-finite-math-only
-#QMAKE_CXXFLAGS_DEBUG = -O3
+
+DISTFILES +=
