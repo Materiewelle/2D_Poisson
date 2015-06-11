@@ -88,7 +88,7 @@ bool steady_state::solve() {
     I = current(d, phi);
 
     bool converged = !(dphi > dphi_threshold);
-    cout << V.s << ", " << V.g << ", " << V.d;
+//    cout << V.s << ", " << V.g << ", " << V.d << ", ";
     string conv_text = converged ? "converged!" : "DIVERGED!!!";
     cout << it << " iterations, reldev=" << dphi/dphi_threshold << ", " << conv_text << endl;
     return converged;
