@@ -80,7 +80,7 @@ int main() {
         std::stringstream ss;
         ss << "tfet_overlap=" << *it << "nm";
         tfet.update(ss.str());
-        steady_state::transfer<true>(tfet, {0.0, -0.1, 0.2}, 0.5, 200, V_g, I);
+        steady_state::transfer<true>(tfet, {0.0, 0., 0.4}, 0.8, 200, V_g, I);
         mat res = join_horiz(V_g, I);
         res.save("data/" + ss.str(), raw_ascii);
     }
