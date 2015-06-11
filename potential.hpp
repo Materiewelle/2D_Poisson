@@ -231,7 +231,6 @@ arma::mat potential_impl::poisson2D(const device & d, const voltage & V, const c
 
     sp_mat S = get_S(d);
     vec R0 = get_R0(d, V);
-    plot(R0);
     vec R = get_R(d, R0, n);
     vec phivec = spsolve(S, R);
     mat phimat(d.N_x, d.M_r);
@@ -262,9 +261,6 @@ arma::mat potential_impl::poisson2D(const device & d, const voltage & V, const c
             }
         }
     }
-    std::cout << k << std::endl;
-    std::cout << phivec.size() << std::endl;
-    plot(phivec);
 
     if (duplicate) {
         phimat = join_horiz(fliplr(phimat), phimat);
@@ -472,13 +468,13 @@ arma::sp_mat & potential_impl::get_S(const device & d) {
         if (j == d.M_cnt + d.M_ox - 1) {
             i0 = d.N_sc + d.N_sox;
             i1 = i0 + d.N_sg;
-            delta = d.N_x - d.N_sc - d.N_dc - d.N_sg;
+            delta = d.N_x - d.N_sc - d.N_dc - d.N_sox;
         }
         if ((j == d.M_cnt + d.M_ox) && (i0 == d.N_sc + d.N_sox)) {
-            delta = d.N_x - d.N_sc - d.N_dc - d.N_sg - d.N_g;
+            delta = d.N_x - d.N_sc - d.N_dc - d.N_sox - d.N_g;
         }
         if ((j == d.M_cnt + d.M_ox) && (i0 == d.N_sc + d.N_sox + d.N_sg + d.N_g)) {
-            delta = d.N_x - d.N_sc - d.N_dc - d.N_sg - d.N_g - d.N_dg;
+            delta = d.N_x - d.N_sc - d.N_dc - d.N_sox - d.N_g - d.N_dox;
         }
         if (j >= d.M_cnt + d.M_ox) {
             if (i0 == d.N_sc + d.N_sox) {
@@ -552,7 +548,7 @@ arma::vec potential_impl::get_R0(const device & d, const voltage & V) {
     }
     k += d.N_dg;
     for (i = d.N_x - d.N_dc - d.N_dox; i < d.N_x - d.N_dc; ++i) {
-        R0(k++) -= dr2 * rp * eps[0](i, j) * V_d;
+        R0(k++) -= dr2 * rp * eps[O](i, j) * V_d;
     }
     R0(k - 1) -= dx2 * r * eps[R](d.N_x - d.N_dc - 1, j) * V_d;
 

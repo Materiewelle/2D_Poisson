@@ -122,11 +122,11 @@ static const device::geometry fet_geometry {
     10.0, // eps_cnt
     25.0, // eps_ox
     12.0, // l_sc
-    12.0, // l_sox
-    12.0, // l_sg
-    12.0, // l_g
-    12.0, // l_dg
-    12.0, // l_dox
+    10.0, // l_sox
+     4.0, // l_sg
+    10.0, // l_g
+     4.0, // l_dg
+    10.0, // l_dox
     12.0, // l_dc
      1.2, // r_cnt
      0.8, // d_ox

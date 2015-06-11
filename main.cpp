@@ -15,7 +15,7 @@
 #include "device.hpp"
 #include "gnuplot.hpp"
 #include "inverter.hpp"
-#include "movie.hpp"
+//#include "movie.hpp"
 #include "potential.hpp"
 #include "steady_state.hpp"
 #include "time_evolution.hpp"
@@ -61,8 +61,8 @@ int main() {
     E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() * 15 / 16);
     E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() * 15 / 16);
 
-    movie argo(te, E_ind);
-    argo.action();
+//    movie argo(te, E_ind);
+//    argo.action();
 
 //    vec V_g;
 //    vec I;
