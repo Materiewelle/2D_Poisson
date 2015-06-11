@@ -421,11 +421,15 @@ arma::vec & charge_density_impl::get_n0(const device & d) {
 
     vec ret(d.N_x);
     ret(d.sc).fill(nc(0));
-    ret(d.sox).fill(nsgd(0));
+    if (d.sox. a < d.sox.b) {
+        ret(d.sox).fill(nsgd(0));
+    }
     ret(d.sg).fill(0);
     ret(d.g).fill(nsgd(1));
     ret(d.dg).fill(0);
-    ret(d.dox).fill(nsgd(2));
+    if (d.dox.a < d.dox.b) {
+        ret(d.dox).fill(nsgd(2));
+    }
     ret(d.dc).fill(nc(1));
 
     ret *= 2 * c::e / M_PI / M_PI / d.r_cnt / d.dr / d.dx; // spintel inside (?)

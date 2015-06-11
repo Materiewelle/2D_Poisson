@@ -11,7 +11,7 @@
 
 class steady_state {
 public:
-    static constexpr auto dphi_threshold = 1e-15;
+    static constexpr auto dphi_threshold = 1e-9;
     static constexpr auto max_iterations = 400;
 
     device d;
@@ -68,8 +68,8 @@ bool steady_state::solve() {
         // update potential
         dphi = phi.update(d, R0, n, mr_neo);
 
-//        cout << V.s << ", " << V.g << ", " << V.d;
-//        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
+        cout << V.s << ", " << V.g << ", " << V.d;
+        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
