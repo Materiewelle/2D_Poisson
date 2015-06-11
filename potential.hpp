@@ -580,60 +580,90 @@ void plot_phi2D(const device & d, const voltage & V) {
 }
 
 void plot_phi2D(const device & d, const voltage & V, const charge_density & n) {
-    arma::mat phi2D = potential_impl::poisson2D<true, true>(d, V, n).t();
+    arma::mat phi2D = potential_impl::poisson2D<true, false>(d, V, n).t();
 
     gnuplot gp;
 
     gp << "set palette defined ( 0 '#D73027', 1 '#F46D43', 2 '#FDAE61', 3 '#FEE090', 4 '#E0F3F8', 5 '#ABD9E9', 6 '#74ADD1', 7 '#4575B4' )\n";
-    gp << "set title \"2D Potential\"\n";
+    gp << "set title \"Radial potential for V_{s} = " << V.s << " V, V_{g} = " << V.g << " V and V_{d} = " << V.d << " V\"\n";
     gp << "set xlabel \"x / nm\"\n";
     gp << "set ylabel \"r / nm\"\n";
     gp << "set zlabel \"Phi / V\"\n";
     gp << "unset key\n";
 
-//    // indicate cnt area
-//    gp << "set obj rect from " << 0 << "," << d.r_cnt << " to " << d.l << "," << -d.r_cnt << "front fillstyle empty\n";
-//    gp << "set label \"CNT\" at " << 0.5 * d.l << "," << 0 << " center front\n";
+    // indicate cnt area
+    gp << "set obj rect from " << 0 << "," << d.r_cnt << " to " << d.l << "," << -d.r_cnt << "front fillstyle empty\n";
+    gp << "set label \"CNT\" at " << 0.5 * d.l << "," << 0 << " center front\n";
 
-//    // indicate oxide area
-//    double x0 = d.l_sc + d.l_s;
-//    double x1 = d.l - d.l_dc - d.l_d;
-//    double y0 = d.r_cnt + d.d_ox;
-//    double y1 = d.r_cnt;
-//    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
-//    gp << "set label \"gate oxide\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
-//    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
-//    gp << "set label \"gate oxide\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+    // indicate oxide area
+    double x0 = d.l_sc;
+    double x1 = d.l - d.l_dc;
+    double y0 = d.r_cnt + d.d_ox;
+    double y1 = d.r_cnt;
+    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
+    gp << "set label \"gate oxide\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
+    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
+    gp << "set label \"gate oxide\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
 
-//    // indicate gate contact area
-//    x0 = d.l_sc + d.l_s + d.l_sox;
-//    x1 = d.l - d.l_dc - d.l_d - d.l_dox;
-//    y0 = d.R;
-//    y1 = d.r_cnt + d.d_ox;
-//    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
-//    gp << "set label \"gate contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
-//    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
-//    gp << "set label \"gate contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+    // indicate gate contact area
+    x0 = d.l_sc + d.l_sox + d.l_sg;
+    x1 = d.l - d.l_dc - d.l_dox - d.l_dg;
+    y0 = d.R;
+    y1 = d.r_cnt + d.d_ox;
+    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
+    gp << "set label \"gate contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
+    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
+    gp << "set label \"gate contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
 
-//    // indicate left contact area
-//    x0 = 0;
-//    x1 = d.l_sc;
-//    y0 = d.R;
-//    y1 = d.r_cnt;
-//    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
-//    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
-//    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
-//    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+    // indicate left contact areas
+    // --------------------------------------------------------------------------------------
+    // top/bottom
+    x0 = 0 + d.dx/2;
+    x1 = d.l_sc + d.l_sox;
+    y0 = d.R - d.dr/2;
+    y1 = d.R - d.dr/2;
+    gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n";
+    gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror y
+    x0 = d.l - x0;
+    x1 = d.l - x1;
+    gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n"; //mirror x
+    gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror both
 
-//    // indicate left contact area
-//    x0 = d.l - d.l_dc;
-//    x1 = d.l;
-//    y0 = d.R;
-//    y1 = d.r_cnt;
-//    gp << "set obj rect from " << x0 << "," << y0 << " to " << x1 << "," << y1 << "front fillstyle empty\n";
-//    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * (y1 - y0) - y1<< " center front\n";
-//    gp << "set obj rect from " << x0 << "," << -y1 << " to " << x1 << "," << -y0 << "front fillstyle empty\n";
-//    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+    // outside
+    x0 = 0;
+    y0 = d.R - d.dr/2;
+    x1 = 0;
+    y1 = d.r_cnt;
+    gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n";
+    gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror
+    x0 = d.l - x0;
+    x1 = d.l - x1;
+    gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n"; //mirror x
+    gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror both
+
+    // inside
+    x0 = d.l_sc + d.l_sox;
+    y0 = d.R - d.dr/2;
+    x1 = d.l_sc + d.l_sox;
+    y1 = d.r_cnt + d.d_ox;
+    gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n";
+    gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror
+    x0 = d.l - x0;
+    x1 = d.l - x1;
+    gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n"; //mirror x
+    gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror both
+
+    // label
+    x0 = 0;
+    x1 = d.l_sc + d.l_sox;
+    y0 = d.r_cnt;
+    y1 = d.R - d.dr/2;
+    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * +(y1 - y0) - y1 << " center front\n"; //mirror y
+    x0 = d.l - x0;
+    x1 = d.l - x1;
+    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n"; //mirror x
+    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * +(y1 - y0) - y1 << " center front\n"; //mirror both
 
     gp.set_background(d.x, arma::join_vert(arma::flipud(-d.r), d.r), phi2D);
     gp.plot();
