@@ -139,10 +139,10 @@ static const device::geometry tfet_geometry {
     10.0, // eps_cnt
     25.0, // eps_ox
     10.0, // l_sc
-    20.0, // l_sox
-     5.0, // l_sg
+     0.0, // l_sox
+    20.0, // l_sg
     20.0, // l_g
-    25.0, // l_dg
+    20.0, // l_dg
      0.0, // l_dox
     10.0, // l_dc
      1.0, // r_cnt

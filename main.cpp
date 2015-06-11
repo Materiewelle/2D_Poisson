@@ -29,17 +29,17 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device nfet("nfet", nfet_model, fet_geometry);
+//    device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
 
-    voltage V { 0.0, 0.0, 0.0 };
-    plot_phi2D(nfet, V);
-    potential phi(nfet, V);
-    plot_ldos(nfet, phi);
-    plot_phi2D(tfet, V);
-    phi = potential(tfet, V);
-    plot_ldos(tfet, phi);
-    return 0;
+//    voltage V { 0.0, 0.0, 0.0 };
+//    plot_phi2D(nfet, V);
+//    potential phi(nfet, V);
+//    plot_ldos(nfet, phi);
+//    plot_phi2D(tfet, V);
+//    phi = potential(tfet, V);
+//    plot_ldos(tfet, phi);
+//    return 0;
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
 //    s.solve();
@@ -55,35 +55,35 @@ int main() {
 
 //    plot(make_pair(V_in, V_out));
 
-    time_evolution te(nfet, voltage { 0.0, 0.25, 0.4 });
-    vec ramp = linspace(0, 0.15, 80);
-    for (int i = 2; i < 82; ++i) {
-        te.V[i] = {ramp(i-2), 0.25, 0.4};
-    }
+//    time_evolution te(nfet, voltage { 0.0, 0.25, 0.4 });
+//    vec ramp = linspace(0, 0.15, 80);
+//    for (int i = 2; i < 82; ++i) {
+//        te.V[i] = {ramp(i-2), 0.25, 0.4};
+//    }
 
-    std::vector<std::pair<int, int>> E_ind(4);
+//    std::vector<std::pair<int, int>> E_ind(4);
 
-    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  1 /  8);
-    E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  1 /  8);
-    E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() * 15 / 16);
-    E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() * 15 / 16);
+//    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  1 /  8);
+//    E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  1 /  8);
+//    E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() * 15 / 16);
+//    E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() * 15 / 16);
 
 //    movie argo(te, E_ind);
 //    argo.action();
 
-//    vec V_g;
-//    vec I;
-//    vec l_g = {9, 18, 41, 320};
-//    for (auto it = l_g.begin(); it != l_g.end(); ++it) {
-//        nfet.l_g = *it;
-//        std::stringstream ss;
-//        ss << "nfet_transfer_lg=" << std::setprecision(2) << *it;
-//        nfet.update(ss.str());
-//        steady_state::transfer<false>(nfet, {0.0, -0.2, 0.4}, 0.6, 300, V_g, I);
-//        mat res = join_horiz(V_g, I);
-//        res.save(ss.str(), raw_ascii);
-//    }
-
+    vec V_g;
+    vec I;
+    vec l_sox = {0, 5, 10, 15, 18};
+    for (auto it = l_sox.begin(); it != l_sox.end(); ++it) {
+        tfet.l_sox = *it;
+        tfet.l_sg = 20 - *it;
+        std::stringstream ss;
+        ss << "tfet_ovelap=" << *it << "nm";
+        tfet.update(ss.str());
+        steady_state::transfer<false>(tfet, {0.0, -0.1, 0.2}, 0.5, 100, V_g, I);
+        mat res = join_horiz(V_g, I);
+        res.save("data/" + ss.str(), raw_ascii);
+    }
 
     return 0;
 }
