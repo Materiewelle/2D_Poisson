@@ -68,8 +68,8 @@ bool steady_state::solve() {
         // update potential
         dphi = phi.update(d, R0, n, mr_neo);
 
-        cout << V.s << ", " << V.g << ", " << V.d;
-        cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
+        //cout << V.s << ", " << V.g << ", " << V.d;
+        //cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
@@ -88,7 +88,7 @@ bool steady_state::solve() {
     I = current(d, phi);
 
     bool converged = !(dphi > dphi_threshold);
-//    cout << V.s << ", " << V.g << ", " << V.d;
+    cout << V.s << ", " << V.g << ", " << V.d;
     string conv_text = converged ? "converged!" : "DIVERGED!!!";
     cout << it << " iterations, reldev=" << dphi/dphi_threshold << ", " << conv_text << endl;
     return converged;

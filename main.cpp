@@ -73,14 +73,14 @@ int main() {
 
     vec V_g;
     vec I;
-    vec l_sox = {0, 5, 10, 15, 18};
+    vec l_sox = {2, 5, 10, 15, 18};
     for (auto it = l_sox.begin(); it != l_sox.end(); ++it) {
         tfet.l_sox = *it;
         tfet.l_sg = 20 - *it;
         std::stringstream ss;
-        ss << "tfet_ovelap=" << *it << "nm";
+        ss << "tfet_overlap=" << *it << "nm";
         tfet.update(ss.str());
-        steady_state::transfer<false>(tfet, {0.0, -0.1, 0.2}, 0.5, 100, V_g, I);
+        steady_state::transfer<true>(tfet, {0.0, -0.1, 0.2}, 0.5, 200, V_g, I);
         mat res = join_horiz(V_g, I);
         res.save("data/" + ss.str(), raw_ascii);
     }
