@@ -1,4 +1,4 @@
-//#define ARMA_NO_DEBUG    // no bound checks
+#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 
 #include <iostream>
@@ -8,7 +8,6 @@
 #include <xmmintrin.h>
 #include <string>
 #include <sstream>
-
 #include <armadillo>
 
 #include "brent.hpp"
@@ -23,11 +22,14 @@
 using namespace arma;
 using namespace std;
 
-int main() {
+int main(int argc, char ** argv) {
     //flush denormal floats to zero for massive speedup
     //(i.e. set bits 15 and 6 in SSE control register MXCSR)
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+
+    // set number of threads used by OMP (<= n_core for OpenBlas)
+    omp_set_num_threads(stoi(argv[0]));
 
 //    device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
@@ -73,12 +75,12 @@ int main() {
 
     vec V_g;
     vec I;
-    vec l_sox = {2, 5, 10, 15, 18};
-    for (auto it = l_sox.begin(); it != l_sox.end(); ++it) {
-        tfet.l_sox = *it;
-        tfet.l_sg = 20 - *it;
+    for (int i = 1; i < argc; ++i) {
+        int l_sox = stoi(argv[i]);
+        tfet.l_sox = l_sox;
+        tfet.l_sg = 20 - l_sox;
         std::stringstream ss;
-        ss << "tfet_overlap=" << *it << "nm";
+        ss << "tfet_overlap=" << l_sox << "nm";
         tfet.update(ss.str());
         steady_state::transfer<true>(tfet, {0.0, 0., 0.4}, 0.8, 200, V_g, I);
         mat res = join_horiz(V_g, I);
