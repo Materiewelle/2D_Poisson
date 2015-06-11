@@ -94,22 +94,14 @@ static inline void plot_ldos(const device & d, const potential & phi, const unsi
     gp.set_background(d.x, E, arma::log(lDOS));
 
     arma::vec vband = phi.data;
-    vband(d.sc)  += -0.5 * d.E_gc;
-    vband(d.sox) += -0.5 * d.E_g;
-    vband(d.sg)  += -0.5 * d.E_g;
-    vband(d.g)   += -0.5 * d.E_g;
-    vband(d.dg)  += -0.5 * d.E_g;
-    vband(d.dox) += -0.5 * d.E_g;
-    vband(d.dc)  += -0.5 * d.E_gc;
+    vband(d.sc)  -= 0.5 * d.E_gc;
+    vband({d.sox.a, d.dox.b}) -= 0.5 * d.E_g;
+    vband(d.dc)  -= 0.5 * d.E_gc;
 
     arma::vec cband = phi.data;
-    cband(d.sc)  += +0.5 * d.E_gc;
-    cband(d.sox) += +0.5 * d.E_g;
-    cband(d.sg)  += +0.5 * d.E_g;
-    cband(d.g)   += +0.5 * d.E_g;
-    cband(d.dg)  += +0.5 * d.E_g;
-    cband(d.dox) += +0.5 * d.E_g;
-    cband(d.dc)  += +0.5 * d.E_gc;
+    cband(d.sc)  += 0.5 * d.E_gc;
+    cband({d.sox.a, d.dox.b}) += 0.5 * d.E_g;
+    cband(d.dc)  += 0.5 * d.E_gc;
 
     gp.add(d.x, vband);
     gp.add(d.x, cband);

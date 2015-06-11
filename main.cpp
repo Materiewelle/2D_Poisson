@@ -30,8 +30,15 @@ int main() {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     device nfet("nfet", nfet_model, fet_geometry);
+    device tfet("tfet", tfet_model, tfet_geometry);
 
-    plot_phi2D(nfet, { -0.8, -0.2, 0.8 });
+    voltage V { 0.0, 0.0, 0.0 };
+    plot_phi2D(nfet, V);
+    potential phi(nfet, V);
+    plot_ldos(nfet, phi);
+    plot_phi2D(tfet, V);
+    phi = potential(tfet, V);
+    plot_ldos(tfet, phi);
     return 0;
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
