@@ -106,11 +106,7 @@ movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i
 
     // band offsets for band drawing
     band_offset(te.d.sc).fill(0.5 * te.d.E_gc);
-    band_offset(te.d.s).fill(0.5 * te.d.E_g);
-    band_offset(te.d.sox).fill(0.5 * te.d.E_g);
-    band_offset(te.d.g).fill(0.5 * te.d.E_g);
-    band_offset(te.d.dox).fill(0.5 * te.d.E_g);
-    band_offset(te.d.d).fill(0.5 * te.d.E_g);
+    band_offset({te.d.sox.a, te.d.dox.b}).fill(0.5 * te.d.E_g);
     band_offset(te.d.dc).fill(0.5 * te.d.E_gc);
 }
 
