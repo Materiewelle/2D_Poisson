@@ -32,13 +32,10 @@ int main() {
     device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
 
-    voltage V { 0.0, 0.0, 0.0 };
-    plot_phi2D(nfet, V);
-    potential phi(nfet, V);
-    plot_ldos(nfet, phi);
-    plot_phi2D(tfet, V);
-    phi = potential(tfet, V);
-    plot_ldos(tfet, phi);
+    steady_state s(tfet, {0.0, 0.5, 0.6});
+    s.solve();
+    plot_ldos(tfet, s.phi);
+
     return 0;
 
 //    steady_state s(n_fet, {0, 0.2, 0.5});
