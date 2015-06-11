@@ -29,13 +29,16 @@ int main(int argc, char ** argv) {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     // set number of threads used by OMP (<= n_core for OpenBlas)
-    omp_set_num_threads(stoi(argv[0]));
+//    omp_set_num_threads(stoi(argv[0]));
 
 //    device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
 
-//    voltage V { 0.0, 0.0, 0.0 };
-//    plot_phi2D(nfet, V);
+    voltage V { 0.0, 0.5, 0.4 };
+    steady_state s(tfet, V);
+    s.solve();
+    plot_phi2D(tfet, V, s.n);
+    plot_ldos(tfet, s.phi);
 //    potential phi(nfet, V);
 //    plot_ldos(nfet, phi);
 //    plot_phi2D(tfet, V);
@@ -73,19 +76,19 @@ int main(int argc, char ** argv) {
 //    movie argo(te, E_ind);
 //    argo.action();
 
-    vec V_g;
-    vec I;
-    for (int i = 1; i < argc; ++i) {
-        int l_sox = stoi(argv[i]);
-        tfet.l_sox = l_sox;
-        tfet.l_sg = 20 - l_sox;
-        std::stringstream ss;
-        ss << "tfet_overlap=" << l_sox << "nm";
-        tfet.update(ss.str());
-        steady_state::transfer<true>(tfet, {0.0, 0., 0.4}, 0.8, 200, V_g, I);
-        mat res = join_horiz(V_g, I);
-        res.save("data/" + ss.str(), raw_ascii);
-    }
+//    vec V_g;
+//    vec I;
+//    for (int i = 1; i < argc; ++i) {
+//        int l_sox = stoi(argv[i]);
+//        tfet.l_sox = l_sox;
+//        tfet.l_sg = 20 - l_sox;
+//        std::stringstream ss;
+//        ss << "tfet_overlap=" << l_sox << "nm";
+//        tfet.update(ss.str());
+//        steady_state::transfer<true>(tfet, {0.0, 0., 0.4}, 0.8, 200, V_g, I);
+//        mat res = join_horiz(V_g, I);
+//        res.save("data/" + ss.str(), raw_ascii);
+//    }
 
     return 0;
 }

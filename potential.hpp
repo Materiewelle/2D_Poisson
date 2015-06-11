@@ -585,11 +585,13 @@ void plot_phi2D(const device & d, const voltage & V, const charge_density & n) {
     gnuplot gp;
 
     gp << "set palette defined ( 0 '#D73027', 1 '#F46D43', 2 '#FDAE61', 3 '#FEE090', 4 '#E0F3F8', 5 '#ABD9E9', 6 '#74ADD1', 7 '#4575B4' )\n";
-    gp << "set title \"Radial potential for V_{s} = " << V.s << " V, V_{g} = " << V.g << " V and V_{d} = " << V.d << " V\"\n";
+    gp << "set title \"Potential cross-section for V_{s} = " << V.s << " V, V_{g} = " << V.g << " V and V_{d} = " << V.d << " V\"\n";
     gp << "set xlabel \"x / nm\"\n";
     gp << "set ylabel \"r / nm\"\n";
     gp << "set zlabel \"Phi / V\"\n";
     gp << "unset key\n";
+
+    gp << "set terminal pdf\nset output 'potential2D.pdf'\n";
 
     // indicate cnt area
     gp << "set obj rect from " << 0 << "," << d.r_cnt << " to " << d.l << "," << -d.r_cnt << "front fillstyle empty\n";
@@ -619,51 +621,51 @@ void plot_phi2D(const device & d, const voltage & V, const charge_density & n) {
     // --------------------------------------------------------------------------------------
     // top/bottom
     x0 = 0 + d.dx/2;
-    x1 = d.l_sc + d.l_sox;
+    x1 = d.l_sc + d.l_sox + d.dx/2;
     y0 = d.R - d.dr/2;
-    y1 = d.R - d.dr/2;
+    y1 = y0;
     gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n";
     gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror y
-    x0 = d.l - x0;
-    x1 = d.l - x1;
+    x0 = d.l - d.dx/2;
+    x1 = d.l - x1 - d.l_dc - d.l_dox - d.dx/2;
     gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n"; //mirror x
     gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror both
 
     // outside
     x0 = 0;
     y0 = d.R - d.dr/2;
-    x1 = 0;
+    x1 = x0;
     y1 = d.r_cnt;
     gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n";
     gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror
-    x0 = d.l - x0;
-    x1 = d.l - x1;
+    x0 = d.l - d.dx/2;
+    x1 = x0;
     gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n"; //mirror x
     gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror both
 
     // inside
     x0 = d.l_sc + d.l_sox;
     y0 = d.R - d.dr/2;
-    x1 = d.l_sc + d.l_sox;
+    x1 = x0;
     y1 = d.r_cnt + d.d_ox;
     gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n";
     gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror
-    x0 = d.l - x0;
-    x1 = d.l - x1;
+    x0 = d.l - d.l_dc - d.l_dox;
+    x1 = x0;
     gp << "set arrow from " << x0 << "," << y0 << " to "<< x1 << "," << y1 << " nohead front\n"; //mirror x
     gp << "set arrow from " << x0 << "," << -y0 << " to "<< x1 << "," << -y1 << " nohead front\n"; //mirror both
 
     // label
     x0 = 0;
     x1 = d.l_sc + d.l_sox;
-    y0 = d.r_cnt;
+    y0 = d.r_cnt + d.d_ox;
     y1 = d.R - d.dr/2;
-    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
-    gp << "set label \"source contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * +(y1 - y0) - y1 << " center front\n"; //mirror y
-    x0 = d.l - x0;
-    x1 = d.l - x1;
-    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n"; //mirror x
-    gp << "set label \"drain contact\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * +(y1 - y0) - y1 << " center front\n"; //mirror both
+    gp << "set label \"source\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n";
+    gp << "set label \"source\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * +(y1 - y0) - y1 << " center front\n"; //mirror y
+    x0 = d.l;
+    x1 = d.l - d.l_dc - d.l_dox;
+    gp << "set label \"drain\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * -(y1 - y0) + y1 << " center front\n"; //mirror x
+    gp << "set label \"drain\" at " << 0.5 * (x1 - x0) + x0 << "," << 0.5 * +(y1 - y0) - y1 << " center front\n"; //mirror both
 
     gp.set_background(d.x, arma::join_vert(arma::flipud(-d.r), d.r), phi2D);
     gp.plot();
