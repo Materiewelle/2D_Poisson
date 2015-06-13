@@ -46,13 +46,16 @@ steady_state::steady_state(const device & dd, const voltage & VV, const charge_d
 
 template<bool smooth>
 bool steady_state::solve() {
+    /* computes a self-consistent solution for the given voltages */
     using namespace std;
 
-    // init potential
+    // get the right-hand side vector in poisson's equation
     arma::vec R0 = potential_impl::get_R0(d, V);
+
+    // solve poisson's equation with flat charge density
     phi = potential(d, R0);
 
-    // dphi = norm(delta_phi)
+    // this variable will hold the maximum deviation of phi
     double dphi;
 
     // iteration counter
@@ -60,7 +63,7 @@ bool steady_state::solve() {
 
     anderson mr_neo(phi.data);
 
-    // repeat until potential does not change anymore or iteration limit has been reached
+    // repeat until potential does not differ from previous iteration or the maximum number of iterations has been reached
     for (it = 1; it <= max_iterations; ++it) {
         // update charge density
         n = { d, phi, E, W };
@@ -71,13 +74,15 @@ bool steady_state::solve() {
         //cout << V.s << ", " << V.g << ", " << V.d;
         //cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
 
-        // check if dphi is small enough
+        // check wether we call this situation self-consitent
         if (dphi < dphi_threshold) {
             break;
         }
 
+        /* It is often a good idea to straighten out the potential inside the contact regions
+         * in order to keep the self-consitency algorithm from diverging during the first few steps.
+         * This could be understood as limiting the first few updates to the central region. */
         if (smooth) {
-            // smooth potential in the beginning
             if (it < 3) {
                 phi.smooth(d);
             }
@@ -104,9 +109,16 @@ bool steady_state::solve() {
 
 template<bool reuse>
 void steady_state::output(const device & d, const voltage & V0, double V_d1, int N, arma::vec & V_d, arma::vec & I) {
+    /* This swipes the drain voltage from a given initial state to V_d1 in n steps. The previous self-constent
+     * solution can be reused as a first guess for the next voltage point. This can speed up the calculation of
+     * successive voltage points in some scenarios (if the points are close together). The voltage points and corresponding
+     * results for the drain-current are stored in the vectors V_d and I. */
+
+    // initialize result-vectors
     V_d = arma::linspace(V0.d, V_d1, N);
     I = arma::vec(N);
 
+    // solve for the first voltage-point
     steady_state s(d, V0);
     bool conv = s.solve();
     I(0) = s.I.total(0);
@@ -118,6 +130,8 @@ void steady_state::output(const device & d, const voltage & V0, double V_d1, int
         if (reuse && conv) {
             s = steady_state(d, V, s.n);
             conv = s.solve<false>();
+            /* don't reuse the previous result
+             * but try again with n=0 */
             if (!conv) {
                 s = steady_state(d, V);
                 conv = s.solve();
@@ -132,14 +146,14 @@ void steady_state::output(const device & d, const voltage & V0, double V_d1, int
 
 template<bool reuse>
 void steady_state::transfer(const device & d, const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & I) {
+    /* Same as steady_state::output, but here the gate voltage is swiped instead. */
+
     V_g = arma::linspace(V0.g, V_g1, N);
     I = arma::vec(N);
 
     steady_state s(d, V0);
     bool conv = false;
 
-//    int diverged = 0;
-//    int max_div = 3;
 
     for (int i = 0; i < N; ++i) {
         std::cout << "Step " << i+1 << "/" << N << ": V_g=" << V_g(i) << ": ";
@@ -148,14 +162,13 @@ void steady_state::transfer(const device & d, const voltage & V0, double V_g1, i
         if (reuse && conv) {
             s = steady_state(d, V, s.n);
             conv = s.solve<false>();
+            /* don't reuse the previous result
+             * but try again with n=0 */
             if (!conv) {
                 s = steady_state(d, V);
                 conv = s.solve();
             }
         } else {
-//            if(++diverged >= max_div) {
-//                break;
-//            }
             s = steady_state(d, V);
             conv = s.solve();
         }
