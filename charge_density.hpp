@@ -173,6 +173,7 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                     double b = std::norm((*psi.data)(2 * j + 1, i));
 //                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
                     n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
+//                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E0(i) - phi(j));
                 }
             }
             // no implied barrier (nowait clause)
