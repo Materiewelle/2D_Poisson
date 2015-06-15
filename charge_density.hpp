@@ -192,11 +192,13 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
                 // get fermi factor and weight
                 double f = psi.F0(i);
                 double W = psi.W(i);
-
                 for (int j = 0; j < d.N_x; ++j) { // loop over all unit cells
                     double a = std::norm((*psi.data)(2 * j    , i)); // first orbital
                     double b = std::norm((*psi.data)(2 * j + 1, i)); // second orbital
-                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j)); // multiply with electron/hole occupation
+//                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
+                    // multiply with electron/hole occupation
+                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
+//                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E0(i) - phi(j));
                 }
             }
             // no implied barrier (nowait clause)

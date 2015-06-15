@@ -57,7 +57,6 @@ public:
     inline movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i);
 
 private:
-    int m;
     int frames; // the current number of frames that have been produced
     static constexpr int frame_skip = 1;
 
@@ -78,13 +77,14 @@ private:
 };
 
 movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i)
-    : m(0), frames(0), te(t_ev), E_ind(E_i), band_offset(te.d.N_x) {
+    : frames(0), te(t_ev), E_ind(E_i), band_offset(te.d.N_x) {
     using namespace std::string_literals;
 
     char buf[32];
     getlogin_r(buf, sizeof(buf));
 
-    parent_folder = "/tmp/movie_tmpdir_"s + buf;
+//    parent_folder = "/tmp/movie_tmpdir_"s + buf;
+    parent_folder = "/home/"s + buf;
     folder = parent_folder + "/" + now();
 
     // produce folder tree
@@ -111,7 +111,8 @@ movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i
 }
 
 void movie::action() {
-    for (m = 0; m < t::N_t; ++m) {
+    frame();
+    while(te.m < t::N_t) {
         te.step();
         frame();
     }
@@ -121,7 +122,7 @@ void movie::action() {
 void movie::frame() {
     using namespace arma;
 
-    if ((m % frame_skip) == 0) {
+    if (((te.m - 1) % frame_skip) == 0) {
         for (unsigned i = 0; i < E_ind.size(); ++i) {
             int lattice = E_ind[i].first;
             double E = te.psi[lattice].E0(E_ind[i].second);
@@ -132,7 +133,7 @@ void movie::frame() {
 
             // set correct output file
             gp << "set output \"" << output_file(lattice, E, frames) << "\"\n";
-            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << m * t::dt * 1e12 << " ps'\n";
+            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << (te.m - 1) * t::dt * 1e12 << " ps'\n";
 
 
             /* Having all the stuff we want to plot
@@ -146,8 +147,8 @@ void movie::frame() {
             data[2] = +arma::abs(wavefunction);
             data[3] = -arma::abs(wavefunction);
 
-            data[4] = te.phi[m].data - band_offset;
-            data[5] = te.phi[m].data + band_offset;
+            data[4] = te.phi[te.m - 1].data - band_offset;
+            data[5] = te.phi[te.m - 1].data + band_offset;
             data[6] = E_line;
 
             // setup psi-plot:
