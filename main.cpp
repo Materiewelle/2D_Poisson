@@ -92,19 +92,7 @@ int main(int argc, char ** argv) {
 
     std::vector<std::pair<int, int>> E_ind(4);
 
-    E_ind[0] =time_evolution te(tfet, voltage { 0.0, 0.3, 0.5 });
-    vec ramp = linspace(0.3, 0.5, 150);
-    for (int i = 2; i < 152; ++i) {
-        te.V[i] = {0.0, ramp(i - 2), 0.5};
-    }
-    std::fill(begin(te.V) + 152, end(te.V), voltage { 0.0, 0.5, 0.5 });
-
-    std::vector<std::pair<int, int>> E_ind(64);
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 16; ++j) {
-            E_ind[i * 16 +  j] = std::make_pair(i, te.psi[i].E0.size() * j / 16);
-        }
-    } std::make_pair(LV, te.psi[LV].E0.size() *  1 /  4);
+    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  1 /  4);
     E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  1 /  4);
     E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() *  1 /  4);
     E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() *  1 /  4);
