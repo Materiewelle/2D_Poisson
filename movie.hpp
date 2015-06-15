@@ -62,7 +62,7 @@ private:
     static constexpr int frame_skip = 1;
 
     static constexpr double phimin = -1.5;
-    static constexpr double phimax = +0.5;
+    static constexpr double phimax = +1.0;
 
     time_evolution & te;
     std::vector<std::pair<int, int>> E_ind;

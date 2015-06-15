@@ -5,7 +5,7 @@
 #include <stack>
 #include <unordered_map>
 
-// forward declarations
+// forward declarations (potential.hpp and wave_packet.hpp include each other)
 #ifndef POTENTIAL_HPP
 class potential;
 #endif
@@ -15,10 +15,12 @@ class wave_packet;
 
 class charge_density {
 public:
-    arma::vec lv;
-    arma::vec rv;
-    arma::vec lc;
-    arma::vec rc;
+
+    // The total current can be understood to consist of 4 parts:
+    arma::vec lv; // coming from left, states in the valence band
+    arma::vec rv; // coming from right, states in the valence band
+    arma::vec lc; // coming from left, states in the conduction band
+    arma::vec rc; // coming from right, states in the conduction band
     arma::vec total;
 
     inline charge_density();
@@ -40,10 +42,13 @@ public:
 
 namespace charge_density_impl {
 
-    static constexpr int initial_waypoints = 50;
+    static constexpr int initial_waypoints = 50; // minimum number of integration intervalls
+
+    // Energy-integration boundaries above and below the source/drain potential
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
-    static constexpr double rel_tol = 5e-3;
+
+    static constexpr double rel_tol = 5e-3; // tolerated relative error in adaptive simpson integration
 
     static inline arma::vec get_bound_states(const device & d, const potential & phi);
     static inline arma::vec get_bound_states(const device & d, const potential & phi, double E0, double E1);
@@ -64,15 +69,25 @@ charge_density::charge_density() {
 }
 
 charge_density::charge_density(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]) {
+    /* This is the main method for computing the charge density in steady state calculations. The Energy
+     * values at which the spectral function was evaluated by the adative simpson integration algorithm
+     * and the curresponding weights at theese points are stored in E and W, respectively. */
+
     using namespace arma;
     using namespace charge_density_impl;
 
+    // get a prediction of bound-state levels in the channel region
     auto E_bound = get_bound_states(d, phi);
 
     // get integration intervals
     auto get_intervals = [&] (double E_min, double E_max) {
+        /* This lambda creates an initial set of integration intervals. If bound states
+         * have been predicted, narrow intervals around them are also created in order to
+         * prevent the adaptive integration scheme from missing them. */
+
         vec lin = linspace(E_min, E_max, initial_waypoints);
 
+        // merge the bound-state intervals and the initial intervals together in case that boundstates have been predicted
         if ((E_bound.size() > 0) && (E_bound(0) < E_max) && (E_bound(E_bound.size() - 1) > E_min)) {
             vec ret = vec(E_bound.size() + lin.size());
 
@@ -113,24 +128,29 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
 
     // calculate charge density
     auto I_s = [&] (double E) -> vec {
+        // spectral funtion in source
         vec A = get_A<true>(d, phi, E);
         double f = fermi(E - phi.s(), d.F_sc);
         for (int i = 0; i < d.N_x; ++i) {
-//             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
+            /* check for each point wether the particle is counted
+             * as an electron or a hole (E below branching point) */
             A(i) *= fermi<true>(f, E - phi(i));
         }
         return A;
     };
     auto I_d = [&] (double E) -> vec {
         vec A = get_A<false>(d, phi, E);
+        // spectral funtion in drain
         double f = fermi(E - phi.d(), d.F_dc);
         for (int i = 0; i < d.N_x; ++i) {
-//             A(i) *= (E >= phi(i)) ? f : (f - 1.0);
             A(i) *= fermi<true>(f, E - phi(i));
         }
         return A;
     };
 
+    /* integrate the lambdas defined above over the given energy-ranges.
+     * keep the energy-values at which the spectral function has been evaluated
+       and the associated weights in the sum. */
     lv = integral(I_s, d.N_x, i_sv, rel_tol, c::epsilon(), E[LV], W[LV]);
     rv = integral(I_d, d.N_x, i_dv, rel_tol, c::epsilon(), E[RV], W[RV]);
     lc = integral(I_s, d.N_x, i_sc, rel_tol, c::epsilon(), E[LC], W[LC]);
@@ -143,17 +163,21 @@ charge_density::charge_density(const device & d, const potential & phi, arma::ve
     lc *= scale;
     rc *= scale;
 
-    // calculate total charge density with doping
+    // calculate total charge density and add the background charge introduced by dopands
     total = lv + rv + lc + rc + get_n0(d);
 }
 
 charge_density::charge_density(const device & d, const wave_packet psi[4], const potential & phi)
     : lv(d.N_x), rv(d.N_x), lc(d.N_x), rc(d.N_x) {
+    /* The overloaded version of the charge-density calculation method which is based on wave-functions.
+     * It is used in time-dependent simulations. */
+
     using namespace arma;
     using namespace charge_density_impl;
 
     auto get_n = [&d, &phi] (const wave_packet & psi, vec & n) {
-        // initial value = 0
+        /* this lambda performs the actual computation of the charge-density
+         * from a set of wave-functions. */
         n.fill(0.0);
 
         #pragma omp parallel
@@ -161,18 +185,18 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
             vec n_thread(n.size());
             n_thread.fill(0.0);
 
-            // loop over all energies
+            /* loop over all energies. Computation for each energy
+             * value is independent, so the loop is inheritely parallel */
             #pragma omp for schedule(static) nowait
             for (unsigned i = 0; i < psi.E0.size(); ++i) {
                 // get fermi factor and weight
                 double f = psi.F0(i);
                 double W = psi.W(i);
 
-                for (int j = 0; j < d.N_x; ++j) {
-                    double a = std::norm((*psi.data)(2 * j    , i));
-                    double b = std::norm((*psi.data)(2 * j + 1, i));
-//                    n_thread(j) += (a + b) * W * ((psi.E(j, i) >= phi(j)) ? f : (f - 1));
-                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j));
+                for (int j = 0; j < d.N_x; ++j) { // loop over all unit cells
+                    double a = std::norm((*psi.data)(2 * j    , i)); // first orbital
+                    double b = std::norm((*psi.data)(2 * j + 1, i)); // second orbital
+                    n_thread(j) += (a + b) * W * fermi<true>(f, psi.E(j, i) - phi(j)); // multiply with electron/hole occupation
                 }
             }
             // no implied barrier (nowait clause)
@@ -184,13 +208,13 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
         }
     };
 
-    // calculate charge density for all areas
+    // call the lambda defined above for every contribution
     get_n(psi[LV], lv);
     get_n(psi[RV], rv);
     get_n(psi[LC], lc);
     get_n(psi[RC], rc);
 
-    // scaling
+    // the charge is distributed on the tube's surface. Scale accordingly...
     double scale = - 0.5 * c::e / M_PI / M_PI / d.r_cnt / d.dr / d.dx;
     lv *= scale;
     rv *= scale;
@@ -201,9 +225,15 @@ charge_density::charge_density(const device & d, const wave_packet psi[4], const
 }
 
 arma::vec charge_density_impl::get_bound_states(const device & d, const potential & phi) {
+    /* This method tries to make a prediction of possible bound-state levels in the gate-region
+     * by solving for the closed system's hamiltonian's eigenvalues. */
+
     double phi0, phi1, phi2, limit;
 
     // check for bound states in valence band
+    // ----------------------------------------------
+    /* first get the energy-range in which bound
+     * states are even possible. */
     phi0 = arma::min(phi.data(d.sg)) - 0.5 * d.E_g;
     phi1 = arma::max(phi.data(d.g )) - 0.5 * d.E_g;
     phi2 = arma::min(phi.data(d.dg)) - 0.5 * d.E_g;
@@ -211,8 +241,10 @@ arma::vec charge_density_impl::get_bound_states(const device & d, const potentia
     if (limit < phi1) {
         return get_bound_states(d, phi, limit, phi1);
     }
+    // ----------------------------------------------
 
     // check for bound states in conduction band
+    // ----------------------------------------------
     phi0 = arma::max(phi.data(d.sg)) + 0.5 * d.E_g;
     phi1 = arma::min(phi.data(d.g )) + 0.5 * d.E_g;
     phi2 = arma::max(phi.data(d.dg)) + 0.5 * d.E_g;
@@ -220,16 +252,21 @@ arma::vec charge_density_impl::get_bound_states(const device & d, const potentia
     if (limit > phi1) {
         return get_bound_states(d, phi, phi1, limit);
     }
+    // ----------------------------------------------
 
     return arma::vec(arma::uword(0));
 }
 
 arma::vec charge_density_impl::get_bound_states(const device & d, const potential & phi, double E0, double E1) {
+    /* This overloaded method implements the actual bound-state prediction algorithm */
+
     using namespace arma;
 
     static constexpr double tol = 1e-10;
 
-    span range{d.sg2.a, d.dg2.b};
+    span range{d.sg2.a, d.dg2.b}; // only look at the gated region
+
+    // for building the hamiltonian only in the gated region
     vec a = d.t_vec(range);
     vec a2 = a % a;
     vec b = phi.twice(range);
@@ -241,10 +278,17 @@ arma::vec charge_density_impl::get_bound_states(const device & d, const potentia
     s0 = eval(a, a2, b, E0);
     s1 = eval(a, a2, b, E1);
 
-    // check if no bound states in this interval
+    /* Check if no bound states in this interval.
+     * This case needs to be handeled separately. */
     if (s1 - s0 == 0) {
         return vec(uword(0));
     }
+
+    /* ----------------------------------------------
+     * In the following, Sturm's theorem is used to
+     * find the smallest magnitude eigenvalues of H
+     * in the given range up to a certain accurancy.
+     * ---------------------------------------------- */
 
     unsigned n = 2;
     vec E = vec(1025);

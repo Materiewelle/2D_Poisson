@@ -84,34 +84,34 @@ int main(int argc, char ** argv) {
 //    }
 
 
-//    time_evolution te(tfet, voltage { 0.0, 0.3, 0.5 });
-//    vec ramp = linspace(0.3, 0.4, 100);
-//    for (int i = 2; i < 102; ++i) {
-//        te.V[i] = {0.0, ramp(i - 2), 0.5};
-//    }
-
-//    std::vector<std::pair<int, int>> E_ind(4);
-
-//    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  3 /  4);
-//    E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  3 /  4);
-//    E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() *  1 /  4);
-//    E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() *  1 /  4);
-
-//    movie argo(te, E_ind);
-//    argo.action();
-
-    vec V_g;
-    vec I;
-    for (int i = 2; i < argc; ++i) {
-        int l_g = stoi(argv[i]);
-        tfet.l_g = l_g;
-        std::stringstream ss;
-        ss << "tfet_lg=" << l_g << "nm";
-        tfet.update(ss.str());
-        steady_state::transfer<false>(tfet, {0.0, 0., 0.4}, 0.8, 150, V_g, I);
-        mat res = join_horiz(V_g, I);
-        res.save("data/" + ss.str(), raw_ascii);
+    time_evolution te(tfet, voltage { 0.0, 0.3, 0.5 });
+    vec ramp = linspace(0.3, 0.4, 100);
+    for (int i = 2; i < 22; ++i) {
+        te.V[i] = {0.0, ramp(i - 2), 0.5};
     }
+
+    std::vector<std::pair<int, int>> E_ind(4);
+
+    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  1 /  4);
+    E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  1 /  4);
+    E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() *  1 /  4);
+    E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() *  1 /  4);
+
+    movie argo(te, E_ind);
+    argo.action();
+
+//    vec V_g;
+//    vec I;
+//    for (int i = 2; i < argc; ++i) {
+//        int l_g = stoi(argv[i]);
+//        tfet.l_g = l_g;
+//        std::stringstream ss;
+//        ss << "tfet_lg=" << l_g << "nm";
+//        tfet.update(ss.str());
+//        steady_state::transfer<false>(tfet, {0.0, 0., 0.4}, 0.8, 150, V_g, I);
+//        mat res = join_horiz(V_g, I);
+//        res.save("data/" + ss.str(), raw_ascii);
+//    }
 
     return 0;
 }
