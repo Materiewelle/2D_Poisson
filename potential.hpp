@@ -496,25 +496,42 @@ arma::sp_mat & potential_impl::get_S(const device & d) {
 }
 
 arma::vec potential_impl::get_R0(const device & d, const voltage & V) {
+    /* returns the constant part of the right-hand side vector in poisson's equation.
+     * This vector only has to be computed once for a given geometry and applied voltage.
+     * The non-constant part of this vector depends on the charge density, which changes in each iteration. */
+
     using namespace arma;
+
+    // theese appear often, precompute and hold in memory
     double dr2 = 1.0 / d.dr / d.dr;
     double dx2 = 1.0 / d.dx / d.dx;
 
+    /* We are looking at the 2D-Poisson equation in it's integral form and in cylindrical ccordinates.
+     * The finite-difference volume in 3D is a ring with rectangular cross-section. The ring's surface
+     * consists of the following four parts: */
     enum {
-        L = 0,
-        R = 1,
-        I = 2,
-        O = 3
+        L = 0, // left hollow circle
+        R = 1, // right hollow circle
+        I = 2, // inside band
+        O = 3  // outside band
     };
 
+    /* get an array of four matrices, that indicate which dielectric constant has to be chosen
+     * at a certain point and for a certain part of the surface: */
     auto eps = get_eps(d);
 
+    // add build-in voltages
     double V_s = - (V.s + d.F_s);
     double V_g = - (V.g + d.F_g);
     double V_d = - (V.d + d.F_d);
 
+    // initialize return vector
     vec R0(d.N_x * d.M_r);
     R0.fill(0);
+
+    /* In the code below, R0 is filled with the right values for the given geometry and voltages.
+     * This section of code is not general. The form of the device we have chosen to simulate is hardcoded here.
+     * If one wishes to simulate another type of device, re-writing the code below would be necessary. */
     int i, j, k;
     double r, rp;
 
@@ -567,12 +584,14 @@ arma::vec potential_impl::get_R0(const device & d, const voltage & V) {
 }
 
 arma::vec potential_impl::get_R(const device & d, const arma::vec & R0, const charge_density & n) {
+    /* This function adds the non-constant part (depending on n) to the right-hand side vector in poisson's equation */
     arma::vec R = R0;
     R({arma::uword((d.M_cnt - 1) * d.N_x), arma::uword(d.M_cnt * d.N_x - 1)}) += n.total * d.r_cnt * 1e9; // 10^9 because of m->nm in epsilon_0
     return R;
 }
 
 void plot_phi2D(const device & d, const voltage & V) {
+    /* This just calls plot_phi2D with n=0 */
     charge_density n;
     n.total.resize(d.N_x);
     n.total.fill(0);
@@ -580,10 +599,15 @@ void plot_phi2D(const device & d, const voltage & V) {
 }
 
 void plot_phi2D(const device & d, const voltage & V, const charge_density & n) {
+    /* This function implements a 2D plot, that shows the 2D potentials distribution throughout the device.
+     * It also shows a cross-section of the device's geometry with indicated areas of different materials. */
+
+    // solve poisson's
     arma::mat phi2D = potential_impl::poisson2D<true, false>(d, V, n).t();
 
     gnuplot gp;
 
+    // gnuplot setup
     gp << "set palette defined ( 0 '#D73027', 1 '#F46D43', 2 '#FDAE61', 3 '#FEE090', 4 '#E0F3F8', 5 '#ABD9E9', 6 '#74ADD1', 7 '#4575B4' )\n";
     gp << "set title \"Potential cross-section for V_{s} = " << V.s << " V, V_{g} = " << V.g << " V and V_{d} = " << V.d << " V\"\n";
     gp << "set xlabel \"x / nm\"\n";

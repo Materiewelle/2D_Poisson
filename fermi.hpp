@@ -8,10 +8,12 @@
 #include "constant.hpp"
 
 inline double fermi(double E, double F) {
+    // just the fermi distribution function for fermions
     return 1.0 / (1.0 + std::exp((E - F) * c::e / c::T / c::k_B));
 }
 
 inline arma::vec fermi(const arma::vec & E, double F) {
+    // returns a vector of occupations for every energy in E
     using namespace arma;
 
     vec ret(E.size());
@@ -24,9 +26,12 @@ inline arma::vec fermi(const arma::vec & E, double F) {
 
 template<bool smooth>
 inline double fermi(double f, double delta_E, double slope = 500) {
+    /* the statistical distribution is not continuous at the branching point.
+     * To prevent the adaptive integration schmeme from creating a very high (and practically useless)
+     * number of energy-levels/wavefunctions, smooth the distribution function around the branching-point energy. */
     if (std::isfinite(delta_E)) {
         if (smooth) {
-            f -= 0.5 - 0.5 * std::tanh(delta_E * slope);
+            f -= 0.5 - 0.5 * std::tanh(delta_E * slope); // add a tangens hyperbolicus instead of a heaviside-funtion
         } else {
             f -= (delta_E < 0) ? 1.0 : 0.0;
         }
@@ -35,36 +40,5 @@ inline double fermi(double f, double delta_E, double slope = 500) {
     }
     return f;
 }
-
-//template<bool smooth>
-//inline double fermi(double E, double F, double E0, double slope = 500) {
-//    double f = fermi(E, F);
-//    return fermi<smooth>(f, E - E0, slope);
-//}
-
-//template<bool smooth>
-//inline arma::vec fermi(const arma::vec & E, double F, double E0, double slope = 500) {
-//    using namespace arma;
-
-//    vec ret(E.size());
-//    if (smooth) {
-//    for (unsigned i = 0; i < E.size(); ++i) {
-//        ret(i) = fermi<smooth>(E(i), F, E0, slope);
-//    }
-//    } else {
-//        auto E0_it = std::lower_bound(std::begin(E), std::end(E), E0);
-//        unsigned i = 0;
-//        for (auto E_it = std::begin(E); E_it != E0_it; ++E_it) {
-//            ret(i) = fermi(*E_it, F) - 1.0;
-//            ++i;
-//        }
-//        for (auto E_it = E0_it; E_it != std::end(E); ++E_it) {
-//            ret(i) = fermi(*E_it, F);
-//            ++i;
-//        }
-//    }
-
-//    return ret;
-//}
 
 #endif
