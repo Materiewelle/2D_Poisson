@@ -29,7 +29,7 @@ int main(int argc, char ** argv) {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     // set number of threads used by OMP (<= n_core for OpenBlas)
-    omp_set_num_threads(stoi(argv[1]));
+    //omp_set_num_threads(stoi(argv[1]));
 
 //    device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
@@ -84,7 +84,7 @@ int main(int argc, char ** argv) {
 
 
     time_evolution te(tfet, voltage { 0.0, 0.2, 0.5 });
-    vec ramp = linspace(0.3, 0.4, 100);
+    vec ramp = linspace(0.3, 0.4, 20);
     for (int i = 2; i < 22; ++i) {
         te.V[i] = {0.0, ramp(i - 2), 0.5};
     }
