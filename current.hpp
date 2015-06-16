@@ -6,6 +6,8 @@
 #include "device.hpp"
 #include "potential.hpp"
 
+#include "wave_packet.hpp"
+
 class current {
 public:
     arma::vec lv;

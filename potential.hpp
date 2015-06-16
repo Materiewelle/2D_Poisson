@@ -2,17 +2,11 @@
 #define POTENTIAL_HPP
 
 #include <armadillo>
-#include <array>
-#include <unordered_map>
 
-#include "anderson.hpp"
+#include "device.hpp"
 #include "voltage.hpp"
-#include "gnuplot.hpp"
 
-// forward declarations
-#ifndef CHARGE_DENSITY_HPP
-class charge_density;
-#endif
+#include "charge_density.hpp"
 
 class potential {
 public:
@@ -38,11 +32,6 @@ private:
     inline void smooth(unsigned x0, unsigned x1);
     inline void update_twice();
 };
-
-// rest of includes
-#include "charge_density.hpp"
-#include "constant.hpp"
-#include "device.hpp"
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -696,4 +685,3 @@ void plot_phi2D(const device & d, const voltage & V, const charge_density & n) {
 }
 
 #endif
-

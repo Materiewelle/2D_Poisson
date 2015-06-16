@@ -1,19 +1,10 @@
 #ifndef MOVIE_HPP
 #define MOVIE_HPP
 
-#include <string>
-#include <sstream>
 #include <iomanip>
-#include <armadillo>
 #include <vector>
-#include <utility>
 
-#include "device.hpp"
-#include "gnuplot.hpp"
-#include "system.hpp"
-#include "time_params.hpp"
 #include "time_evolution.hpp"
-#include "wave_packet.hpp"
 
 class movie {
 public:
@@ -98,7 +89,7 @@ void movie::frame() {
 
             // set correct output file
             gp << "set output \"" << output_file(lattice, E, frames) << "\"\n";
-            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << (te.m - 1) * t::dt * 1e12 << " ps'\n";
+            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << (te.m - 1) * time_evolution::dt * 1e12 << " ps'\n";
 
 
             /* Having all the stuff we want to plot
@@ -152,7 +143,7 @@ void movie::frame() {
         ++frames;
     }
 
-    if (te.m == t::N_t) {
+    if (te.m == te.sg.N_t) {
         mp4();
     }
 }
@@ -186,7 +177,5 @@ std::string movie::output_folder(int lattice, double E) {
     ss << save_folder() << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
     return ss.str();
 }
-
-
 
 #endif

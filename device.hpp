@@ -2,12 +2,7 @@
 #define DEVICE_HPP
 
 #include <armadillo>
-#include <sstream>
 #include <string>
-
-//#include <QSettings>
-
-#include "constant.hpp"
 
 class device {
 public:
@@ -112,7 +107,6 @@ public:
     arma::vec t_vec; // vector with t values
 
     inline device(const std::string & n, const model & m, const geometry & g);
-    //inline device(const std::string & filename);
     inline void update(const std::string & n);
     inline std::string to_string();
 
@@ -210,9 +204,6 @@ device::device(const std::string & n, const model & m, const geometry & g) {
 
     update(n);
 }
-
-//device::device(const std::string & filename) {
-//}
 
 void device::update(const std::string & n) {
     name = n;
@@ -316,4 +307,3 @@ std::string device::to_string() {
 }
 
 #endif
-

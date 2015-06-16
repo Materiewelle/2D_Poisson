@@ -2,12 +2,6 @@
 #define GREEN_HPP
 
 #include <armadillo>
-#include <complex>
-
-#include "constant.hpp"
-#include "device.hpp"
-#include "inverse.hpp"
-#include "potential.hpp"
 
 static inline void self_energy(const device & d, const potential & phi, double E, arma::cx_double & Sigma_s, arma::cx_double & Sigma_d) {
     using namespace arma;
@@ -129,4 +123,3 @@ static inline void plot_ldos(const device & d, const potential & phi, const unsi
 }
 
 #endif
-

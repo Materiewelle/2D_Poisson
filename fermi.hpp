@@ -3,9 +3,6 @@
 
 #include <armadillo>
 #include <cmath>
-#include <cfloat>
-
-#include "constant.hpp"
 
 inline double fermi(double E, double F) {
     // just the fermi distribution function for fermions

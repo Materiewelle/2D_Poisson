@@ -22,17 +22,16 @@ HEADERS += \
     gnuplot.hpp \
     rwth.hpp \
     time_evolution.hpp \
-    time_params.hpp \
     voltage.hpp \
     sd_quantity.hpp \
     movie.hpp \
     inverter.hpp \
     brent.hpp \
-    device_old.hpp \
-    potential_old.hpp \
     device.hpp \
     potential.hpp \
-    system.hpp
+    system.hpp \
+    include.hpp \
+    signal.hpp
 
 LIBS += -lblas -lgomp -lsuperlu
 

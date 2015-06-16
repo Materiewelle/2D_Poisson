@@ -1,7 +1,6 @@
 #ifndef CONSTANT_HPP
 #define CONSTANT_HPP
 
-#include <armadillo>
 #include <cmath>
 
 namespace c {
@@ -22,4 +21,3 @@ namespace c {
 }
 
 #endif
-

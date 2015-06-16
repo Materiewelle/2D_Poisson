@@ -1,23 +1,7 @@
 #define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
-#include <omp.h>
-#include <xmmintrin.h>
-#include <string>
-#include <sstream>
-#include <armadillo>
-
-#include "brent.hpp"
-#include "device.hpp"
-#include "gnuplot.hpp"
-#include "inverter.hpp"
-#include "movie.hpp"
-#include "potential.hpp"
-#include "steady_state.hpp"
-#include "time_evolution.hpp"
+#include "include.hpp"
 
 using namespace arma;
 using namespace std;
@@ -35,20 +19,26 @@ int main(int argc, char ** argv) {
 //    device tfet("tfet", tfet_model, tfet_geometry);
 
 
-    time_evolution te(nfet, voltage { 0.0, 0.5, 0.5 });
-    vec ramp = linspace(0.5, 0.8, 150);
-    for (int i = 2; i < 152; ++i) {
-        te.V[i] = { 0.0, 0.5, ramp(i - 2) };
-    }
-    std::fill(begin(te.V) + 152, end(te.V), voltage { 0.0, 0.5, 0.8 });
+    signal sg(1e-12, {6e-16, 2e-14}, {{0.0, 0.5, 0.5}, {0.0, 0.5, 0.8}});
+//    vec s(sg.V.size());
+//    vec g(sg.V.size());
+//    vec d(sg.V.size());
+//    for (unsigned i = 0; i < sg.V.size(); ++i) {
+//        s(i) = sg.V[i].s;
+//        g(i) = sg.V[i].g;
+//        d(i) = sg.V[i].d;
+//    }
+//    plot(s, g, d);
+
+    time_evolution te(nfet, sg);
 
     std::vector<std::pair<int, int>> E_ind(4);
     E_ind[0] = std::make_pair(LC, (int)(te.psi[LC].E0.size() * 0.50));
     E_ind[1] = std::make_pair(LC, (int)(te.psi[LC].E0.size() * 0.75));
     E_ind[2] = std::make_pair(RC, (int)(te.psi[RC].E0.size() * 0.50));
     E_ind[3] = std::make_pair(RC, (int)(te.psi[RC].E0.size() * 0.75));
-
     movie argo(te, E_ind);
+
     te.solve();
     te.save();
 

@@ -85,4 +85,3 @@ static inline bool brent(F && f, double a, double b, double tol, double & x0) {
 }
 
 #endif
-

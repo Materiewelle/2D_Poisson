@@ -1,17 +1,13 @@
-#ifndef CHARGE_DENSITY_HPP
-#define CHARGE_DENSITY_HPP
+#ifndef CHARGE_DENSITY_HPP_HEADER
+#define CHARGE_DENSITY_HPP_HEADER
 
 #include <armadillo>
 #include <stack>
 #include <unordered_map>
 
-// forward declarations (potential.hpp and wave_packet.hpp include each other)
-#ifndef POTENTIAL_HPP
+// forward declarations
 class potential;
-#endif
-#ifndef WAVE_PACKET_HPP
 class wave_packet;
-#endif
 
 class charge_density {
 public:
@@ -27,18 +23,6 @@ public:
     inline charge_density(const device & d, const potential & phi, arma::vec E[4], arma::vec W[4]);
     inline charge_density(const device & d, const wave_packet psi[4], const potential & phi);
 };
-
-// rest of includes
-#include "constant.hpp"
-#include "device.hpp"
-#include "fermi.hpp"
-#include "green.hpp"
-#include "integral.hpp"
-#include "potential.hpp"
-#include "wave_packet.hpp"
-#include "gnuplot.hpp"
-
-//----------------------------------------------------------------------------------------------------------------------
 
 namespace charge_density_impl {
 
@@ -63,7 +47,12 @@ namespace charge_density_impl {
 
 }
 
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
+
+#ifndef CHARGE_DENSITY_HPP_BODY
+#define CHARGE_DENSITY_HPP_BODY
 
 charge_density::charge_density() {
 }

@@ -3,11 +3,7 @@
 
 #include <armadillo>
 
-#include "brent.hpp"
 #include "device.hpp"
-#include "voltage.hpp"
-#include "steady_state.hpp"
-#include "time_evolution.hpp"
 
 class inverter {
 public:
@@ -72,17 +68,17 @@ void inverter::solve(const std::vector<voltage> & V, std::vector<double> & V_out
     };
     brent(delta_I, -1.0, 1.0, 0.00001, V_out[0]);
 
-    time_evolution te_n(s_n);
-    time_evolution te_p(s_p);
+//    time_evolution te_n(s_n);
+//    time_evolution te_p(s_p);
 
-    unsigned & m = te_n.m;
-    while (m < V.size()) {
-        V_out[m] = V_out[m - 1] + (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * t::dt / capacitance;
-        te_n.V[m] = { te_n.V[m - 1].s, te_n.V[m - 1].g,        V_out[m] };
-        te_p.V[m] = {        V_out[m], te_p.V[m - 1].g, te_p.V[m - 1].d };
-        te_n.step();
-        te_p.step();
-    }
+//    unsigned & m = te_n.m;
+//    while (m < V.size()) {
+//        V_out[m] = V_out[m - 1] + (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * t::dt / capacitance;
+//        te_n.V[m] = { te_n.V[m - 1].s, te_n.V[m - 1].g,        V_out[m] };
+//        te_p.V[m] = {        V_out[m], te_p.V[m - 1].g, te_p.V[m - 1].d };
+//        te_n.step();
+//        te_p.step();
+//    }
 }
 
 void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out) {
@@ -99,4 +95,3 @@ void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, a
 }
 
 #endif
-

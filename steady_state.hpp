@@ -1,13 +1,10 @@
 #ifndef STEADY_STATE_HPP
 #define STEADY_STATE_HPP
 
-#include <armadillo>
-
-#include "anderson.hpp"
+#include "device.hpp"
+#include "voltage.hpp"
 #include "charge_density.hpp"
 #include "current.hpp"
-#include "potential.hpp"
-#include "voltage.hpp"
 
 class steady_state {
 public:
@@ -177,4 +174,3 @@ void steady_state::transfer(const device & d, const voltage & V0, double V_g1, i
 }
 
 #endif
-

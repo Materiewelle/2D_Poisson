@@ -182,4 +182,3 @@ inline auto inverse_cols(const T & A, const U & B) {
 }
 
 #endif
-

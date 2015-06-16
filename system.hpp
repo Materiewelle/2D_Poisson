@@ -4,8 +4,6 @@
 #include <sstream>
 #include <string>
 
-#include <unistd.h>
-
 static inline void shell(const std::stringstream & command) {
     system(command.str().c_str());
 }
@@ -42,4 +40,3 @@ static inline const std::string & save_folder() {
 }
 
 #endif
-

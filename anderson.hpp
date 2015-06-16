@@ -3,8 +3,6 @@
 
 #include <armadillo>
 
-#include "gnuplot.hpp"
-
 class anderson {
 public:
     static constexpr auto beta = 0.5;

@@ -2,15 +2,8 @@
 #define GNUPLOT_HPP
 
 #include <armadillo>
-#include <cstdio>
-#include <iostream>
 #include <tuple>
-#include <utility>
-#include <vector>
-
 #include <ext/stdio_filebuf.h>
-
-#include "rwth.hpp"
 
 class gnuplot_file {
 public:
