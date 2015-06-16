@@ -61,7 +61,7 @@ time_evolution::time_evolution(const device & dd, const signal & sgg)
     : m(1), sg(sgg), d(dd), I(sg.N_t), phi(sg.N_t), n(sg.N_t), u(sg.N_t), L(sg.N_t), q(sg.N_t), qsum(sg.N_t - 1) {
 
     // solve steady state
-    steady_state s(d, sgg.V[0]);
+    steady_state s(d, sg.V[0]);
     s.solve<true>();
 
     // initialize

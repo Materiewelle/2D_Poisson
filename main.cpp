@@ -1,25 +1,22 @@
 #define ARMA_NO_DEBUG    // no bound checks
-//#define GNUPLOT_NOPLOTS
+#define GNUPLOT_NOPLOTS
 
 #include "include.hpp"
 
 using namespace arma;
 using namespace std;
 
-int main(int argc, char ** argv) {
+int main() {
     //flush denormal floats to zero for massive speedup
     //(i.e. set bits 15 and 6 in SSE control register MXCSR)
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    // set number of threads used by OMP (<= n_core for OpenBlas)
-//    omp_set_num_threads(stoi(argv[1]));
-
     device nfet("nfet", nfet_model, fet_geometry);
 //    device tfet("tfet", tfet_model, tfet_geometry);
 
 
-    signal sg(1e-12, {6e-16, 2e-14}, {{0.0, 0.5, 0.5}, {0.0, 0.5, 0.8}});
+    signal sg(1e-12, {6e-16, 2e-14}, {{0.0, 0.1, 0.5}, {0.0, 0.5, 0.5}});
 //    vec s(sg.V.size());
 //    vec g(sg.V.size());
 //    vec d(sg.V.size());
@@ -41,19 +38,6 @@ int main(int argc, char ** argv) {
 
     te.solve();
     te.save();
-
-//    vec V_g;
-//    vec I;
-//    for (int i = 2; i < argc; ++i) {
-//        int l_g = stoi(argv[i]);
-//        tfet.l_g = l_g;
-//        std::stringstream ss;
-//        ss << "tfet_lg=" << l_g << "nm";
-//        tfet.update(ss.str());
-//        steady_state::transfer<false>(tfet, {0.0, 0., 0.4}, 0.8, 150, V_g, I);
-//        mat res = join_horiz(V_g, I);
-//        res.save("data/" + ss.str(), raw_ascii);
-//    }
 
     return 0;
 }
