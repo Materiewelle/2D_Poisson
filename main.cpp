@@ -12,11 +12,11 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-//    device nfet("nfet", nfet_model, fet_geometry);
-    device tfet("tfet", tfet_model, tfet_geometry);
+    device nfet("nfet", nfet_model, fet_geometry);
+//    device tfet("tfet", tfet_model, tfet_geometry);
 
 
-    signal sg(1e-12, {6e-16, 4e-14}, {{0.0, -0.2, 0.5}, {0.0, 0.8, 0.5}});
+    signal sg(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
 
 //    // for checking if the signal came out fine
 //    vec s(sg.V.size());
@@ -29,19 +29,21 @@ int main() {
 //    }
 //    plot(s, g, d);
 
-    steady_state ss(tfet, sg.V[0]);
+    steady_state ss(nfet, sg.V[0]);
     ss.solve();
 
 //     // for identifying nice E-numbers
-//    plot_ldos(tfet, ss.phi);
-//    plot(ss.E[LV]);
+//    plot_ldos(ss.d, ss.phi);
+//    plot(ss.E[LC]);
 //    plot(ss.E[RC]);
+//    plot(ss.E[RV]);
 
     time_evolution te(ss, sg);
 
     std::vector<std::pair<int, int>> E_ind(2);
-    E_ind[0] = std::make_pair(LV, 3600);
-    E_ind[1] = std::make_pair(RC, 260);
+    E_ind[0] = std::make_pair(LC, 250);
+    E_ind[1] = std::make_pair(RC, 250);
+    E_ind[1] = std::make_pair(RV, 280);
     movie argo(te, E_ind);
 
     te.solve();
