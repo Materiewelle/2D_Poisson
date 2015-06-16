@@ -31,6 +31,7 @@ public:
 
     inline void solve();
     inline void step();
+    inline void save();
 
 private:
     sd_vec u;
@@ -82,151 +83,6 @@ void time_evolution::solve() {
     while (m < t::N_t) {
         step();
     }
-    /*using namespace arma;
-    using namespace std::complex_literals;
-
-    // solve steady state
-    steady_state s(d, V[0]);
-    s.solve<false>();
-
-    // save results
-    I[0]   = s.I;
-    phi[0] = s.phi;
-    n[0]   = s.n;
-
-    // get initial wavefunctions
-    wave_packet psi[4];
-    psi[LV].init< true>(d, s.E[LV], s.W[LV], phi[0]);
-    psi[RV].init<false>(d, s.E[RV], s.W[RV], phi[0]);
-    psi[LC].init< true>(d, s.E[LC], s.W[LC], phi[0]);
-    psi[RC].init<false>(d, s.E[RC], s.W[RC], phi[0]);
-
-#ifdef MOVIEMODE
-    std::vector<std::pair<int, int>> E_ind(4);
-
-    E_ind[0] = std::make_pair(LV, psi[LV].E0.size() *  1 /  8);
-    E_ind[1] = std::make_pair(RV, psi[RV].E0.size() *  1 /  8);
-    E_ind[2] = std::make_pair(LC, psi[LC].E0.size() * 15 / 16);
-    E_ind[3] = std::make_pair(RC, psi[RC].E0.size() * 15 / 16);
-
-    std::cout << "MOVIEMODE is activated!" << std::endl;
-    movie argo(d, psi, E_ind);
-#endif
-
-    // precalculate q-values
-    calculate_q();
-
-    // build constant part of Hamiltonian
-    cx_mat H_eff(2*d.N_x, 2*d.N_x);
-    H_eff.fill(0);
-    H_eff.diag(+1) = conv_to<cx_vec>::from(d.t_vec);
-    H_eff.diag(-1) = conv_to<cx_vec>::from(d.t_vec);
-
-    anderson mr_neo;
-    sd_vec affe;
-    arma::cx_mat U_eff;
-    sd_vec inv;
-    sd_vec old_L;
-
-    L.s.fill(1.0);
-    L.d.fill(1.0);
-
-    const cx_mat cx_eye = eye<cx_mat>(2 * d.N_x, 2 * d.N_x);
-
-    // main loop of timesteps
-    for (unsigned m = 1; m < t::N_t; ++m) {
-
-        // estimate charge density from previous values
-        n[m].total = (m == 1) ? n[m-1].total : (2 * n[m-1].total - n[m-2].total);
-
-        vec R0 = potential_impl::get_R0(d, V[m]);
-
-        // first guess for the potential
-        phi[m] = potential(d, R0, n[m]);
-        mr_neo.reset(phi[m].data);
-
-        // current data becomes old data
-        for (int i = 0; i < 4; ++i) {
-            psi[i].remember();
-        }
-        old_L = L;
-
-        // self-consistency loop
-        for (int it = 0; it < max_iterations; ++it) {
-            // diagonal of H with self-energy
-            H_eff.diag() = conv_to<cx_vec>::from(0.5 * (phi[m].twice + phi[m-1].twice));
-            H_eff(        0,        0) -= 1i * t::g * q.s(0);
-            H_eff(2*d.N_x-1,2*d.N_x-1) -= 1i * t::g * q.d(0);
-
-            // crank-nicolson propagator
-            U_eff = arma::solve(cx_eye + 1i * t::g * H_eff, cx_eye - 1i * t::g * H_eff);
-
-            // inv
-            inv.s = inverse_col< true>(cx_vec(1i * t::g * d.t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
-            inv.d = inverse_col<false>(cx_vec(1i * t::g * d.t_vec), cx_vec(1.0 + 1i * t::g * H_eff.diag()));
-
-            // u
-            u.s(m) = 0.5 * (phi[m].s() + phi[m - 1].s()) - phi[0].s();
-            u.d(m) = 0.5 * (phi[m].d() + phi[m - 1].d()) - phi[0].d();
-            u.s(m) = (1.0 - 0.5i * t::g * u.s(m)) / (1.0 + 0.5i * t::g * u.s(m));
-            u.d(m) = (1.0 - 0.5i * t::g * u.d(m)) / (1.0 + 0.5i * t::g * u.d(m));
-
-            // Lambda
-            L.s({1, m}) = old_L.s({1, m}) * u.s(m) * u.s(m);
-            L.d({1, m}) = old_L.d({1, m}) * u.d(m) * u.d(m);
-
-            if (m == 1) {
-                for (int i = 0; i < 4; ++i) {
-                    psi[i].memory_init();
-                    psi[i].source_init(d, u, q);
-                    psi[i].propagate(U_eff, inv);
-                    psi[i].update_E(d, phi[m], phi[0]);
-                }
-            } else {
-                affe.s = - t::g * t::g * L.s({1, m - 1}) % qsum.s({t::N_t-m, t::N_t-2}) / u.s({1, m - 1}) / u.s(m);
-                affe.d = - t::g * t::g * L.d({1, m - 1}) % qsum.d({t::N_t-m, t::N_t-2}) / u.d({1, m - 1}) / u.d(m);
-
-                // propagate wave functions of modes inside bands
-                for (int i = 0; i < 4; ++i) {
-                    psi[i].memory_update(affe, m);
-                    psi[i].source_update(u, L, qsum, m);
-                    psi[i].propagate(U_eff, inv);
-                    psi[i].update_E(d, phi[m], phi[0]);
-                }
-            }
-
-            // update n
-            n[m] = {d, psi, phi[m] };
-
-            // update potential
-            auto dphi = phi[m].update(d, R0, n[m], mr_neo);
-
-            cout << m << ": iteration " << it << ": rel deviation is " << dphi / dphi_threshold << endl;
-
-            // check if dphi is small enough
-            if (dphi < dphi_threshold) {
-                break;
-            }
-        }
-
-        // update sum
-        for (int i = 0; i < 4; ++i) {
-            psi[i].update_sum(m);
-        }
-
-        // calculate current
-        I[m] = current(d, psi, phi[m]);
-
-#ifdef MOVIEMODE
-        argo.frame(m, phi[m], psi);
-#endif
-
-    }
-
-#ifdef MOVIEMODE
-    argo.mp4(psi);
-#endif*/
-
 }
 
 void time_evolution::step() {
@@ -321,6 +177,27 @@ void time_evolution::step() {
 
     // increase m for next time step
     ++m;
+}
+
+void time_evolution::save() {
+
+    std::cout << "\nsaving time-dependent observables in /tmp... ";
+    arma::mat potential(d.N_x, t::N_t),
+              charge_density(d.N_x, t::N_t),
+              current(d.N_x, t::N_t);
+    for (int i = 0; i < t::N_t; ++i) {
+        potential.col(i) = phi[i].data;
+        charge_density.col(i) = n[i].total;
+        current.col(i) = I[i].total;
+    }
+    std::flush(std::cout);
+    potential.save("/tmp/phi.arma");
+    charge_density.save("/tmp/n.arma");
+    current.save("/tmp/I.arma");
+    d.x.save("/tmp/xtics.arma");
+    t::t.save("/tmp/ttics.arma");
+    std::cout << " done!\n";
+
 }
 
 void time_evolution::init(const steady_state & s) {

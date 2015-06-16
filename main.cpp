@@ -29,7 +29,7 @@ int main(int argc, char ** argv) {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     // set number of threads used by OMP (<= n_core for OpenBlas)
-    omp_set_num_threads(stoi(argv[1]));
+//    omp_set_num_threads(stoi(argv[1]));
 
 //    device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
@@ -83,22 +83,26 @@ int main(int argc, char ** argv) {
 //    }
 
 
-    time_evolution te(tfet, voltage { 0.0, 0.2, 0.5 });
-    vec ramp = linspace(0.3, 0.4, 100);
-    for (int i = 2; i < 22; ++i) {
+    time_evolution te(tfet, voltage{ 0.0, 0.2, 0.5 });
+    vec ramp = linspace(0.2, 0.4, 50);
+    for (int i = 2; i < 52; ++i) {
         te.V[i] = {0.0, ramp(i - 2), 0.5};
     }
-    std::fill(begin(te.V) + 22, end(te.V), voltage { 0.0, 0.4, 0.5 });
+    std::fill(begin(te.V) + 52, end(te.V), voltage { 0.0, 0.4, 0.5 });
 
-    std::vector<std::pair<int, int>> E_ind(4);
+    te.solve();
+    te.save();
 
-    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  1 /  4);
-    E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  1 /  4);
-    E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() *  1 /  4);
-    E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() *  1 /  4);
 
-    movie argo(te, E_ind);
-    argo.action();
+//    std::vector<std::pair<int, int>> E_ind(4);
+
+//    E_ind[0] = std::make_pair(LV, te.psi[LV].E0.size() *  1 /  4);
+//    E_ind[1] = std::make_pair(RV, te.psi[RV].E0.size() *  1 /  4);
+//    E_ind[2] = std::make_pair(LC, te.psi[LC].E0.size() *  1 /  4);
+//    E_ind[3] = std::make_pair(RC, te.psi[RC].E0.size() *  1 /  4);
+
+//    movie argo(te, E_ind);
+//    argo.action();
 
 //    vec V_g;
 //    vec I;

@@ -39,5 +39,3 @@ QMAKE_CXXFLAGS = -std=c++14 -march=native -fopenmp
 
 # optimize as hard as possible in release mode
 QMAKE_CXXFLAGS_RELEASE = -Ofast -fno-finite-math-only
-
-DISTFILES +=

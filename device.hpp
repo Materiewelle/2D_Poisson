@@ -138,13 +138,13 @@ static const device::geometry fet_geometry {
 static const device::geometry tfet_geometry {
     10.0, // eps_cnt
     25.0, // eps_ox
-     1.0, // l_sc
-    15.0, // l_sox
-     5.0, // l_sg
-    20.0, // l_g
-    20.0, // l_dg
+    10.0, // l_sc
+     7.0, // l_sox
+     3.0, // l_sg
+    10.0, // l_g
+    10.0, // l_dg
      0.0, // l_dox
-     1.0, // l_dc
+    10.0, // l_dc
      1.0, // r_cnt
      2.0, // d_ox
      2.0, // r_ext
@@ -175,8 +175,8 @@ static const device::model pfet_model {
 static const device::model tfet_model {
     0.62,               // E_g
     0.05 * c::m_e,      // m_eff
-    0.20,               // E_gc
-    0.10 * c::m_e,      // m_efc
+    0.62,               // E_gc
+    0.05 * c::m_e,      // m_efc
     - 0.62 / 2 + 0.011, // F_s
     0.00,               // F_g
     0.62 / 2 + 0.011    // F_d
