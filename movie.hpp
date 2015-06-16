@@ -143,9 +143,9 @@ void movie::frame() {
         ++frames;
     }
 
-    if (te.m == te.sg.N_t) {
-        mp4();
-    }
+//    if (te.m == te.sg.N_t) {
+//        mp4();
+//    }
 }
 
 void movie::mp4() {
