@@ -80,8 +80,8 @@ static inline void plot_ldos(const device & d, const potential & phi, const unsi
     gp << "set zlabel \"log(lDOS)\"\n";
     gp << "unset key\n";
     gp << "unset colorbox\n";
-    gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
-    gp << "set output 'lDOS.pdf'\n";
+//    gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
+//    gp << "set output 'lDOS.pdf'\n";
 
     arma::vec E;
     arma::mat lDOS = get_lDOS(d, phi, N_grid, E);
