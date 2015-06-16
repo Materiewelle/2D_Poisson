@@ -31,7 +31,8 @@ HEADERS += \
     device_old.hpp \
     potential_old.hpp \
     device.hpp \
-    potential.hpp
+    potential.hpp \
+    system.hpp
 
 LIBS += -lblas -lgomp -lsuperlu
 

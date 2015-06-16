@@ -35,12 +35,12 @@ int main(int argc, char ** argv) {
 //    device tfet("tfet", tfet_model, tfet_geometry);
 
 
-    time_evolution te(nfet, voltage { 0.0, 0.0, 0.5 });
-    vec ramp = linspace(0.0, 0.5, 150);
+    time_evolution te(nfet, voltage { 0.0, 0.5, 0.5 });
+    vec ramp = linspace(0.5, 0.8, 150);
     for (int i = 2; i < 152; ++i) {
-        te.V[i] = {0.0, ramp(i - 2), 0.5};
+        te.V[i] = { 0.0, 0.5, ramp(i - 2) };
     }
-    std::fill(begin(te.V) + 152, end(te.V), voltage { 0.0, 0.5, 0.5 });
+    std::fill(begin(te.V) + 152, end(te.V), voltage { 0.0, 0.5, 0.8 });
 
     std::vector<std::pair<int, int>> E_ind(4);
     E_ind[0] = std::make_pair(LC, (int)(te.psi[LC].E0.size() * 0.50));
@@ -49,7 +49,7 @@ int main(int argc, char ** argv) {
     E_ind[3] = std::make_pair(RC, (int)(te.psi[RC].E0.size() * 0.75));
 
     movie argo(te, E_ind);
-    argo.action();
+    te.solve();
     te.save();
 
 //    vec V_g;

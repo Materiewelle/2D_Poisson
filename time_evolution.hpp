@@ -1,6 +1,7 @@
 #ifndef TIME_EVOLUTION_HPP
 #define TIME_EVOLUTION_HPP
 
+#include <functional>
 #include <vector>
 #include <utility>
 
@@ -8,6 +9,7 @@
 #include "gnuplot.hpp"
 #include "sd_quantity.hpp"
 #include "steady_state.hpp"
+#include "system.hpp"
 #include "time_params.hpp"
 #include "voltage.hpp"
 #include "wave_packet.hpp"
@@ -33,6 +35,8 @@ public:
     inline void step();
     inline void save();
 
+    inline void add_callback(const std::function<void(void)> & f);
+
 private:
     sd_vec u;
     sd_vec L;
@@ -43,8 +47,11 @@ private:
     sd_vec old_L;
     arma::cx_mat cx_eye;
 
+    std::vector<std::function<void()>> callbacks;
+
     inline void init(const steady_state & s);
     inline void calculate_q();
+    inline void callback();
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -80,8 +87,10 @@ time_evolution::time_evolution(const device & dd, const std::vector<voltage> & V
 }
 
 void time_evolution::solve() {
+    callback();
     while (m < t::N_t) {
         step();
+        callback();
     }
 }
 
@@ -180,24 +189,30 @@ void time_evolution::step() {
 }
 
 void time_evolution::save() {
-
-    std::cout << "\nsaving time-dependent observables in /tmp... ";
-    arma::mat potential(d.N_x, t::N_t),
-              charge_density(d.N_x, t::N_t),
-              current(d.N_x, t::N_t);
-    for (int i = 0; i < t::N_t; ++i) {
-        potential.col(i) = phi[i].data;
-        charge_density.col(i) = n[i].total;
-        current.col(i) = I[i].total;
-    }
+    std::cout << "\nsaving time-dependent observables... ";
     std::flush(std::cout);
-    potential.save("/tmp/phi.arma");
-    charge_density.save("/tmp/n.arma");
-    current.save("/tmp/I.arma");
-    d.x.save("/tmp/xtics.arma");
-    t::t.save("/tmp/ttics.arma");
-    std::cout << " done!\n";
 
+    arma::mat phi_mat(d.N_x, t::N_t);
+    arma::mat n_mat(d.N_x, t::N_t);
+    arma::mat I_mat(d.N_x, t::N_t);
+
+    for (int i = 0; i < t::N_t; ++i) {
+        phi_mat.col(i) = phi[i].data;
+        n_mat.col(i) = n[i].total;
+        I_mat.col(i) = I[i].total;
+    }
+
+    phi_mat.save(save_folder() + "/phi.arma");
+    n_mat.save(save_folder() + "/n.arma");
+    I_mat.save(save_folder() + "/I.arma");
+    d.x.save(save_folder() + "/xtics.arma");
+    t::t.save(save_folder() + "/ttics.arma");
+
+    std::cout << " done!\n";
+}
+
+void time_evolution::add_callback(const std::function<void(void)> & f) {
+    callbacks.push_back(f);
 }
 
 void time_evolution::init(const steady_state & s) {
@@ -313,6 +328,14 @@ void time_evolution::calculate_q() {
         qsum.d(i) = q.d(t::N_t - 1 - i) + q.d(t::N_t - 2 - i);
     }
     cout << " done!" << endl;
+}
+
+void time_evolution::callback() {
+    using namespace std;
+
+    for (auto i = begin(callbacks); i != end(callbacks); ++i) {
+        (*i)();
+    }
 }
 
 #endif

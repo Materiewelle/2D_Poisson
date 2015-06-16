@@ -4,55 +4,19 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <ctime>
 #include <armadillo>
-#include <stdio.h>
 #include <vector>
 #include <utility>
-#include <unistd.h>
 
-#include "wave_packet.hpp"
-#include "gnuplot.hpp"
 #include "device.hpp"
+#include "gnuplot.hpp"
+#include "system.hpp"
 #include "time_params.hpp"
 #include "time_evolution.hpp"
-
-static inline void shell(const std::stringstream & command) {
-    system(command.str().c_str());
-}
-static inline void system(const std::string & s) {
-    system(s.c_str());
-}
-
-static inline auto now() {
-    using namespace std;
-    time_t rawtime;
-    struct tm* timeinfo;
-    char buffer[80];
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
-    strftime(buffer,80,"%Y-%m-%d-%H-%M-%S",timeinfo);
-    return string(buffer);
-}
-
-static inline const std::string & lattice_name(int i) {
-    static const std::string names[6] = {
-        "left_valence",
-        "right_valence",
-        "left_conduction",
-        "right_conduction",
-        "left_tunnel",
-        "right_tunnel" };
-    return names[i];
-}
+#include "wave_packet.hpp"
 
 class movie {
 public:
-    std::string parent_folder;
-    std::string folder;
-
-    inline void action();
-
     // provide an initialized time_evolution object with solved steady-state
     inline movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i);
 
@@ -76,16 +40,22 @@ private:
     inline std::string output_file(int lattice, double E, int frame_number);
 };
 
+static inline const std::string & lattice_name(int i) {
+    static const std::string names[6] = {
+        "left_valence",
+        "right_valence",
+        "left_conduction",
+        "right_conduction",
+        "left_tunnel",
+        "right_tunnel"
+    };
+
+    return names[i];
+}
+
 movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i)
     : frames(0), te(t_ev), E_ind(E_i), band_offset(te.d.N_x) {
     using namespace std::string_literals;
-
-    char buf[32];
-    getlogin_r(buf, sizeof(buf));
-
-//    parent_folder = "/tmp/movie_tmpdir_"s + buf;
-    parent_folder = "/home/"s + buf;
-    folder = parent_folder + "/" + now();
 
     // produce folder tree
     for (unsigned i = 0; i < E_ind.size(); ++i) {
@@ -108,15 +78,10 @@ movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i
     band_offset(te.d.sc).fill(0.5 * te.d.E_gc);
     band_offset({te.d.sox.a, te.d.dox.b}).fill(0.5 * te.d.E_g);
     band_offset(te.d.dc).fill(0.5 * te.d.E_gc);
-}
 
-void movie::action() {
-    frame();
-    while(te.m < t::N_t) {
-        te.step();
-        frame();
-    }
-    mp4();
+    t_ev.add_callback([this] () {
+        this->frame();
+    });
 }
 
 void movie::frame() {
@@ -186,6 +151,10 @@ void movie::frame() {
         // update frame number
         ++frames;
     }
+
+    if (te.m == t::N_t) {
+        mp4();
+    }
 }
 
 void movie::mp4() {
@@ -214,7 +183,7 @@ std::string movie::output_file(int lattice, double E, int frame_number) {
 
 std::string movie::output_folder(int lattice, double E) {
     std::stringstream ss;
-    ss << folder << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
+    ss << save_folder() << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
     return ss.str();
 }
 
