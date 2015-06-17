@@ -289,12 +289,9 @@ device::device(const std::string & str) {
                 s.insert(it->second);
             } else {
                 // try to convert to double
-                try {
-                    d[it->second - 1] = stod(right);
-
-                    // add data index
+                std::istringstream i(right);
+                if (i >> d[it->second - 1]) {
                     s.insert(it->second);
-                } catch (...) {
                 }
             }
         }

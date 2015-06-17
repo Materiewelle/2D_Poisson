@@ -51,21 +51,11 @@ int main() {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     device nfet("nfet", nfet_model, fet_geometry);
+    device tfet("tfet", tfet_model, tfet_geometry);
+    cout << tfet.to_string() << endl;
+    return 0;
 
     signal sg = sine_signal(1e-12, {0.0, 0.5, 0.5}, {0.0, 0.2, 0.0}, {1e13, 2e13, 3e13 }, {5e-14, 6e-14, 1e-14}, {0.2*M_PI, 0, 0.8*M_PI});
-
-    vec s(sg.N_t);
-    vec g(sg.N_t);
-    vec d(sg.N_t);
-    for (unsigned i = 0; i < sg.N_t; ++i) {
-        s(i) = sg[i].s;
-        g(i) = sg[i].g;
-        d(i) = sg[i].d;
-    }
-    plot(s, g, d);
-
-
-//    device tfet("tfet", tfet_model, tfet_geometry);
 
 //    signal sg = linear_signal(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
 
