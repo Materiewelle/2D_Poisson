@@ -2,6 +2,8 @@
 #define DEVICE_HPP
 
 #include <armadillo>
+#include <map>
+#include <set>
 #include <string>
 
 class device {
@@ -107,9 +109,9 @@ public:
     arma::vec t_vec; // vector with t values
 
     inline device(const std::string & n, const model & m, const geometry & g);
+    inline device(const std::string & str);
     inline void update(const std::string & n);
     inline std::string to_string();
-
 };
 
 static const device::geometry fet_geometry {
@@ -205,6 +207,123 @@ device::device(const std::string & n, const model & m, const geometry & g) {
     update(n);
 }
 
+device::device(const std::string & str) {
+    using namespace std;
+
+    // trim function
+    auto trim = [] (string str) -> string {
+        if (str.empty()) {
+            return str;
+        }
+
+        auto first = str.find_first_not_of(' ');
+        auto last = str.find_last_not_of(' ');
+        return str.substr(first, last - first + 1);
+    };
+
+    // lookup map
+    static const map<string, int> m = {
+        { "name"   ,  0 },
+        { "E_g"    ,  1 },
+        { "m_eff"  ,  2 },
+        { "E_gc"   ,  3 },
+        { "m_efc"  ,  4 },
+        { "F_s"    ,  5 },
+        { "F_g"    ,  6 },
+        { "F_d"    ,  7 },
+        { "eps_cnt",  8 },
+        { "eps_ox" ,  9 },
+        { "l_sc"   , 10 },
+        { "l_sox"  , 11 },
+        { "l_sg"   , 12 },
+        { "l_g"    , 13 },
+        { "l_dg"   , 14 },
+        { "l_dox"  , 15 },
+        { "l_dc"   , 16 },
+        { "r_cnt"  , 17 },
+        { "d_ox"   , 18 },
+        { "r_ext"  , 19 },
+        { "dx"     , 20 },
+        { "dr"     , 21 }
+    };
+
+    // set for data indices (check if all are in string)
+    set<int> s;
+
+    // data array
+    double d[21];
+
+    // iterate over all lines
+    istringstream stream(str);
+    string line;
+    while (getline(stream, line)) {
+        // continue if empty line or comment
+        if ((line.empty()) || (line[line.find_first_not_of(' ')] == ';')) {
+            continue;
+        }
+
+        // find delimiter
+        int pos = line.find('=');
+        if (pos == string::npos) {
+            continue;
+        }
+
+        // split line into left and right side of = sign
+        string left = trim(line.substr(0, pos));
+        string right = trim(line.substr(pos + 1));
+
+        // look left side up
+        auto it = m.find(left);
+        if (it != m.end()) {
+            // check if name (the only non double value)
+            if (it->second == 0) {
+                name = right;
+
+                // add data index
+                s.insert(it->second);
+            } else {
+                // try to convert to double
+                try {
+                    d[it->second - 1] = stod(right);
+
+                    // add data index
+                    s.insert(it->second);
+                } catch (...) {
+                }
+            }
+        }
+    }
+
+    // check if all fields were in string
+    if (s.size() != 22) {
+        cout << "Error while loading device!!" << endl;
+        return;
+    }
+
+    // save data
+    E_g     = d[ 1 - 1];
+    m_eff   = d[ 2 - 1];
+    E_gc    = d[ 3 - 1];
+    m_efc   = d[ 4 - 1];
+    F_s     = d[ 5 - 1];
+    F_g     = d[ 6 - 1];
+    F_d     = d[ 7 - 1];
+    eps_cnt = d[ 8 - 1];
+    eps_ox  = d[ 9 - 1];
+    l_sc    = d[10 - 1];
+    l_sox   = d[11 - 1];
+    l_sg    = d[12 - 1];
+    l_g     = d[13 - 1];
+    l_dg    = d[14 - 1];
+    l_dox   = d[15 - 1];
+    l_dc    = d[16 - 1];
+    r_cnt   = d[17 - 1];
+    d_ox    = d[18 - 1];
+    r_ext   = d[19 - 1];
+    dx      = d[20 - 1];
+    dr      = d[21 - 1];
+}
+
 void device::update(const std::string & n) {
     name = n;
     F_sc = F_s;
@@ -286,6 +405,7 @@ std::string device::to_string() {
     ss << "F_s     = " << F_s     << endl;
     ss << "F_g     = " << F_g     << endl;
     ss << "F_d     = " << F_d     << endl;
+    ss << endl;
 
     ss << "; geometry" << endl;
     ss << "eps_cnt = " << eps_cnt << endl;
