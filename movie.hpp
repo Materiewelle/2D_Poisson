@@ -89,7 +89,7 @@ void movie::frame() {
 
             // set correct output file
             gp << "set output \"" << output_file(lattice, E, frames) << "\"\n";
-            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(3) << fixed << (te.m - 1) * time_evolution::dt * 1e12 << " ps'\n";
+            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(3) << std::fixed << (te.m - 1) * time_evolution::dt * 1e12 << " ps'\n";
 
 
             /* Having all the stuff we want to plot
@@ -142,10 +142,6 @@ void movie::frame() {
         // update frame number
         ++frames;
     }
-
-//    if (te.m == te.sg.N_t) {
-//        mp4();
-//    }
 }
 
 void movie::mp4() {

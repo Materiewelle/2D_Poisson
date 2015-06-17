@@ -3,6 +3,7 @@
 
 #include <armadillo>
 #include <functional>
+#include <fstream>
 
 #include "device.hpp"
 #include "current.hpp"
@@ -201,6 +202,10 @@ void time_evolution::save() {
     d.x.save(save_folder() + "/xtics.arma");
     sg.t.save(save_folder() + "/ttics.arma");
     V_mat.save(save_folder() + "/V.arma");
+
+    std::ofstream device_params(save_folder() + "/device.ini");
+    device_params << d.to_string();
+    device_params.close();
 
     std::cout << " done!\n";
 }
