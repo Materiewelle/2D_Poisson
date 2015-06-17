@@ -6,6 +6,8 @@
 #include <set>
 #include <string>
 
+#include "constant.hpp"
+
 class device {
 public:
     struct model {
