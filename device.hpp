@@ -324,6 +324,8 @@ device::device(const std::string & str) {
     r_ext   = d[19 - 1];
     dx      = d[20 - 1];
     dr      = d[21 - 1];
+
+    update(name);
 }
 
 void device::update(const std::string & n) {
