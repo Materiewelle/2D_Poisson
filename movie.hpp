@@ -89,7 +89,7 @@ void movie::frame() {
 
             // set correct output file
             gp << "set output \"" << output_file(lattice, E, frames) << "\"\n";
-            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(4) << (te.m - 1) * time_evolution::dt * 1e12 << " ps'\n";
+            gp << "set multiplot layout 1,2 title 't = " << std::setprecision(3) << fixed << (te.m - 1) * time_evolution::dt * 1e12 << " ps'\n";
 
 
             /* Having all the stuff we want to plot
@@ -126,8 +126,8 @@ void movie::frame() {
                         gp << "set yrange [" << phimin << ":" << phimax << "]\n";
                         gp << "p "
                               "'-' w l ls 3 lw 2 notitle, "
-                              "'-' w l ls 3 lw 2 notitle, "
-                              "'-' w l ls 2 lw 2 t 'injection energy'\n";
+                              "'-' w l ls 3 lw 2 t 'band edges'', "
+                              "'-' w l ls 2 lw 2 t '<E_{psi}>(x)'\n";
                     }
                     gp << te.d.x(k) << " " << ((p < 4) ? data[p](2 * k) : data[p](k)) << std::endl;
                 }
