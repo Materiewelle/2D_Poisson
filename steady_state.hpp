@@ -19,6 +19,7 @@ public:
     arma::vec E[4];
     arma::vec W[4];
 
+    inline steady_state();
     inline steady_state(const device & dd, const voltage & V);
     inline steady_state(const device & dd, const voltage & V, const charge_density & n0);
 
@@ -32,6 +33,9 @@ public:
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+
+steady_state::steady_state() {
+}
 
 steady_state::steady_state(const device & dd, const voltage & VV)
     : d(dd), V(VV), n() {

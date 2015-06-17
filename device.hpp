@@ -110,6 +110,7 @@ public:
     double tcc;      // hopping between contact and central area
     arma::vec t_vec; // vector with t values
 
+    inline device();
     inline device(const std::string & n, const model & m, const geometry & g);
     inline device(const std::string & str);
     inline void update(const std::string & n);
@@ -181,6 +182,9 @@ static const device::model tfet_model {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+
+device::device() {
+}
 
 device::device(const std::string & n, const model & m, const geometry & g) {
     eps_cnt = g.eps_cnt;
@@ -265,7 +269,7 @@ device::device(const std::string & str) {
         }
 
         // find delimiter
-        int pos = line.find('=');
+        auto pos = line.find('=');
         if (pos == string::npos) {
             continue;
         }

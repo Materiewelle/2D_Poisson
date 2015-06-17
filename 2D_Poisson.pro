@@ -30,7 +30,6 @@ HEADERS += \
     device.hpp \
     potential.hpp \
     system.hpp \
-    include.hpp \
     signal.hpp
 
 LIBS += -lblas -lgomp -lsuperlu

@@ -1,9 +1,45 @@
 #define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 
-#include "include.hpp"
 #include <fstream>
 #include <iostream>
+#include <omp.h>
+#include <xmmintrin.h>
+
+#define CHARGE_DENSITY_HPP_BODY
+#define WAVE_PACKET_HPP_BODY
+#define SIGNAL_HPP_BODY
+
+#include "anderson.hpp"
+#include "constant.hpp"
+#include "device.hpp"
+#include "fermi.hpp"
+#include "rwth.hpp"
+#include "gnuplot.hpp"
+#include "brent.hpp"
+#include "integral.hpp"
+#include "inverse.hpp"
+#include "system.hpp"
+#include "voltage.hpp"
+#include "sd_quantity.hpp"
+#include "charge_density.hpp"
+#include "potential.hpp"
+#include "green.hpp"
+#include "wave_packet.hpp"
+#include "current.hpp"
+#include "steady_state.hpp"
+#include "signal.hpp"
+#include "time_evolution.hpp"
+#include "inverter.hpp"
+#include "movie.hpp"
+
+#undef CHARGE_DENSITY_HPP_BODY
+#undef WAVE_PACKET_HPP_BODY
+#undef SIGNAL_HPP_BODY
+
+#include "charge_density.hpp"
+#include "wave_packet.hpp"
+#include "signal.hpp"
 
 using namespace arma;
 using namespace std;
@@ -15,9 +51,23 @@ int main() {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
     device nfet("nfet", nfet_model, fet_geometry);
+
+    signal sg = sine_signal(1e-12, {0.0, 0.5, 0.5}, {0.0, 0.2, 0.0}, {1e13, 2e13, 3e13 }, {5e-14, 6e-14, 1e-14}, {0.2*M_PI, 0, 0.8*M_PI});
+
+    vec s(sg.N_t);
+    vec g(sg.N_t);
+    vec d(sg.N_t);
+    for (unsigned i = 0; i < sg.N_t; ++i) {
+        s(i) = sg[i].s;
+        g(i) = sg[i].g;
+        d(i) = sg[i].d;
+    }
+    plot(s, g, d);
+
+
 //    device tfet("tfet", tfet_model, tfet_geometry);
 
-//    signal sg(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
+//    signal sg = linear_signal(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
 
 //    // for checking if the signal came out fine
 //    vec s(sg.V.size());

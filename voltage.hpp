@@ -1,30 +1,90 @@
 #ifndef VOLTAGE_HPP
 #define VOLTAGE_HPP
 
-class voltage {
+template<class T>
+class triple {
 public:
-    double s;
-    double g;
-    double d;
+    T s;
+    T g;
+    T d;
+
+    inline triple(T ss, T gg, T dd);
+    inline triple(T v);
+    inline triple();
 };
 
-inline voltage operator+(const voltage & V0, const voltage & V1) {
-    return voltage { V0.s + V1.s, V0.g + V1.g, V0.d + V1.d };
+template<class T>
+triple<T>::triple(T ss, T gg, T dd)
+    : s(ss), g(gg), d(dd) {
 }
-inline voltage operator-(const voltage & V0, const voltage & V1) {
-    return voltage { V0.s - V1.s, V0.g - V1.g, V0.d - V1.d };
+
+template<class T>
+triple<T>::triple(T v)
+    : triple(v, v, v) {
 }
-inline voltage operator-(const voltage & V0) {
-    return voltage { - V0.s, - V0.g, - V0.d };
+
+template<class T>
+triple<T>::triple()
+    : triple(T()) {
 }
-inline voltage operator*(const voltage & V0, double m) {
-    return voltage { V0.s * m, V0.g * m, V0.d * m };
+
+template<class T>
+inline triple<T> operator+(const triple<T> & t0, double x) {
+    return triple<T> { t0.s + x, t0.g + x, t0.d + x };
 }
-inline voltage operator*(double m, const voltage & V0) {
-    return V0 * m;
+template<class T>
+inline triple<T> operator+(double x, const triple<T> & t0) {
+    return t0 + x;
 }
-inline voltage operator/(const voltage & V0, double m) {
-    return voltage { V0.s / m, V0.g / m, V0.d / m };
+template<class T>
+inline triple<T> operator+(const triple<T> & t0, const triple<T> & t1) {
+    return triple<T> { t0.s + t1.s, t0.g + t1.g, t0.d + t1.d };
 }
+template<class T>
+inline triple<T> operator-(const triple<T> & t0) {
+    return triple<T> { - t0.s, - t0.g, - t0.d };
+}
+template<class T>
+inline triple<T> operator-(const triple<T> & t0, double x) {
+    return t0 + (-x);
+}
+template<class T>
+inline triple<T> operator-(double x, const triple<T> & t0) {
+    return -(t0 - x);
+}
+template<class T>
+inline triple<T> operator-(const triple<T> & t0, const triple<T> & t1) {
+    return t0 + (-t1);
+}
+template<class T>
+inline triple<T> operator*(const triple<T> & t0, double m) {
+    return triple<T> { t0.s * m, t0.g * m, t0.d * m };
+}
+template<class T>
+inline triple<T> operator*(double m, const triple<T> & t0) {
+    return t0 * m;
+}
+template<class T>
+inline triple<T> operator*(const triple<T> & t0, const triple<T> & t1) {
+    return triple<T> { t0.s * t1.s, t0.g * t1.g, t0.d * t1.d };
+}
+template<class T>
+inline triple<T> operator/(const triple<T> & t0, double m) {
+    return triple<T> { t0.s / m, t0.g / m, t0.d / m };
+}
+template<class T, class F>
+inline triple<T> func(F && f, const triple<T> & t) {
+    triple<T> ret;
+
+    ret.s = f(t.s);
+    ret.g = f(t.g);
+    ret.d = f(t.d);
+
+    return ret;
+}
+
+using voltage = triple<double>;
+using tripled = triple<double>;
+using triplei = triple<int>;
 
 #endif

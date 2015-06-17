@@ -30,6 +30,7 @@ public:
     std::vector<charge_density> n;
     wave_packet psi[4];
 
+    inline time_evolution();
     inline time_evolution(const device & dd, const signal & sgg);
     inline time_evolution(const steady_state & s, const signal & sgg);
 
@@ -57,6 +58,9 @@ private:
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+
+time_evolution::time_evolution() {
+}
 
 time_evolution::time_evolution(const device & dd, const signal & sgg)
     : m(1), sg(sgg), d(dd), I(sg.N_t), phi(sg.N_t), n(sg.N_t), u(sg.N_t), L(sg.N_t), q(sg.N_t), qsum(sg.N_t - 1) {
