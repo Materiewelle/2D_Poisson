@@ -3,6 +3,7 @@
 
 #include <armadillo>
 #include <functional>
+#include <fstream>
 
 #include "device.hpp"
 #include "current.hpp"
@@ -61,7 +62,7 @@ time_evolution::time_evolution(const device & dd, const signal & sgg)
     : m(1), sg(sgg), d(dd), I(sg.N_t), phi(sg.N_t), n(sg.N_t), u(sg.N_t), L(sg.N_t), q(sg.N_t), qsum(sg.N_t - 1) {
 
     // solve steady state
-    steady_state s(d, sgg.V[0]);
+    steady_state s(d, sg.V[0]);
     s.solve<true>();
 
     // initialize
@@ -201,6 +202,10 @@ void time_evolution::save() {
     d.x.save(save_folder() + "/xtics.arma");
     sg.t.save(save_folder() + "/ttics.arma");
     V_mat.save(save_folder() + "/V.arma");
+
+    std::ofstream device_params(save_folder() + "/device.ini");
+    device_params << d.to_string();
+    device_params.close();
 
     std::cout << " done!\n";
 }
