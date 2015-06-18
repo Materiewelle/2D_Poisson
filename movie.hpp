@@ -126,7 +126,7 @@ void movie::frame() {
                         gp << "set yrange [" << phimin << ":" << phimax << "]\n";
                         gp << "p "
                               "'-' w l ls 3 lw 2 notitle, "
-                              "'-' w l ls 3 lw 2 t 'band edges'', "
+                              "'-' w l ls 3 lw 2 t 'band edges', "
                               "'-' w l ls 2 lw 2 t '<E_{psi}>(x)'\n";
                     }
                     gp << te.d.x(k) << " " << ((p < 4) ? data[p](2 * k) : data[p](k)) << std::endl;
