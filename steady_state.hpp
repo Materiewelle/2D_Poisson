@@ -96,7 +96,7 @@ bool steady_state::solve() {
     bool converged = !(dphi > dphi_threshold);
 //    cout << V.s << ", " << V.g << ", " << V.d << ", ";
     string conv_text = converged ? "converged!" : "DIVERGED!!!";
-    cout << it << " iterations, reldev=" << dphi/dphi_threshold << ", " << conv_text << endl;
+    cout << it << " iterations, reldev=" << dphi/dphi_threshold << ", " << conv_text << ", n_E = " << E[0].size() + E[1].size() + E[3].size() + E[4].size() << endl;
     return converged;
 
     // check if actually converged
