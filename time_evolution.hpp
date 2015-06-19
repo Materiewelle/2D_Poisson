@@ -4,6 +4,7 @@
 #include <armadillo>
 #include <functional>
 #include <fstream>
+#include <iomanip>
 
 #include "device.hpp"
 #include "current.hpp"
@@ -19,7 +20,7 @@ class time_evolution {
 public:
     static constexpr double dphi_threshold = 1e-8;
     static constexpr int max_iterations = 25;
-    static constexpr double dt = 4e-16;                     // timestep
+    static constexpr double dt = 6e-16;                     // timestep
     static const double g; // debug doesn't work otherwise
 
     unsigned m;
@@ -163,10 +164,11 @@ void time_evolution::step() {
         // update potential
         auto dphi = phi[m].update(d, R0, n[m], mr_neo);
 
-        cout << m << ": iteration " << it << ": rel deviation is " << dphi / dphi_threshold << endl;
+//        cout << m << ": iteration " << it << ": rel deviation is " << dphi / dphi_threshold << endl;
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
+            std::cout << "timestep " << m << ": t = " << m * dt * 1e12 << std::setprecision(5) << std::fixed << " ps. " << it << "iterations " << it << ", reldev = " << dphi / dphi_threshold << std::endl;
             break;
         }
     }

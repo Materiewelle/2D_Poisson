@@ -52,6 +52,7 @@ int main() {
 
 //    device nfet("nfet", nfet_model, fet_geometry);
 //    device pfet("pfet", pfet_model, fet_geometry);
+    device tfet("tfet", tfet_model, tfet_geometry);
 
 //    inverter i(nfet, pfet, 1e-9);
 //    signal sg = linear_signal(1e-12, {1e-14, 2e-14}, {{0.0, 0.2, 0.45}, {0.0, 0.45, 0.45}});
@@ -61,13 +62,13 @@ int main() {
 //    return 0;
 
 //    device nfet("nfet", nfet_model, fet_geometry);
-    device tfet("tfet", tfet_model, tfet_geometry);
+//    device tfet("tfet", tfet_model, tfet_geometry);
 
-    signal sg = sine_signal(3.125e-12 + 1e-14, {0.0, 0.3, 0.5}, {0.0, 0.3, 0.0}, {8e11}, {1e-14}, {0});
+    signal sg = sine_signal(4e-12 + 1e-14, {0.0, 0.7, 0.5}, {0.0, 0.0, 0.25}, {5e11}, {1e-14}, {.5 * M_PI});
 
 //    signal sg = linear_signal(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
 
-////     for checking if the signal came out fine
+//    //for checking if the signal came out fine
 //    vec s(sg.V.size());
 //    vec g(sg.V.size());
 //    vec d(sg.V.size());
@@ -82,16 +83,17 @@ int main() {
     ss.solve();
 
     // for identifying nice E-numbers
-//    plot_ldos(ss.d, ss.phi);
-//    plot(ss.E[LV]);
-//    plot(ss.E[RC]);
-//    plot(ss.E[RV]);
+    plot_ldos(ss.d, ss.phi);
+    plot(ss.E[LV]);
+    plot(ss.E[RC]);
+    plot(ss.E[RV]);
 
     time_evolution te(ss, sg);
 
     std::vector<std::pair<int, int>> E_ind(2);
-    E_ind[0] = std::make_pair(LV, 1900);
-    E_ind[1] = std::make_pair(LV, 1870);
+    E_ind[0] = std::make_pair(LV, 1500);
+    E_ind[1] = std::make_pair(LV, 1660);
+    E_ind[1] = std::make_pair(RC, 280);
     movie argo(te, E_ind);
 
     te.solve();
