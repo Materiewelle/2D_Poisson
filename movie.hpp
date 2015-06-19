@@ -13,7 +13,7 @@ public:
 
 private:
     int frames; // the current number of frames that have been produced
-    static constexpr int frame_skip = 1;
+    static constexpr int frame_skip = 4;
 
     static constexpr double phimin = -1.5;
     static constexpr double phimax = +1.0;

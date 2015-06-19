@@ -26,13 +26,13 @@ public:
 
 namespace charge_density_impl {
 
-    static constexpr int initial_waypoints = 60; // minimum number of integration intervalls
+    static constexpr int initial_waypoints = 40; // minimum number of integration intervalls
 
     // Energy-integration boundaries above and below the source/drain potential
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
 
-    static constexpr double rel_tol = 3e-3; // tolerated relative error in adaptive simpson integration
+    static constexpr double rel_tol = 7e-3; // tolerated relative error in adaptive simpson integration
 
     static inline arma::vec get_bound_states(const device & d, const potential & phi);
     static inline arma::vec get_bound_states(const device & d, const potential & phi, double E0, double E1);

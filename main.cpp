@@ -53,11 +53,11 @@ int main() {
 //    device nfet("nfet", nfet_model, fet_geometry);
     device tfet("tfet", tfet_model, tfet_geometry);
 
-    signal sg = sine_signal(1e-12, {0.0, 0.35, 0.5}, {0.0, 0.2, 0.0}, {1e13}, {1e-14}, {0});
+    signal sg = sine_signal(3.125e-12 + 1e-14, {0.0, 0.3, 0.5}, {0.0, 0.3, 0.0}, {8e11}, {1e-14}, {0});
 
 //    signal sg = linear_signal(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
 
-//    // for checking if the signal came out fine
+////     for checking if the signal came out fine
 //    vec s(sg.V.size());
 //    vec g(sg.V.size());
 //    vec d(sg.V.size());
@@ -71,7 +71,7 @@ int main() {
     steady_state ss(tfet, sg.V[0]);
     ss.solve();
 
-//     // for identifying nice E-numbers
+    // for identifying nice E-numbers
 //    plot_ldos(ss.d, ss.phi);
 //    plot(ss.E[LV]);
 //    plot(ss.E[RC]);
@@ -80,9 +80,8 @@ int main() {
     time_evolution te(ss, sg);
 
     std::vector<std::pair<int, int>> E_ind(2);
-    E_ind[0] = std::make_pair(LV, 4800);
-    E_ind[1] = std::make_pair(RC, 2200);
-//    E_ind[2] = std::make_pair(RV, 280);
+    E_ind[0] = std::make_pair(LV, 1900);
+    E_ind[1] = std::make_pair(LV, 1870);
     movie argo(te, E_ind);
 
     te.solve();
