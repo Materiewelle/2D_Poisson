@@ -18,9 +18,10 @@ public:
 
     inline inverter(const device & n, const device & p, double c);
 
-    inline bool solve(const voltage & V, double & V_o);
-    inline void solve(const signal & sg);
+    inline bool solve(const voltage & V, double & V_o); // solve steady state
+    inline void solve(const signal & sg);               // solve time-evolution
 
+    // steady-state gate-voltage sweep (output curve)
     inline void output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out);
 };
 
@@ -31,7 +32,18 @@ inverter::inverter(const device & n, const device & p, double c)
 }
 
 bool inverter::solve(const voltage & V, double & V_o) {
+    /* In steady-state simulations, a root finding algorithm
+     * (namely the Brent-algorithm) is used to find the voltage
+     * at the output terminal for which the currents through the
+     * devices cancel each other.
+     * The physical solution has been found in this case, as
+     * it satisfies the law of local conservation of charge. */
+
     auto delta_I = [&] (double V_o) {
+        /* this lamda takes a certain output voltage,
+         * computes a self-consitent steady-state solution
+         * for each device and returns the difference in current. */
+
         s_n = steady_state(n_fet, {V.s, V.g, V_o});
         s_p = steady_state(p_fet, {V_o, V.g, V.d});
 
@@ -44,25 +56,41 @@ bool inverter::solve(const voltage & V, double & V_o) {
 
         return s_n.I.total(0) - s_p.I.total(0);
     };
+
+    // find the output-voltage at which delta_I has a root
     return brent(delta_I, 0.0, 0.5, 0.0005, V_o);
 }
 
 void inverter::solve(const signal & sg) {
     double V_out;
-    // solve steady state
+
+    // get the steady state solution for this inverter
     if (!solve(sg[0], V_out)) {
         std::cout << "inverter: steady_state did not converge" << std::endl;
         return;
     }
 
+    // setup time-evolution objects
     te_n = std::move(time_evolution(s_n, sg));
     te_p = std::move(time_evolution(s_p, sg));
 
+    /* the time-evolution objects keep track
+     * of the time. Observe one of their watches.
+     * (They both show the same time...) */
     const unsigned & m = te_n.m;
+
     while (m < sg.N_t) {
+        /* The capacitance is charged due to the difference in output-currents.
+         * The following is basically the differential equation for charging a capacitor. */
         V_out += (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * time_evolution::dt / capacitance;
+
+        /* pin the devices' internal
+         * potentials to the voltage caused
+         * by the charge stored on the capacitor */
         te_n.sg[m].d = V_out;
         te_p.sg[m].s = V_out;
+
+        // tick-tock on the clock
         te_n.step();
         te_p.step();
     }
