@@ -50,21 +50,20 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-//    device nfet("nfet", nfet_model, fet_geometry);
-//    device pfet("pfet", pfet_model, fet_geometry);
-    device tfet("tfet", tfet_model, tfet_geometry);
+    device nfet("nfet", nfet_model, fet_geometry);
+    device pfet("pfet", pfet_model, fet_geometry);
 
-//    inverter i(nfet, pfet, 1e-9);
-//    signal sg = linear_signal(1e-12, {1e-14, 2e-14}, {{0.0, 0.2, 0.45}, {0.0, 0.45, 0.45}});
-//    i.solve(sg);
-//    i.te_n.save();
-//    i.te_p.save();
-//    return 0;
+    inverter i(nfet, pfet, 1e-13);
+    signal sg = linear_signal(5e-12, {1e-14, 2e-14}, {{0.0, 0.2, 0.45}, {0.0, 0.45, 0.45}});
+    i.solve(sg);
+    i.te_n.save();
+    i.te_p.save();
+    return 0;
 
 //    device nfet("nfet", nfet_model, fet_geometry);
 //    device tfet("tfet", tfet_model, tfet_geometry);
 
-    signal sg = sine_signal(4e-12 + 1e-14, {0.0, 0.7, 0.5}, {0.0, 0.0, 0.25}, {5e11}, {1e-14}, {.5 * M_PI});
+//    signal sg = sine_signal(4e-12 + 1e-14, {0.0, 0.7, 0.5}, {0.0, 0.0, 0.25}, {5e11}, {1e-14}, {.5 * M_PI});
 
 //    signal sg = linear_signal(1e-12, {6e-16, 4e-14}, {{0.0, 0.49, 0.0}, {0.0, 0.5, 0.8}});
 
@@ -79,8 +78,8 @@ int main() {
 //    }
 //    plot(s, g, d);
 
-    steady_state ss(tfet, sg.V[0]);
-    ss.solve();
+//    steady_state ss(tfet, sg.V[0]);
+//    ss.solve();
 
 //    // for identifying nice E-numbers
 //    plot_ldos(ss.d, ss.phi);
@@ -88,16 +87,16 @@ int main() {
 //    plot(ss.E[RC]);
 //    plot(ss.E[RV]);
 
-    time_evolution te(ss, sg);
+//    time_evolution te(ss, sg);
 
-    std::vector<std::pair<int, int>> E_ind(2);
-    E_ind[0] = std::make_pair(LV, 1500);
-    E_ind[1] = std::make_pair(LV, 1660);
-    E_ind[1] = std::make_pair(RC, 280);
-    movie argo(te, E_ind);
+//    std::vector<std::pair<int, int>> E_ind(2);
+//    E_ind[0] = std::make_pair(LV, 1500);
+//    E_ind[1] = std::make_pair(LV, 1660);
+//    E_ind[1] = std::make_pair(RC, 280);
+//    movie argo(te, E_ind);
 
-    te.solve();
-    te.save();
+//    te.solve();
+//    te.save();
 
-    return 0;
+//    return 0;
 }
