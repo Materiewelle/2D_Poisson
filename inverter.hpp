@@ -55,12 +55,8 @@ void inverter::solve(const signal & sg) {
         return;
     }
 
-
-//    new(&te_n) time_evolution(s_n, sg);
-//    new(&te_p) time_evolution(s_p, sg);
-
-    te_n = time_evolution(s_n, sg);
-    te_p = time_evolution(s_p, sg);
+    te_n = std::move(time_evolution(s_n, sg));
+    te_p = std::move(time_evolution(s_p, sg));
 
     const unsigned & m = te_n.m;
     while (m < sg.N_t) {
