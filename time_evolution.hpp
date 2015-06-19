@@ -168,7 +168,7 @@ void time_evolution::step() {
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
-            std::cout << "timestep " << m << ": t = " << m * dt * 1e12 << std::setprecision(5) << std::fixed << " ps. " << it << "iterations " << it << ", reldev = " << dphi / dphi_threshold << std::endl;
+            std::cout << "timestep " << m << ": t=" << m * dt * 1e12 << std::setprecision(5) << std::fixed << "ps, " << it + 1 << " iterations, reldev=" << dphi / dphi_threshold << std::endl;
             break;
         }
     }
