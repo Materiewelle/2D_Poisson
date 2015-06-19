@@ -82,11 +82,11 @@ int main() {
     steady_state ss(tfet, sg.V[0]);
     ss.solve();
 
-    // for identifying nice E-numbers
-    plot_ldos(ss.d, ss.phi);
-    plot(ss.E[LV]);
-    plot(ss.E[RC]);
-    plot(ss.E[RV]);
+//    // for identifying nice E-numbers
+//    plot_ldos(ss.d, ss.phi);
+//    plot(ss.E[LV]);
+//    plot(ss.E[RC]);
+//    plot(ss.E[RV]);
 
     time_evolution te(ss, sg);
 
