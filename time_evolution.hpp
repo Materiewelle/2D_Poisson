@@ -19,7 +19,7 @@ class time_evolution {
 public:
     static constexpr double dphi_threshold = 1e-8;
     static constexpr int max_iterations = 25;
-    static constexpr double dt = 2e-16;                     // timestep
+    static constexpr double dt = 4e-16;                     // timestep
     static const double g; // debug doesn't work otherwise
 
     unsigned m;

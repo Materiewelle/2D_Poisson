@@ -147,7 +147,7 @@ static const device::geometry tfet_geometry {
      1.0, // r_cnt
      2.0, // d_ox
      2.0, // r_ext
-     0.1, // dx
+     0.2, // dx
      0.1  // dr
 };
 

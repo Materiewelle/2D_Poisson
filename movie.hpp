@@ -13,7 +13,7 @@ public:
 
 private:
     int frames; // the current number of frames that have been produced
-    static constexpr int frame_skip = 1;
+    static constexpr int frame_skip = 4;
 
     static constexpr double phimin = -1.5;
     static constexpr double phimax = +1.0;
@@ -126,8 +126,8 @@ void movie::frame() {
                         gp << "set yrange [" << phimin << ":" << phimax << "]\n";
                         gp << "p "
                               "'-' w l ls 3 lw 2 notitle, "
-                              "'-' w l ls 3 lw 2 t 'band edges'', "
-                              "'-' w l ls 2 lw 2 t '<E_{psi}>(x)'\n";
+                              "'-' w l ls 3 lw 2 t 'band edges', "
+                              "'-' w l ls 2 lw 2 t '<E_{{/Symbol Y}}>(x)'\n";
                     }
                     gp << te.d.x(k) << " " << ((p < 4) ? data[p](2 * k) : data[p](k)) << std::endl;
                 }
