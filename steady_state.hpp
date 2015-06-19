@@ -32,6 +32,8 @@ public:
     static inline void transfer(const device & d, const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & I);
 };
 
+
+
 //----------------------------------------------------------------------------------------------------------------------
 
 steady_state::steady_state() {

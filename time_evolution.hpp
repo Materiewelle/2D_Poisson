@@ -20,7 +20,7 @@ public:
     static constexpr double dphi_threshold = 1e-8;
     static constexpr int max_iterations = 25;
     static constexpr double dt = 2e-16;                     // timestep
-    static constexpr double g = 0.5 * dt * c::e / c::h_bar; // delta
+    static const double g; // debug doesn't work otherwise
 
     unsigned m;
     signal sg;
@@ -56,6 +56,7 @@ private:
     inline void calculate_q();
     inline void callback();
 };
+const double time_evolution::g = 0.5 * time_evolution::dt * c::e / c::h_bar;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -189,15 +190,15 @@ void time_evolution::save() {
     arma::mat phi_mat(d.N_x, sg.N_t);
     arma::mat n_mat(d.N_x, sg.N_t);
     arma::mat I_mat(d.N_x, sg.N_t);
-    arma::mat V_mat(3, sg.N_t);
+    arma::mat V_mat(sg.N_t, 3);
 
     for (unsigned i = 0; i < sg.N_t; ++i) {
         phi_mat.col(i) = phi[i].data;
         n_mat.col(i) = n[i].total;
         I_mat.col(i) = I[i].total;
-        V_mat(0, i) = sg.V[i].s;
-        V_mat(1, i) = sg.V[i].g;
-        V_mat(2, i) = sg.V[i].d;
+        V_mat(i, 0) = sg.V[i].s;
+        V_mat(i, 1) = sg.V[i].g;
+        V_mat(i, 2) = sg.V[i].d;
     }
 
     phi_mat.save(save_folder() + "/phi.arma");
@@ -261,7 +262,7 @@ void time_evolution::calculate_q() {
     const double t12 = t1 * t1;
     const double t2 = d.tc2;
     const double t22 = t2 * t2;
-    static constexpr double g2 = g * g;
+    static const double g2 = g * g;
     static const mat22 eye2 = { 1, 0, 0, 1 };
 
     // get q values dependent on potential in lead

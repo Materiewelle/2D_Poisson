@@ -3,6 +3,8 @@
 
 #include <armadillo>
 
+#include "sd_quantity.hpp"
+
 enum {
     LV = 0,
     RV = 1,
@@ -19,6 +21,13 @@ public:
     arma::vec W;
     arma::cx_mat * data;
     arma::mat E;
+
+    inline wave_packet();
+    inline wave_packet(const wave_packet & psi);
+    inline wave_packet(wave_packet && psi);
+
+    inline wave_packet & operator=(const wave_packet & psi);
+    inline wave_packet & operator=(wave_packet && psi);
 
     template<bool left>
     inline void init(const device & d, const arma::vec & E, const arma::vec & W, const potential & phi, unsigned N_t);
@@ -63,6 +72,54 @@ private:
 
 #ifndef WAVE_PACKET_HPP_BODY
 #define WAVE_PACKET_HPP_BODY
+
+wave_packet::wave_packet() {
+}
+
+wave_packet::wave_packet(const wave_packet & psi) :
+    E0(psi.E0),
+    F0(psi.F0),
+    W(psi.W),
+    E(psi.E),
+    in(psi.in),
+    out(psi.out),
+    sum(psi.sum),
+    source(psi.source),
+    memory(psi.memory),
+    l(psi.l),
+    old_source(psi.old_source),
+    data1(psi.data1),
+    data2(psi.data2) {
+    data = (psi.data == &psi.data1) ? &data1 : ((psi.data == &psi.data2) ? &data2 : nullptr);
+    old_data = (psi.old_data == &psi.data1) ? &data1 : ((psi.old_data == &psi.data2) ? &data2 : nullptr);
+}
+wave_packet::wave_packet(wave_packet && psi)
+    : l(psi.l) {
+    E0 = std::move(psi.E0);
+    F0 = std::move(psi.F0);
+    W = std::move(psi.W);
+    E = std::move(psi.E);
+    in = std::move(psi.in);
+    out = std::move(psi.out);
+    sum = std::move(psi.sum);
+    source = std::move(psi.source);
+    memory = std::move(psi.memory);
+    old_source = std::move(psi.old_source);
+    data1 = std::move(psi.data1);
+    data2 = std::move(psi.data2);
+    data = psi.data;
+    old_data = psi.data;
+}
+
+wave_packet & wave_packet::operator=(const wave_packet & psi) {
+    // "Don't do it in practice. The whole thing is ugly beyond description."
+    new(this) wave_packet(psi);
+    return *this;
+}
+wave_packet & wave_packet::operator=(wave_packet && psi) {
+    new(this) wave_packet(psi);
+    return *this;
+}
 
 template<bool left>
 void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec & WW, const potential & phi, unsigned N_t) {
@@ -124,7 +181,7 @@ void wave_packet::memory_update(const sd_vec & affe, unsigned m) {
 void wave_packet::source_init(const device & d, const sd_vec & u, const sd_vec & q) {
     using namespace std::complex_literals;
 
-    static constexpr double g = time_evolution::g;
+    static const double g = time_evolution::g;
 
     source.s = - 2i * g * u.s(1) * (d.tc2 * out.s + 1i * g * q.s(0) * in.s) / (1.0 + 1i * g * E0);
     source.d = - 2i * g * u.d(1) * (d.tc2 * out.d + 1i * g * q.d(0) * in.d) / (1.0 + 1i * g * E0);
@@ -132,8 +189,8 @@ void wave_packet::source_init(const device & d, const sd_vec & u, const sd_vec &
 
 void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m, int N_t) {
     using namespace std::complex_literals;
-    static constexpr double g = time_evolution::g;
-    static constexpr double g2 = g * g;
+    static const double g = time_evolution::g;
+    static const double g2 = g * g;
 
     source.s = (old_source.s % (1 - 1i * g * E0) * u.s(m) * u.s(m-1) + 2 * g2 * L.s(1) / u.s(m) * qsum.s(N_t-m) * in.s) / (1 + 1i * g * E0);
     source.d = (old_source.d % (1 - 1i * g * E0) * u.d(m) * u.d(m-1) + 2 * g2 * L.d(1) / u.d(m) * qsum.d(N_t-m) * in.d) / (1 + 1i * g * E0);

@@ -44,7 +44,7 @@ bool inverter::solve(const voltage & V, double & V_o) {
 
         return s_n.I.total(0) - s_p.I.total(0);
     };
-    return brent(delta_I, -0.2, 0.6, 0.0005, V_o);
+    return brent(delta_I, 0.0, 0.5, 0.0005, V_o);
 }
 
 void inverter::solve(const signal & sg) {
@@ -54,6 +54,10 @@ void inverter::solve(const signal & sg) {
         std::cout << "inverter: steady_state did not converge" << std::endl;
         return;
     }
+
+
+//    new(&te_n) time_evolution(s_n, sg);
+//    new(&te_p) time_evolution(s_p, sg);
 
     te_n = time_evolution(s_n, sg);
     te_p = time_evolution(s_p, sg);
