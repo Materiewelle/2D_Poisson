@@ -32,7 +32,7 @@ namespace charge_density_impl {
     static constexpr double E_min = -1.5;
     static constexpr double E_max = +1.5;
 
-    static constexpr double rel_tol = 8e-3; // tolerated relative error in adaptive simpson integration
+    static constexpr double rel_tol = 5e-3; // tolerated relative error in adaptive simpson integration
 
     static inline arma::vec get_bound_states(const device & d, const potential & phi);
     static inline arma::vec get_bound_states(const device & d, const potential & phi, double E0, double E1);

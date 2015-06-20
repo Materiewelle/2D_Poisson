@@ -49,7 +49,7 @@ static inline arma::mat get_lDOS(const device & d, const potential & phi, int N_
     double phi_min = min(phi.data);
     double phi_max = max(phi.data);
 
-    E = linspace(phi_min - 0.5 * d.E_g - 2.2, phi_max + 0.5 * d.E_g + 2.2, N_grid);
+    E = linspace(phi_min - 0.5 * d.E_g - 0.2, phi_max + 0.5 * d.E_g + 0.2, N_grid);
 
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < N_grid; ++i) {

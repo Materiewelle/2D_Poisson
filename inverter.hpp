@@ -2,27 +2,39 @@
 #define INVERTER_HPP
 
 #include <armadillo>
+#include <fstream>
 
 #include "device.hpp"
 #include "time_evolution.hpp"
+#include "gnuplot.hpp"
+
+#define SAY_N std::cout << "(nfet) "
+#define SAY_P std::cout << "(pfet) "
 
 class inverter {
 public:
+    // always needed
     device n_fet;
     device p_fet;
     double capacitance;
     steady_state s_n;
     steady_state s_p;
+
+    // only for transient simulations
+    signal sg;
     time_evolution te_n;
     time_evolution te_p;
+    arma::vec V_out;
 
     inline inverter(const device & n, const device & p, double c);
 
     inline bool solve(const voltage & V, double & V_o); // solve steady state
-    inline void solve(const signal & sg);               // solve time-evolution
+    inline void solve(const signal & sig);               // solve time-evolution
 
     // steady-state gate-voltage sweep (output curve)
     inline void output(const voltage & V0, double V_g1, int N, arma::vec & V_g, arma::vec & V_out);
+
+    inline void save();
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,10 +59,10 @@ bool inverter::solve(const voltage & V, double & V_o) {
         s_n = steady_state(n_fet, {V.s, V.g, V_o});
         s_p = steady_state(p_fet, {V_o, V.g, V.d});
 
-        std::cout << "n: " << V.s << ", " << V.g << ", " << V_o << ": ";
+        SAY_N; std::cout << V.s << ", " << V.g << ", " << V_o << ": ";
         std::flush(std::cout);
         s_n.solve();
-        std::cout << "p: " << V_o << ", " << V.g << ", " << V.d << ": ";
+        SAY_P; std::cout << V_o << ", " << V.g << ", " << V.d << ": ";
         std::flush(std::cout);
         s_p.solve();
 
@@ -61,38 +73,43 @@ bool inverter::solve(const voltage & V, double & V_o) {
     return brent(delta_I, 0.0, 0.5, 0.0005, V_o);
 }
 
-void inverter::solve(const signal & sg) {
-    double V_out;
+void inverter::solve(const signal & sig) {
+    sg = sig; // copy to member (for saving)
+
+    // initialize result vector
+    V_out = arma::vec(sg.N_t);
+    V_out.fill(0);
 
     // get the steady state solution for this inverter
-    if (!solve(sg[0], V_out)) {
+    if (!solve(sg[0], V_out(0))) {
         std::cout << "inverter: steady_state did not converge" << std::endl;
         return;
     }
 
     // setup time-evolution objects
-    te_n = std::move(time_evolution(s_n, sg));
-    te_p = std::move(time_evolution(s_p, sg));
+    SAY_N; te_n = std::move(time_evolution(s_n, sg));
+    SAY_P; te_p = std::move(time_evolution(s_p, sg));
 
     /* the time-evolution objects keep track
-     * of the time. Observe one of their watches.
-     * (They both show the same time...) */
+     * of the time. Observe te_n's watch.
+     * (It should show the same time as te_p's...) */
     const unsigned & m = te_n.m;
 
     while (m < sg.N_t) {
         /* The capacitance is charged due to the difference in output-currents.
          * The following is basically the differential equation for charging a capacitor. */
-        V_out += (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * time_evolution::dt / capacitance;
+        V_out(m) = V_out(m-1) + (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * time_evolution::dt / capacitance;
+        std::cout << "V_out = " << V_out(m) << std::endl;
 
         /* pin the devices' internal
-         * potentials to the voltage caused
+         * potentials to the one caused
          * by the charge stored on the capacitor */
-        te_n.sg[m].d = V_out;
-        te_p.sg[m].s = V_out;
+        te_n.sg[m].d = V_out(m);
+        te_p.sg[m].s = V_out(m);
 
         // tick-tock on the clock
-        te_n.step();
-        te_p.step();
+        SAY_N; te_n.step();
+        SAY_P; te_p.step();
     }
 }
 
@@ -107,6 +124,27 @@ void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, a
             std::cout << V_g(i) << ": ERROR!" << std::endl;
         }
     }
+}
+
+void inverter::save() {
+    SAY_N; te_n.save();
+    SAY_P; te_p.save();
+    V_out.save(save_folder() + "/V_out.arma");
+    std::ofstream just_C(save_folder() + "/C.txt");
+    just_C << capacitance;
+    just_C.close();
+
+    // make a plot of V_out and save it as a PDF
+    gnuplot gp;
+    gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
+    gp << "set title 'Inverter output voltage'\n";
+    gp << "set xlabel 't / ps'\n";
+    gp << "set ylabel 'V_{out} / V'\n";
+    gp << "set format x '%1.2f'\n";
+    gp << "set format y '%1.2f'\n";
+    gp << "set output '" << save_folder() << "/V_out.pdf'\n";
+    gp.add(std::make_pair(sg.t * 1e12, V_out));
+    gp.plot();
 }
 
 #endif

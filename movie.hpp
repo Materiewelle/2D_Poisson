@@ -170,7 +170,7 @@ std::string movie::output_file(int lattice, double E, int frame_number) {
 
 std::string movie::output_folder(int lattice, double E) {
     std::stringstream ss;
-    ss << save_folder() << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
+    ss << save_folder() << "/" << te.d.name << "/" << lattice_name(lattice) << "/energy=" << std::setprecision(2) << E << "eV";
     return ss.str();
 }
 

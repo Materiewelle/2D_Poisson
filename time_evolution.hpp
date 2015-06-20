@@ -20,7 +20,7 @@ class time_evolution {
 public:
     static constexpr double dphi_threshold = 1e-8;
     static constexpr int max_iterations = 25;
-    static constexpr double dt = 6e-16;                     // timestep
+    static constexpr double dt = 5e-16;                     // timestep
     static const double g; // debug doesn't work otherwise
 
     unsigned m;
@@ -186,7 +186,7 @@ void time_evolution::step() {
 }
 
 void time_evolution::save() {
-    std::cout << "\nsaving time-dependent observables... ";
+    std::cout << "saving time-dependent observables... ";
     std::flush(std::cout);
 
     arma::mat phi_mat(d.N_x, sg.N_t);
@@ -203,16 +203,46 @@ void time_evolution::save() {
         V_mat(i, 2) = sg.V[i].d;
     }
 
-    phi_mat.save(save_folder() + "/phi.arma");
-    n_mat.save(save_folder() + "/n.arma");
-    I_mat.save(save_folder() + "/I.arma");
-    d.x.save(save_folder() + "/xtics.arma");
-    sg.t.save(save_folder() + "/ttics.arma");
-    V_mat.save(save_folder() + "/V.arma");
+    std::string subfolder(save_folder() + "/" + d.name);
+    system("mkdir -p " + subfolder);
 
-    std::ofstream device_params(save_folder() + "/device.ini");
+    phi_mat.save(subfolder + "/phi.arma");
+    n_mat.save(subfolder + "/n.arma");
+    I_mat.save(subfolder + "/I.arma");
+    d.x.save(subfolder + "/xtics.arma");
+    sg.t.save(subfolder + "/ttics.arma");
+    V_mat.save(subfolder + "/V.arma");
+
+    std::ofstream device_params(subfolder + "/device.ini");
     device_params << d.to_string();
     device_params.close();
+
+    /* produce plots of purely time-dependent
+     * observables and save them as PDFs */
+    gnuplot gp;
+    gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
+    gp << "set xlabel 't / ps'\n";
+
+    // source and drain current
+    gp << "set format x '%1.2f'\n";
+    gp << "set format y '%1.0g'\n";
+    arma::vec I_s(sg.N_t);
+    arma::vec I_d(sg.N_t);
+    for (unsigned i = 0; i < sg.N_t; ++i) {
+        I_s(i) = I[i].s();
+        I_d(i) = I[i].d();
+    }
+    gp << "set title '" << d.name << " time-dependent source current'\n";
+    gp << "set ylabel 'I_{s} / A'\n";
+    gp << "set output '" << subfolder << "/I_s.pdf'\n";
+    gp.add(std::make_pair(sg.t * 1e12, I_s));
+    gp.plot();
+    gp.reset();
+    gp << "set title '" << d.name << " time-dependent drain voltage'\n";
+    gp << "set ylabel 'I_{d} / A'\n";
+    gp << "set output '" << subfolder << "/I_d.pdf'\n";
+    gp.add(std::make_pair(sg.t * 1e12, I_d));
+    gp.plot();
 
     std::cout << " done!\n";
 }

@@ -50,17 +50,44 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device nfet("nfet", nfet_model, fet_geometry);
-    device pfet("pfet", pfet_model, fet_geometry);
+    device nfet("n-tfet", ntfet_model, tfet_geometry);
+    device pfet("p-tfet", ptfet_model, tfet_geometry);
 
-    inverter i(nfet, pfet, 1e-13);
-    signal sg = linear_signal(5e-12, {1e-14, 2e-14}, {{0.0, 0.2, 0.45}, {0.0, 0.45, 0.45}});
-    i.solve(sg);
-    i.te_n.save();
-    i.te_p.save();
-    return 0;
+//    inverter i(nfet, pfet, 1e-13);
+//    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.1, 0.45}, {0.0, 0.3, 0.45}});
+//    i.solve(sg);
+//    i.save();
+//    return 0;
 
-//    device nfet("nfet", nfet_model, fet_geometry);
+    steady_state sn0{nfet, {0, 0, .4}};
+    sn0.solve();
+    plot_ldos(nfet, sn0.phi);
+
+    steady_state sn1{nfet, {0, .4, .4}};
+    sn1.solve();
+    plot_ldos(nfet, sn1.phi);
+
+    steady_state sp0{pfet, {.4, 0, 0}};
+    sp0.solve();
+    plot_ldos(pfet, sp0.phi);
+
+    steady_state sp1{pfet, {.4, -.4, 0}};
+    sp1.solve();
+    plot_ldos(pfet, sp1.phi);
+
+//    vec nV_g, nI;
+//    steady_state::transfer<false>(nfet, {0, .1, .4}, .4, 50, nV_g, nI);
+//    vec pV_g, pI;
+//    steady_state::transfer<false>(pfet, {0, .1, .4}, .4, 50, pV_g, pI);
+
+//    gnuplot gp;
+//    gp.add(make_pair(nV_g, nI));
+//    gp.add(make_pair(pV_g, pI));
+//    gp << "set logscale y\n";
+//    gp << "set format y '%1.0g'\n";
+//    gp.plot();
+
+
 //    device tfet("tfet", tfet_model, tfet_geometry);
 
 //    signal sg = sine_signal(4e-12 + 1e-14, {0.0, 0.7, 0.5}, {0.0, 0.0, 0.25}, {5e11}, {1e-14}, {.5 * M_PI});
