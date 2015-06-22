@@ -5,6 +5,7 @@
 #include <iostream>
 #include <omp.h>
 #include <xmmintrin.h>
+#include <fstream>
 
 #define CHARGE_DENSITY_HPP_BODY
 #define WAVE_PACKET_HPP_BODY
@@ -75,22 +76,33 @@ int main() {
 //    sp1.solve();
 //    plot_ldos(pfet, sp1.phi);
 
-    vec nV_g, nI;
-    steady_state::transfer<false>(nfet, {0, -.5, .4}, .5, 30, nV_g, nI);
-    vec pV_g, pI;
-    steady_state::transfer<false>(pfet, {0, .5, -.4}, -.5, 30, pV_g, pI);
+    vec V_g, nI, pI;
+    steady_state::transfer<false>(nfet, {0, -.5, +.4}, .5, 30, V_g, nI);
+    steady_state::transfer<false>(pfet, {0, -.5, -.4}, .5, 30, V_g, pI);
 
-    gnuplot gp;
-    gp.add(make_pair(nV_g, nI));
-    gp.add(make_pair(pV_g, -pI));
-    gp << "set logscale y\n";
-    gp << "set format y '%1.0g'\n";
-    gp.plot();
+    ofstream fo("/home/fabian/tfet_complementary.txt");
+    for (unsigned i = 0; i < V_g.size(); ++i) {
+        fo << V_g << "\t" << nI << "\t" << pI << endl;
+    }
+    fo.close();
+
+//    gnuplot gp;
+//    gp.add(make_pair(nV_g, nI));
+//    gp.add(make_pair(pV_g, -pI));
+//    gp << "set logscale y\n";
+//    gp << "set format y '%1.0g'\n";
+//    gp.plot();
 
     vec V_in, V_out;
     inverter i(nfet, pfet);
     i.output({0, .1, .4}, .3, 40, V_in, V_out);
-    plot(make_pair(V_in, V_out));
+//    plot(make_pair(V_in, V_out));
+
+    ofstream fi("/home/fabian/tfet_inverter.txt");
+    for (unsigned i = 0; i < V_in.size(); ++i) {
+        fi << V_in << "\t" << V_out << endl;
+    }
+    fi.close();
 
 
 
