@@ -54,16 +54,16 @@ bool inverter::solve(const voltage & V, double & V_o) {
          * for each device and returns the difference in current. */
 
         s_n = steady_state(n_fet, {V.s, V.g, V_o});
-        s_p = steady_state(p_fet, {V_o, V.g, V.d});
+        s_p = steady_state(p_fet, {V.d, V.g, V_o});
 
         std::cout << "(nfet) " << V.s << ", " << V.g << ", " << V_o << ": ";
         std::flush(std::cout);
         s_n.solve();
-        std::cout << "(pfet) " << V_o << ", " << V.g << ", " << V.d << ": ";
+        std::cout << "(pfet) " << V.d << ", " << V.g << ", " <<  V_o<< ": ";
         std::flush(std::cout);
         s_p.solve();
 
-        return s_n.I.total(0) - s_p.I.total(0);
+        return s_n.I.total(0) + s_p.I.total(0);
     };
 
     // find the output-voltage at which delta_I has a root
@@ -95,7 +95,7 @@ void inverter::solve(const signal & sig) {
     while (m < sg.N_t) {
         /* The capacitance is charged due to the difference in output-currents.
          * The following is basically the differential equation for charging a capacitor. */
-        V_out(m) = V_out(m-1) + (te_n.I[m - 1].d() - te_p.I[m - 1].s()) * time_evolution::dt / capacitance;
+        V_out(m) = V_out(m-1) + (te_n.I[m - 1].d() + te_p.I[m - 1].d()) * time_evolution::dt / capacitance;
         std::cout << "V_out = " << V_out(m) << std::endl;
 
         /* pin the devices' internal
@@ -115,9 +115,8 @@ void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, a
     V_out = arma::vec(N);
 
     for (int i = 0; i < N; ++i) {
-        std::cout << "\nstep " << i << ": ";
         if (solve({V0.s, V_g(i), V0.d}, V_out(i))) {
-            std::cout << V_g(i) << " -> " << V_out(i) << std::endl;
+            std::cout << "\nstep " << i << ": in " << V_g(i) << "V -> out " << V_out(i) << "V" << std::endl;
         } else {
             std::cout << V_g(i) << ": ERROR!" << std::endl;
         }
