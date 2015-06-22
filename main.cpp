@@ -59,33 +59,41 @@ int main() {
 //    i.save();
 //    return 0;
 
-    steady_state sn0{nfet, {0, 0, .4}};
-    sn0.solve();
-    plot_ldos(nfet, sn0.phi);
+//    steady_state sn0{nfet, {0, 0, 0}};
+//    sn0.solve();
+//    plot_ldos(nfet, sn0.phi);
 
-    steady_state sn1{nfet, {0, .4, .4}};
-    sn1.solve();
-    plot_ldos(nfet, sn1.phi);
+//    steady_state sn1{nfet, {0, .4, .4}};
+//    sn1.solve();
+//    plot_ldos(nfet, sn1.phi);
 
-    steady_state sp0{pfet, {.4, 0, 0}};
-    sp0.solve();
-    plot_ldos(pfet, sp0.phi);
+//    steady_state sp0{pfet, {0, 0, -0.4}};
+//    sp0.solve();
+//    plot_ldos(pfet, sp0.phi);
 
-    steady_state sp1{pfet, {.4, -.4, 0}};
-    sp1.solve();
-    plot_ldos(pfet, sp1.phi);
+//    steady_state sp1{pfet, {0, -.4, -0.4}};
+//    sp1.solve();
+//    plot_ldos(pfet, sp1.phi);
 
-//    vec nV_g, nI;
-//    steady_state::transfer<false>(nfet, {0, .1, .4}, .4, 50, nV_g, nI);
-//    vec pV_g, pI;
-//    steady_state::transfer<false>(pfet, {0, .1, .4}, .4, 50, pV_g, pI);
+    vec nV_g, nI;
+    steady_state::transfer<false>(nfet, {0, -.5, .4}, .5, 30, nV_g, nI);
+    vec pV_g, pI;
+    steady_state::transfer<false>(pfet, {0, .5, -.4}, -.5, 30, pV_g, pI);
 
-//    gnuplot gp;
-//    gp.add(make_pair(nV_g, nI));
-//    gp.add(make_pair(pV_g, pI));
-//    gp << "set logscale y\n";
-//    gp << "set format y '%1.0g'\n";
-//    gp.plot();
+    gnuplot gp;
+    gp.add(make_pair(nV_g, nI));
+    gp.add(make_pair(pV_g, -pI));
+    gp << "set logscale y\n";
+    gp << "set format y '%1.0g'\n";
+    gp.plot();
+
+    vec V_in, V_out;
+    inverter i(nfet, pfet);
+    i.output({0, .1, .4}, .3, 40, V_in, V_out);
+    plot(make_pair(V_in, V_out));
+
+
+
 
 
 //    device tfet("tfet", tfet_model, tfet_geometry);

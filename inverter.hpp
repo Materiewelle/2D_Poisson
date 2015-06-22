@@ -16,17 +16,17 @@ public:
     // always needed
     device n_fet;
     device p_fet;
-    double capacitance;
     steady_state s_n;
     steady_state s_p;
 
     // only for transient simulations
+    double capacitance;
     signal sg;
     time_evolution te_n;
     time_evolution te_p;
     arma::vec V_out;
 
-    inline inverter(const device & n, const device & p, double c);
+    inline inverter(const device & n, const device & p, double c = 1e-12);
 
     inline bool solve(const voltage & V, double & V_o); // solve steady state
     inline void solve(const signal & sig);               // solve time-evolution

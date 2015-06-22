@@ -138,10 +138,10 @@ static const device::geometry tfet_geometry {
     10.0, // eps_cnt
     25.0, // eps_ox
      5.0, // l_sc
-    15.0, // l_sox
-     5.0, // l_sg
+    22.0, // l_sox
+     3.0, // l_sg
     10.0, // l_g
-    20.0, // l_dg
+    25.0, // l_dg
      0.0, // l_dox
      5.0, // l_dc
      1.0, // r_cnt
@@ -193,9 +193,9 @@ static const device::model ntfet_model {
     0.05 * c::m_e,      // m_eff
     0.62,               // E_gc
     0.05 * c::m_e,      // m_efc
-   -0.62 / 2 - 0.011,   // F_s
+   -0.62 / 2 - 0.015,   // F_s (p++)
     0.00,               // F_g
-   +0.62 / 2 + 0.011    // F_d
+   +0.62 / 2 + 0.001    // F_d (n+)
 };
 
 static const device::model ptfet_model {
@@ -203,9 +203,9 @@ static const device::model ptfet_model {
     ntfet_model.m_eff, // m_eff
     ntfet_model.E_gc,  // E_gc
     ntfet_model.m_efc, // m_efc
-    nfet_model.F_d,    // F_s (SWAPPED!!!)
+   +0.62 / 2 + 0.015,  // F_s (n++)
     0.00,              // F_g
-    ntfet_model.F_s    // F_d (SWAPPED!!!)
+   -0.62 / 2 - 0.001   // F_d (p+)
 };
 
 //----------------------------------------------------------------------------------------------------------------------
