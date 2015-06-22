@@ -8,9 +8,6 @@
 #include "time_evolution.hpp"
 #include "gnuplot.hpp"
 
-#define SAY_N std::cout << "(nfet) "
-#define SAY_P std::cout << "(pfet) "
-
 class inverter {
 public:
     // always needed
@@ -59,10 +56,10 @@ bool inverter::solve(const voltage & V, double & V_o) {
         s_n = steady_state(n_fet, {V.s, V.g, V_o});
         s_p = steady_state(p_fet, {V_o, V.g, V.d});
 
-        SAY_N; std::cout << V.s << ", " << V.g << ", " << V_o << ": ";
+        std::cout << "(nfet) " << V.s << ", " << V.g << ", " << V_o << ": ";
         std::flush(std::cout);
         s_n.solve();
-        SAY_P; std::cout << V_o << ", " << V.g << ", " << V.d << ": ";
+        std::cout << "(pfet) " << V_o << ", " << V.g << ", " << V.d << ": ";
         std::flush(std::cout);
         s_p.solve();
 
@@ -87,8 +84,8 @@ void inverter::solve(const signal & sig) {
     }
 
     // setup time-evolution objects
-    SAY_N; te_n = std::move(time_evolution(s_n, sg));
-    SAY_P; te_p = std::move(time_evolution(s_p, sg));
+    te_n = std::move(time_evolution(s_n, sg));
+    te_p = std::move(time_evolution(s_p, sg));
 
     /* the time-evolution objects keep track
      * of the time. Observe te_n's watch.
@@ -108,8 +105,8 @@ void inverter::solve(const signal & sig) {
         te_p.sg[m].s = V_out(m);
 
         // tick-tock on the clock
-        SAY_N; te_n.step();
-        SAY_P; te_p.step();
+        te_n.step();
+        te_p.step();
     }
 }
 
@@ -127,8 +124,8 @@ void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, a
 }
 
 void inverter::save() {
-    SAY_N; te_n.save();
-    SAY_P; te_p.save();
+    te_n.save();
+    te_p.save();
     V_out.save(save_folder() + "/V_out.arma");
     std::ofstream just_C(save_folder() + "/C.txt");
     just_C << capacitance;

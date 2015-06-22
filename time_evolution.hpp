@@ -168,7 +168,7 @@ void time_evolution::step() {
 
         // check if dphi is small enough
         if (dphi < dphi_threshold) {
-            std::cout << "timestep " << m << ": t=" << m * dt * 1e12 << std::setprecision(5) << std::fixed << "ps, " << it + 1 << " iterations, reldev=" << dphi / dphi_threshold << std::endl;
+            std::cout << "(" << d.name << ") timestep " << m << ": t=" << m * dt * 1e12 << std::setprecision(5) << std::fixed << "ps, " << it + 1 << " iterations, reldev=" << dphi / dphi_threshold << std::endl;
             break;
         }
     }
@@ -186,7 +186,7 @@ void time_evolution::step() {
 }
 
 void time_evolution::save() {
-    std::cout << "saving time-dependent observables... ";
+    std::cout << "(" << d.name << ") saving time-dependent observables... ";
     std::flush(std::cout);
 
     arma::mat phi_mat(d.N_x, sg.N_t);
@@ -287,7 +287,7 @@ void time_evolution::calculate_q() {
     using namespace std;
     using mat22 = cx_mat::fixed<2, 2>;
 
-    cout << "precalculating the q-values..."; flush(cout);
+    cout << "(" << d.name << ") precalculating the q-values..."; flush(cout);
 
     // shortcuts
     const double t1 = d.tc1;
