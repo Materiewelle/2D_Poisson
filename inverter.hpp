@@ -115,8 +115,9 @@ void inverter::output(const voltage & V0, double V_g1, int N, arma::vec & V_g, a
     V_out = arma::vec(N);
 
     for (int i = 0; i < N; ++i) {
+        std::cout << "\nstep " << i << ": ";
         if (solve({V0.s, V_g(i), V0.d}, V_out(i))) {
-            std::cout << V_g(i) << ": " << V_out(i) << std::endl;
+            std::cout << V_g(i) << " -> " << V_out(i) << std::endl;
         } else {
             std::cout << V_g(i) << ": ERROR!" << std::endl;
         }
