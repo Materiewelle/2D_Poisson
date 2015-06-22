@@ -51,8 +51,8 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device nfet("n-tfet", ntfet_model, tfet_geometry);
-    device pfet("p-tfet", ptfet_model, tfet_geometry);
+    device nfet("n-type", ntfet_model, tfet_geometry);
+    device pfet("p-type", ptfet_model, tfet_geometry);
 
 //    inverter i(nfet, pfet, 1e-13);
 //    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.1, 0.45}, {0.0, 0.3, 0.45}});
