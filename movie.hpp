@@ -73,6 +73,9 @@ movie::movie(time_evolution & t_ev, const std::vector<std::pair<int, int>> & E_i
     t_ev.add_callback([this] () {
         this->frame();
     });
+
+    // produce first frame
+    frame();
 }
 
 void movie::frame() {

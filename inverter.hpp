@@ -3,8 +3,10 @@
 
 #include <armadillo>
 #include <fstream>
+#include <vector>
 
 #include "device.hpp"
+#include "movie.hpp"
 #include "time_evolution.hpp"
 #include "gnuplot.hpp"
 
@@ -66,21 +68,6 @@ bool inverter::solve(const voltage & V, double & V_o) {
         return s_n.I.total(0) + s_p.I.total(0);
     };
 
-//    int N = 100;
-//    arma::vec V_test = arma::linspace(-0.4, 0.4, N);
-//    arma::vec In(N), Ip(N), dI(N);
-//    for (int i = 0; i < N; ++i) {
-//        dI(i) = delta_I(V_test(i));
-//        In(i) = s_n.I.total(0);
-//        Ip(i) = s_p.I.total(0);
-//    }
-//    plot(std::make_pair(V_test, dI));
-//    plot(std::make_pair(V_test, In));
-//    plot(std::make_pair(V_test, Ip));
-//    std::string test;
-//    std::cin >> test;
-//    exit(0);
-
     // find the output-voltage at which delta_I has a root
     return brent(delta_I, 0.0, 0.5, 0.0005, V_o);
 }
@@ -101,6 +88,21 @@ void inverter::solve(const signal & sig) {
     // setup time-evolution objects
     te_n = std::move(time_evolution(s_n, sg));
     te_p = std::move(time_evolution(s_p, sg));
+
+    // setup movies
+    std::vector<std::pair<int, int>> E_i(16);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            E_i[i * 4 + j] = std::make_pair(i, (int)(j * s_n.E[i].size() * 0.25));
+        }
+    }
+    movie mov_n(te_n, E_i);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            E_i[i * 4 + j] = std::make_pair(i, (int)(j * s_p.E[i].size() * 0.25));
+        }
+    }
+    movie mov_p(te_p, E_i);
 
     /* the time-evolution objects keep track
      * of the time. Observe te_n's watch.

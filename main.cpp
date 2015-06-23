@@ -67,11 +67,11 @@ int main() {
 //    plot_ldos(ntfet, sn.phi);
 //    plot_ldos(ptfet, sp.phi);
 
-//    inverter i(nfet, pfet, 1e-13);
-//    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.1, 0.45}, {0.0, 0.3, 0.45}});
-//    i.solve(sg);
-//    i.save();
-//    return 0;
+    inverter i(nfet, pfet, 1e-13);
+    signal sg = linear_signal(5e-12, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.2, 0.5}, {0.0, 0.3, 0.5}});
+    i.solve(sg);
+    i.save();
+    return 0;
 
 //    steady_state ss_n(nfet, voltage{0.0, 0.0, 0.4});
 //    steady_state ss_p(pfet, voltage{0.4, 0.01, 0.3838383838383838383838383838383838});
@@ -85,8 +85,8 @@ int main() {
 //    cout << ss_p.I.total(0) << endl;
 //    return 0;
 
-    vec V_in, V_out;
-    inverter i(nfet, pfet);
-    i.output({0.0, 0.2, 0.5}, 0.3, 200, V_in, V_out);
-    plot(make_pair(V_in, V_out));
+//    vec V_in, V_out;
+//    inverter i(nfet, pfet);
+//    i.output({0.0, 0.2, 0.5}, 0.3, 200, V_in, V_out);
+//    plot(make_pair(V_in, V_out));
 }

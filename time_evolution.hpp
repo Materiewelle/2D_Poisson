@@ -86,13 +86,14 @@ void time_evolution::solve() {
     callback();
     while (m < sg.N_t) {
         step();
-        callback();
     }
 }
 
 void time_evolution::step() {
     using namespace arma;
     using namespace std::complex_literals;
+
+    callback();
 
     // estimate charge density from previous values
     n[m].total = (m == 1) ? n[0].total : (2 * n[m-1].total - n[m-2].total);
