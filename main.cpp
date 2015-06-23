@@ -51,8 +51,10 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device nfet("n-type", ntfet_model, tfet_geometry);
-    device pfet("p-type", ptfet_model, tfet_geometry);
+    device ntfet("ntfet", ntfet_model, tfet_geometry);
+    device ptfet("ptfet", ptfet_model, tfet_geometry);
+    device nfet("nfet", nfet_model, fet_geometry);
+    device pfet("pfet", pfet_model, fet_geometry);
 
 //    inverter i(nfet, pfet, 1e-13);
 //    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.1, 0.45}, {0.0, 0.3, 0.45}});
@@ -60,13 +62,21 @@ int main() {
 //    i.save();
 //    return 0;
 
-    vec V_in, V_out;
-    inverter i(nfet, pfet);
-    i.output({0, .2, .4}, .4, 40, V_in, V_out);
+    steady_state ss_n(nfet, voltage{0.0, 0.0, 0.4});
+    steady_state ss_p(pfet, voltage{0.0, 0.0, -0.4});
 
-    ofstream fi("/home/fabian/tfet_inverter.txt");
-    for (unsigned i = 0; i < V_in.size(); ++i) {
-        fi << V_in(i) << "\t" << V_out(i) << endl;
-    }
-    fi.close();
+    ss_n.solve();
+    ss_p.solve();
+
+    plot_ldos(nfet, ss_n.phi);
+    plot_ldos(pfet, ss_p.phi);
+    cout << ss_n.I.total(0) << endl;
+    cout << ss_p.I.total(0) << endl;
+    return 0;
+
+    vec V_in, V_out;
+    inverter i(ntfet, ptfet);
+    i.output({0.0, 0.0, 0.4}, 0.4, 80, V_in, V_out);
+
+    plot(make_pair(V_in, V_out));
 }
