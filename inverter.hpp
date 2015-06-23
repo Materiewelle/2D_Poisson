@@ -56,15 +56,30 @@ bool inverter::solve(const voltage & V, double & V_o) {
         s_n = steady_state(n_fet, {V.s, V.g, V_o});
         s_p = steady_state(p_fet, {V.d, V.g, V_o});
 
-        std::cout << "(nfet) " << V.s << ", " << V.g << ", " << V_o << ": ";
+        std::cout << "(" << n_fet.name << ") " << V.s << ", " << V.g << ", " << V_o << ": ";
         std::flush(std::cout);
         s_n.solve();
-        std::cout << "(pfet) " << V.d << ", " << V.g << ", " <<  V_o<< ": ";
+        std::cout << "(" << p_fet.name << ") " << V.d << ", " << V.g << ", " <<  V_o << ": ";
         std::flush(std::cout);
         s_p.solve();
 
         return s_n.I.total(0) + s_p.I.total(0);
     };
+
+    int N = 50;
+    arma::vec V_test = arma::linspace(-0.4, 0.4, N);
+    arma::vec In(N), Ip(N), dI(N);
+    for (int i = 0; i < N; ++i) {
+        dI(i) = delta_I(V_test(i));
+        In(i) = s_n.I.total(0);
+        Ip(i) = s_p.I.total(0);
+    }
+    plot(std::make_pair(V_test, dI));
+    plot(std::make_pair(V_test, In));
+    plot(std::make_pair(V_test, Ip));
+    std::string test;
+    std::cin >> test;
+    exit(0);
 
     // find the output-voltage at which delta_I has a root
     return brent(delta_I, 0.0, 0.5, 0.0005, V_o);

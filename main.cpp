@@ -51,19 +51,21 @@ int main() {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    device nfet("n-type", ntfet_model, tfet_geometry);
-    device pfet("p-type", ptfet_model, tfet_geometry);
+    device ntfet("ntfet", ntfet_model, tfet_geometry);
+    device ptfet("ptfet", ptfet_model, tfet_geometry);
+    device nfet("nfet", nfet_model, fet_geometry);
+    device pfet("pfet", pfet_model, fet_geometry);
 
-    steady_state sn(nfet, {0,.3,.3});
+    steady_state sn(ntfet, {0,.3,.3});
     sn.solve<false>();
     cout << sn.I.total(0) << endl;
-    steady_state sp(pfet, {0,-.3,-.3});
+    steady_state sp(ptfet, {0,-.3,-.3});
     sp.solve<false>();
     cout << sp.I.total(0) << endl;
     cout << "rel " << sn.I.total(0) / sp.I.total(0) << endl;
 
-    plot_ldos(nfet, sn.phi);
-    plot_ldos(pfet, sp.phi);
+    plot_ldos(ntfet, sn.phi);
+    plot_ldos(ptfet, sp.phi);
 
 //    inverter i(nfet, pfet, 1e-13);
 //    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.1, 0.45}, {0.0, 0.3, 0.45}});
@@ -80,4 +82,5 @@ int main() {
 //        fi << V_in(i) << "\t" << V_out(i) << endl;
 //    }
 //    fi.close();
+
 }

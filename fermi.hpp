@@ -24,7 +24,7 @@ inline arma::vec fermi(const arma::vec & E, double F) {
 template<bool smooth>
 inline double fermi(double f, double delta_E, double slope = 500) {
     /* the statistical distribution is not continuous at the branching point.
-     * To prevent the adaptive integration schmeme from creating a very high (and practically useless)
+     * To prevent the adaptive integration scheme from creating a very high (and practically useless)
      * number of energy-levels/wavefunctions, smooth the distribution function around the branching-point energy. */
     if (std::isfinite(delta_E)) {
         if (smooth) {

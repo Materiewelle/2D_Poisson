@@ -151,23 +151,6 @@ static const device::geometry tfet_geometry {
      0.1  // dr
 };
 
-//static const device::geometry ptfet_geometry {
-//    ntfet_geometry.eps_cnt, // eps_cnt
-//    ntfet_geometry.eps_ox,  // eps_ox
-//    ntfet_geometry.l_sc,    // l_sc
-//    ntfet_geometry.l_dox,   // l_sox (SWAPPED!!!)
-//    ntfet_geometry.l_dg,    // l_sg  (SWAPPED!!!)
-//    ntfet_geometry.l_g,     // l_g
-//    ntfet_geometry.l_sg,    // l_dg  (SWAPPED!!!)
-//    ntfet_geometry.l_sox,   // l_dox (SWAPPED!!!)
-//    ntfet_geometry.l_dc,    // l_dc
-//    ntfet_geometry.r_cnt,   // r_cnt
-//    ntfet_geometry.d_ox,    // d_ox
-//    ntfet_geometry.r_ext,   // r_ext
-//    ntfet_geometry.dx,      // dx
-//    ntfet_geometry.dr       // dr
-//};
-
 static const device::model nfet_model {
     0.62,            // E_g
     0.05 * c::m_e,   // m_eff
@@ -203,9 +186,9 @@ static const device::model ptfet_model {
     ntfet_model.m_eff, // m_eff
     ntfet_model.E_gc,  // E_gc
     ntfet_model.m_efc, // m_efc
-   +0.62 / 2 + 0.015,  // F_s (n++)
-    0.00,              // F_g
-   -0.62 / 2 - 0.001   // F_d (p+)
+   -ntfet_model.F_s,   // F_s (n++)
+   -ntfet_model.F_g,   // F_g
+   -ntfet_model.F_d    // F_d (p+)
 };
 
 //----------------------------------------------------------------------------------------------------------------------
