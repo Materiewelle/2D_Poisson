@@ -74,9 +74,6 @@ bool steady_state::solve() {
         // update potential
         dphi = phi.update(d, R0, n, mr_neo);
 
-        //cout << V.s << ", " << V.g << ", " << V.d;
-        //cout << ": iteration " << it << ": rel deviation is " << dphi/dphi_threshold << endl;
-
         // check wether we call this situation self-consitent
         if (dphi < dphi_threshold) {
             break;
@@ -96,18 +93,10 @@ bool steady_state::solve() {
     I = current(d, phi);
 
     bool converged = !(dphi > dphi_threshold);
-//    cout << V.s << ", " << V.g << ", " << V.d << ", ";
     string conv_text = converged ? "converged!" : "DIVERGED!!!";
-    cout << it << " iterations, reldev=" << dphi/dphi_threshold << ", " << conv_text << ", n_E = " << E[0].size() + E[1].size() + E[3].size() + E[4].size() << endl;
-    return converged;
+    cout << it << " iterations, reldev=" << dphi/dphi_threshold << ", " << conv_text << ", n_E = " << E[0].size() + E[1].size() + E[2].size() + E[3].size() << endl;
 
-    // check if actually converged
-    //if (!converged) {
-        //cout << "Warning: steady_state::solve did not converge after " << it << " iterations!" << endl;
-    //    return false;
-    //} else {
-    //    return true;
-    //}
+    return converged;
 }
 
 template<bool reuse>
