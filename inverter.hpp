@@ -112,7 +112,7 @@ void inverter::solve(const signal & sig) {
     while (m < sg.N_t) {
         /* The capacitance is charged due to the difference in output-currents.
          * The following is basically the differential equation for charging a capacitor. */
-        V_out(m) = V_out(m-1) - (te_n.I[m - 1].d() + te_p.I[m - 1].d()) * time_evolution::dt / capacitance;
+        V_out(m) = V_out(m-1) + (te_n.I[m - 1].d() + te_p.I[m - 1].d()) * time_evolution::dt / capacitance;
         std::cout << "V_out = " << V_out(m) << std::endl;
 
         /* pin the devices' internal
