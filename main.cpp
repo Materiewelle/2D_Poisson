@@ -54,19 +54,30 @@ int main() {
     device nfet("n-type", ntfet_model, tfet_geometry);
     device pfet("p-type", ptfet_model, tfet_geometry);
 
+    steady_state sn(nfet, {0,.3,.3});
+    sn.solve<false>();
+    cout << sn.I.total(0) << endl;
+    steady_state sp(pfet, {0,-.3,-.3});
+    sp.solve<false>();
+    cout << sp.I.total(0) << endl;
+    cout << "rel " << sn.I.total(0) / sp.I.total(0) << endl;
+
+    plot_ldos(nfet, sn.phi);
+    plot_ldos(pfet, sp.phi);
+
 //    inverter i(nfet, pfet, 1e-13);
 //    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.1, 0.45}, {0.0, 0.3, 0.45}});
 //    i.solve(sg);
 //    i.save();
 //    return 0;
 
-    vec V_in, V_out;
-    inverter i(nfet, pfet);
-    i.output({0, .2, .4}, .4, 40, V_in, V_out);
+//    vec V_in, V_out;
+//    inverter i(nfet, pfet);
+//    i.output({0, .2, .4}, .4, 40, V_in, V_out);
 
-    ofstream fi("/home/fabian/tfet_inverter.txt");
-    for (unsigned i = 0; i < V_in.size(); ++i) {
-        fi << V_in(i) << "\t" << V_out(i) << endl;
-    }
-    fi.close();
+//    ofstream fi("/home/fabian/tfet_inverter.txt");
+//    for (unsigned i = 0; i < V_in.size(); ++i) {
+//        fi << V_in(i) << "\t" << V_out(i) << endl;
+//    }
+//    fi.close();
 }
