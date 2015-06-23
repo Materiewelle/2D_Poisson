@@ -82,7 +82,7 @@ bool inverter::solve(const voltage & V, double & V_o) {
 //    exit(0);
 
     // find the output-voltage at which delta_I has a root
-    return brent(delta_I, 0.0, 0.4, 0.0005, V_o);
+    return brent(delta_I, 0.0, 0.5, 0.0005, V_o);
 }
 
 void inverter::solve(const signal & sig) {

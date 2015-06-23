@@ -87,6 +87,6 @@ int main() {
 
     vec V_in, V_out;
     inverter i(nfet, pfet);
-    i.output({0.01, 0.01, 0.4}, 0.4, 80, V_in, V_out);
-
+    i.output({0.0, 0.2, 0.5}, 0.3, 200, V_in, V_out);
+    plot(make_pair(V_in, V_out));
 }
