@@ -83,7 +83,6 @@ time_evolution::time_evolution(const steady_state & s, const signal & sgg)
 }
 
 void time_evolution::solve() {
-    callback();
     while (m < sg.N_t) {
         step();
     }
@@ -92,8 +91,6 @@ void time_evolution::solve() {
 void time_evolution::step() {
     using namespace arma;
     using namespace std::complex_literals;
-
-    callback();
 
     // estimate charge density from previous values
     n[m].total = (m == 1) ? n[0].total : (2 * n[m-1].total - n[m-2].total);
@@ -184,6 +181,8 @@ void time_evolution::step() {
 
     // increase m for next time step
     ++m;
+
+    callback();
 }
 
 void time_evolution::save() {
