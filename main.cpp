@@ -67,7 +67,7 @@ int main() {
 //    plot_ldos(ntfet, sn.phi);
 //    plot_ldos(ptfet, sp.phi);
 
-    inverter i(nfet, pfet, 1e-13);
+    inverter i(nfet, pfet, 1e-15);
     signal sg = linear_signal(5e-12, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.2, 0.5}, {0.0, 0.3, 0.5}});
     i.solve(sg);
     i.save();
