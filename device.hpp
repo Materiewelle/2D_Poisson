@@ -153,12 +153,12 @@ static const device::geometry tfet_geometry {
 
 static const device::model nfet_model {
     0.62,            // E_g
-    0.05 * c::m_e,   // m_eff
+    0.01 * c::m_e,   // m_eff
     0.62,            // E_gc
-    0.05 * c::m_e,   // m_efc
-    0.62 / 2 + 0.011,// F_s
+    0.01 * c::m_e,   // m_efc
+    0.62 / 2 + 0.015,// F_s
     0.00,            // F_g
-    0.62 / 2 + 0.011 // F_d
+    0.62 / 2 + 0.015 // F_d
 };
 
 static const device::model pfet_model {

@@ -62,21 +62,21 @@ int main() {
 //    i.save();
 //    return 0;
 
-    steady_state ss_n(nfet, voltage{0.0, 0.0, 0.4});
-    steady_state ss_p(pfet, voltage{0.0, 0.0, -0.4});
+//    steady_state ss_n(nfet, voltage{0.0, 0.0, 0.4});
+//    steady_state ss_p(pfet, voltage{0.4, 0.01, 0.3838383838383838383838383838383838});
 
-    ss_n.solve();
-    ss_p.solve();
+//    ss_n.solve();
+//    ss_p.solve();
 
-    plot_ldos(nfet, ss_n.phi);
-    plot_ldos(pfet, ss_p.phi);
-    cout << ss_n.I.total(0) << endl;
-    cout << ss_p.I.total(0) << endl;
-    return 0;
+//    plot_ldos(nfet, ss_n.phi);
+//    plot_ldos(pfet, ss_p.phi);
+//    cout << ss_n.I.total(0) << endl;
+//    cout << ss_p.I.total(0) << endl;
+//    return 0;
 
     vec V_in, V_out;
-    inverter i(ntfet, ptfet);
-    i.output({0.0, 0.0, 0.4}, 0.4, 80, V_in, V_out);
+    inverter i(nfet, pfet);
+    i.output({0.01, 0.01, 0.4}, 0.4, 80, V_in, V_out);
 
     plot(make_pair(V_in, V_out));
 }
