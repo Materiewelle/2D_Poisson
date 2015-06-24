@@ -20,7 +20,7 @@ class time_evolution {
 public:
     static constexpr double dphi_threshold = 1e-8;
     static constexpr int max_iterations = 25;
-    static constexpr int memory_cutoff = 1000;
+    static constexpr int memory_cutoff = 2000;
     static constexpr double dt = 5e-16;                     // timestep
     static const double g; // debug doesn't work otherwise
 
