@@ -30,13 +30,15 @@ public:
     inline wave_packet & operator=(wave_packet && psi);
 
     template<bool left>
-    inline void init(const device & d, const arma::vec & E, const arma::vec & W, const potential & phi, unsigned N_t);
+//    inline void init(const device & d, const arma::vec & E, const arma::vec & W, const potential & phi, unsigned N_t);
+    inline void init(const device & d, const arma::vec & E, const arma::vec & W, const potential & phi);
 
     inline void memory_init();
     inline void memory_update(const sd_vec & affe, unsigned m);
 
     inline void source_init(const device & d, const sd_vec & u, const sd_vec & q);
-    inline void source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m, int N_t);
+//    inline void source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m, int N_t);
+    inline void source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m);
 
     template<class T>
     inline void propagate(const T & U_eff, const sd_vec & inv);
@@ -122,7 +124,8 @@ wave_packet & wave_packet::operator=(wave_packet && psi) {
 }
 
 template<bool left>
-void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec & WW, const potential & phi, unsigned N_t) {
+//void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec & WW, const potential & phi, unsigned N_t) {
+void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec & WW, const potential & phi) {
     using namespace arma;
 
     E0 = EE;
@@ -137,7 +140,8 @@ void wave_packet::init(const device & d, const arma::vec & EE, const arma::vec &
     E = mat(d.N_x, E0.size());
     in = sd_vec(E0.size());
     out = sd_vec(E0.size());
-    sum = sd_mat(N_t, E0.size());
+//    sum = sd_mat(N_t, E0.size());
+    sum = sd_mat(time_evolution::memory_cutoff, E0.size());
     source = sd_vec(E0.size());
     memory = sd_vec(E0.size());
     l = left;
@@ -174,8 +178,19 @@ void wave_packet::memory_init() {
 }
 
 void wave_packet::memory_update(const sd_vec & affe, unsigned m) {
-    memory.s = (affe.s.st() * sum.s.rows({1, m - 1})).st();
-    memory.d = (affe.d.st() * sum.d.rows({1, m - 1})).st();
+//    memory.s = (affe.s.st() * sum.s.rows({1, m - 1})).st();
+//    memory.d = (affe.d.st() * sum.d.rows({1, m - 1})).st();
+    unsigned cu = time_evolution::memory_cutoff;
+    if (m - 2 < cu) {
+        memory.s = (affe.s.st() * sum.s.rows({0, m - 2})).st();
+        memory.d = (affe.d.st() * sum.d.rows({0, m - 2})).st();
+    } else {
+        unsigned n = m % cu;
+        memory.s = (affe.s({         0, cu - n}).st() * sum.s.rows({n - 1, cu - 1})).st()
+                 + (affe.s({cu - n + 1, cu - 1}).st() * sum.s.rows({    0, n  - 2})).st();
+        memory.d = (affe.d({         0, cu - n}).st() * sum.d.rows({n - 1, cu - 1})).st()
+                 + (affe.d({cu - n + 1, cu - 1}).st() * sum.d.rows({    0, n  - 2})).st();
+    }
 }
 
 void wave_packet::source_init(const device & d, const sd_vec & u, const sd_vec & q) {
@@ -183,17 +198,26 @@ void wave_packet::source_init(const device & d, const sd_vec & u, const sd_vec &
 
     static const double g = time_evolution::g;
 
-    source.s = - 2i * g * u.s(1) * (d.tc2 * out.s + 1i * g * q.s(0) * in.s) / (1.0 + 1i * g * E0);
-    source.d = - 2i * g * u.d(1) * (d.tc2 * out.d + 1i * g * q.d(0) * in.d) / (1.0 + 1i * g * E0);
+//    source.s = - 2i * g * u.s(1) * (d.tc2 * out.s + 1i * g * q.s(0) * in.s) / (1.0 + 1i * g * E0);
+//    source.d = - 2i * g * u.d(1) * (d.tc2 * out.d + 1i * g * q.d(0) * in.d) / (1.0 + 1i * g * E0);
+    source.s = - 2i * g * u.s(0) * (d.tc2 * out.s + 1i * g * q.s(0) * in.s) / (1.0 + 1i * g * E0);
+    source.d = - 2i * g * u.d(0) * (d.tc2 * out.d + 1i * g * q.d(0) * in.d) / (1.0 + 1i * g * E0);
 }
 
-void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m, int N_t) {
+//void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m, int N_t) {
+void wave_packet::source_update(const sd_vec & u, const sd_vec & L, const sd_vec & qsum, int m) {
     using namespace std::complex_literals;
     static const double g = time_evolution::g;
     static const double g2 = g * g;
 
-    source.s = (old_source.s % (1 - 1i * g * E0) * u.s(m) * u.s(m-1) + 2 * g2 * L.s(1) / u.s(m) * qsum.s(N_t-m) * in.s) / (1 + 1i * g * E0);
-    source.d = (old_source.d % (1 - 1i * g * E0) * u.d(m) * u.d(m-1) + 2 * g2 * L.d(1) / u.d(m) * qsum.d(N_t-m) * in.d) / (1 + 1i * g * E0);
+//    source.s = (old_source.s % (1 - 1i * g * E0) * u.s(m) * u.s(m-1) + 2 * g2 * L.s(1) / u.s(m) * qsum.s(N_t-m) * in.s) / (1 + 1i * g * E0);
+//    source.d = (old_source.d % (1 - 1i * g * E0) * u.d(m) * u.d(m-1) + 2 * g2 * L.d(1) / u.d(m) * qsum.d(N_t-m) * in.d) / (1 + 1i * g * E0);
+
+    int n = time_evolution::memory_cutoff + 1 - m;
+    auto qss = (n >= 0) ? qsum.s(n) : 0.0;
+    auto qsd = (n >= 0) ? qsum.d(n) : 0.0;
+    source.s = (old_source.s % (1 - 1i * g * E0) * u.s(m - 1) * u.s(m - 2) + 2 * g2 * L.s(0) / u.s(m - 1) * qss * in.s) / (1 + 1i * g * E0);
+    source.d = (old_source.d % (1 - 1i * g * E0) * u.d(m - 1) * u.d(m - 2) + 2 * g2 * L.d(0) / u.d(m - 1) * qsd * in.d) / (1 + 1i * g * E0);
 }
 
 template<class T>
@@ -213,8 +237,12 @@ void wave_packet::remember() {
 }
 
 void wave_packet::update_sum(int m) {
-    sum.s.row(m) = old_data->row(0) + data->row(0);
-    sum.d.row(m) = old_data->row(old_data->n_rows - 1) + data->row(data->n_rows - 1);
+//    sum.s.row(m) = old_data->row(0) + data->row(0);
+//    sum.d.row(m) = old_data->row(old_data->n_rows - 1) + data->row(data->n_rows - 1);
+    int n = (m - 1) % time_evolution::memory_cutoff;
+    int end = old_data->n_rows - 1;
+    sum.s.row(n) = old_data->row(  0) + data->row(  0);
+    sum.d.row(n) = old_data->row(end) + data->row(end);
 }
 
 void wave_packet::update_E(const device & d, const potential & phi, const potential & phi0) {

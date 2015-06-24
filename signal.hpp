@@ -24,6 +24,7 @@ public:
     inline const voltage & operator[](int index) const;
 };
 
+static inline signal const_signal(double T, const voltage & V0);
 static inline signal linear_signal(double T, const std::vector<double> & t, const std::vector<voltage> & V);
 static inline signal sine_signal(double T, const voltage & V0, const voltage & V_a, const tripled & f, const tripled & t0 = 0, const tripled & ph = 0);
 
@@ -58,6 +59,16 @@ voltage & signal::operator[](int index) {
 
 const voltage & signal::operator[](int index) const {
     return V[index];
+}
+
+signal const_signal(double T, const voltage & V0) {
+    signal s(T);
+
+    for (unsigned i = 0; i < s.N_t; ++i) {
+        s[i] = V0;
+    }
+
+    return s;
 }
 
 signal linear_signal(double T, const std::vector<double> & t, const std::vector<voltage> & V) {
