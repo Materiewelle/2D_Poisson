@@ -28,6 +28,7 @@ public:
     inline inverter(const device & n, const device & p, double c = 1e-12);
 
     inline bool solve(const voltage & V, double & V_o); // solve steady state
+    template<bool make_movie = false>
     inline void solve(const signal & sig);               // solve time-evolution
 
     // steady-state gate-voltage sweep (output curve)
@@ -72,6 +73,7 @@ bool inverter::solve(const voltage & V, double & V_o) {
     return brent(delta_I, 0.0, 0.5, 0.0005, V_o);
 }
 
+template<bool make_movie>
 void inverter::solve(const signal & sig) {
     sg = sig; // copy to member (for saving)
 
@@ -89,20 +91,21 @@ void inverter::solve(const signal & sig) {
     te_n = std::move(time_evolution(s_n, sg));
     te_p = std::move(time_evolution(s_p, sg));
 
-    // setup movies
-    std::vector<std::pair<int, int>> E_i(16);
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            E_i[i * 4 + j] = std::make_pair(i, (int)(j * s_n.E[i].size() * 0.25));
+    if (make_movie) {
+        std::vector<std::pair<int, int>> E_i(16);
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                E_i[i * 4 + j] = std::make_pair(i, (int)(j * s_n.E[i].size() * 0.25));
+            }
         }
-    }
-    movie mov_n(te_n, E_i);
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            E_i[i * 4 + j] = std::make_pair(i, (int)(j * s_p.E[i].size() * 0.25));
+        movie mov_n(te_n, E_i);
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                E_i[i * 4 + j] = std::make_pair(i, (int)(j * s_p.E[i].size() * 0.25));
+            }
         }
+        movie mov_p(te_p, E_i);
     }
-    movie mov_p(te_p, E_i);
 
     /* the time-evolution objects keep track
      * of the time. Observe te_n's watch.
