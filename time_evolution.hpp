@@ -237,9 +237,9 @@ void time_evolution::save() {
     device_params.close();
 
     /* produce plots of purely time-dependent
-     * observables and save them as PDFs */
+     * observables and save them as PNGs */
     gnuplot gp;
-    gp << "set terminal pdf rounded color enhanced font 'arial,12'\n";
+    gp << "set terminal png rounded color enhanced font 'arial,12'\n";
     gp << "set xlabel 't / ps'\n";
 
     // source and drain current

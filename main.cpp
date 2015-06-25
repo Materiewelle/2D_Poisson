@@ -1,4 +1,4 @@
-//#define ARMA_NO_DEBUG    // no bound checks
+#define ARMA_NO_DEBUG    // no bound checks
 //#define GNUPLOT_NOPLOTS
 
 #include <fstream>
@@ -89,14 +89,14 @@ int main(int argc, char ** argv) {
     te.solve();
     te.save();
 
-    vec s(sg.V.size());
-    vec g(sg.V.size());
-    vec d(sg.V.size());
-    for (unsigned i = 0; i < sg.V.size(); ++i) {
-        s[i] = sg.V[i].s;
-        g[i] = sg.V[i].g;
-        d[i] = sg.V[i].d;
-    }
-    plot(s,g,d);
+//    vec s(sg.V.size());
+//    vec g(sg.V.size());
+//    vec d(sg.V.size());
+//    for (unsigned i = 0; i < sg.V.size(); ++i) {
+//        s[i] = sg.V[i].s;
+//        g[i] = sg.V[i].g;
+//        d[i] = sg.V[i].d;
+//    }
+//    plot(s,g,d);
     return 0;
 }
