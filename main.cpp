@@ -1,5 +1,5 @@
-//#define ARMA_NO_DEBUG    // no bound checks
-//#define GNUPLOT_NOPLOTS
+#define ARMA_NO_DEBUG    // no bound checks
+#define GNUPLOT_NOPLOTS
 
 #include <fstream>
 #include <iostream>
@@ -56,6 +56,22 @@ int main() {
     device nfet("nfet", nfet_model, fet_geometry);
     device pfet("pfet", pfet_model, fet_geometry);
 
+    signal sg = sine_signal(3998 * time_evolution::dt, {0, 0, .5}, {0, .2, 0 }, 1e12, 10 * time_evolution::dt, .5 * M_PI);
+    time_evolution te(ntfet, sg);
+    te.solve();
+    te.save();
+//    vec s(sg.V.size());
+//    vec g(sg.V.size());
+//    vec d(sg.V.size());
+//    for (unsigned i = 0; i < sg.V.size(); ++i) {
+//        s[i] = sg.V[i].s;
+//        g[i] = sg.V[i].g;
+//        d[i] = sg.V[i].d;
+//    }
+//    plot(s,g,d);
+//    return 0;
+//    time_evolution te(ntfet, sg);
+
 //    signal sg = const_signal(5e-12, {0.0, 0.2, 0.5});
 //    time_evolution te(nfet, sg);
 //    std::vector<std::pair<int, int>> E_i(16);
@@ -83,11 +99,11 @@ int main() {
 //    plot_ldos(ntfet, sn.phi);
 //    plot_ldos(ptfet, sp.phi);
 
-    inverter i(nfet, pfet, 1e-16);
-    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.2, 0.5}, {0.0, 0.3, 0.5}});
-    i.solve(sg);
-    i.save();
-    return 0;
+//    inverter i(nfet, pfet, 1e-16);
+//    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.2, 0.5}, {0.0, 0.3, 0.5}});
+//    i.solve(sg);
+//    i.save();
+//    return 0;
 
 //    steady_state ss_n(nfet, voltage{0.0, 0.0, 0.4});
 //    steady_state ss_p(pfet, voltage{0.4, 0.01, 0.3838383838383838383838383838383838});
