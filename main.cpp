@@ -66,13 +66,13 @@ int main(int argc, char ** argv) {
         case 1: // gate signal
         V0_g = 0.0;
         V0_d = 0.5;
-        A_g  = 0.2;
+        A_g  = 0.25;
         A_d  = 0.0;
-        ph   = .5 * M_PI;
+        ph   = -.5 * M_PI;
         break;
 
         case 2: // drain signal
-        V0_g = 0.4;
+        V0_g = 0.5;
         V0_d = 0.0;
         A_g  = 0.0;
         A_d  = 0.25;
@@ -85,18 +85,18 @@ int main(int argc, char ** argv) {
     }
 
     signal sg = sine_signal(2 * T + dry, {0, V0_g, V0_d}, {0, A_g, A_d}, f, dry, ph);
-    time_evolution te(ntfet, sg);
-    te.solve();
-    te.save();
+//    time_evolution te(ntfet, sg);
+//    te.solve();
+//    te.save();
 
-//    vec s(sg.V.size());
-//    vec g(sg.V.size());
-//    vec d(sg.V.size());
-//    for (unsigned i = 0; i < sg.V.size(); ++i) {
-//        s[i] = sg.V[i].s;
-//        g[i] = sg.V[i].g;
-//        d[i] = sg.V[i].d;
-//    }
-//    plot(s,g,d);
+    vec s(sg.V.size());
+    vec g(sg.V.size());
+    vec d(sg.V.size());
+    for (unsigned i = 0; i < sg.V.size(); ++i) {
+        s[i] = sg.V[i].s;
+        g[i] = sg.V[i].g;
+        d[i] = sg.V[i].d;
+    }
+    plot(s,g,d);
     return 0;
 }
