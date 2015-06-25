@@ -3,7 +3,7 @@
 
 #include <sstream>
 #include <string>
-#include <unistd.h>
+#include <cstdlib>
 
 static inline void shell(const std::stringstream & command) {
     system(command.str().c_str());
@@ -34,7 +34,7 @@ static inline const std::string & save_folder() {
     static std::string folder;
 
     if (folder.empty()) {
-        folder = "/home/" + get_login_name() + "/" + now();
+        folder = std::string(std::getenv("HOME")) + "/" + now();
     }
 
     return folder;
