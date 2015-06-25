@@ -70,6 +70,7 @@ int main() {
 //    plot(qsums);
 //    plot(qsumd);
 //    te.solve();
+//    return 0;
 
 //    steady_state sn(ntfet, {0,.3,.3});
 //    sn.solve<false>();

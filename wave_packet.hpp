@@ -181,15 +181,17 @@ void wave_packet::memory_update(const sd_vec & affe, unsigned m) {
 //    memory.s = (affe.s.st() * sum.s.rows({1, m - 1})).st();
 //    memory.d = (affe.d.st() * sum.d.rows({1, m - 1})).st();
     unsigned cu = time_evolution::memory_cutoff;
-    if (m - 2 < cu) {
+    if (m <= cu) {
         memory.s = (affe.s.st() * sum.s.rows({0, m - 2})).st();
         memory.d = (affe.d.st() * sum.d.rows({0, m - 2})).st();
     } else {
-        unsigned n = m % cu;
-        memory.s = (affe.s({         0, cu - n}).st() * sum.s.rows({n - 1, cu - 1})).st()
-                 + (affe.s({cu - n + 1, cu - 1}).st() * sum.s.rows({    0, n  - 2})).st();
-        memory.d = (affe.d({         0, cu - n}).st() * sum.d.rows({n - 1, cu - 1})).st()
-                 + (affe.d({cu - n + 1, cu - 1}).st() * sum.d.rows({    0, n  - 2})).st();
+        unsigned n = (m - 1) % cu;
+        memory.s = (affe.s({0, cu - n - 1}).st() * sum.s.rows({n, cu - 1})).st();
+        memory.d = (affe.d({0, cu - n - 1}).st() * sum.d.rows({n, cu - 1})).st();
+        if (n > 0) {
+            memory.s += (affe.s({cu - n, cu - 1}).st() * sum.s.rows({0, n - 1})).st();
+            memory.d += (affe.d({cu - n, cu - 1}).st() * sum.d.rows({0, n - 1})).st();
+        }
     }
 }
 
