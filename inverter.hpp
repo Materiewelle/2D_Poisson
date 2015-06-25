@@ -56,6 +56,7 @@ bool inverter::solve(const voltage & V, double & V_o) {
          * computes a self-consitent steady-state solution
          * for each device and returns the difference in current. */
 
+
         s_n = steady_state(n_fet, {V.s, V.g, V_o});
         s_p = steady_state(p_fet, {V.d, V.g, V_o});
 
