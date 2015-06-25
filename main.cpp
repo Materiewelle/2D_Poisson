@@ -56,10 +56,10 @@ int main() {
     device nfet("nfet", nfet_model, fet_geometry);
     device pfet("pfet", pfet_model, fet_geometry);
 
-    signal sg = sine_signal(3998 * time_evolution::dt, {0, 0, .5}, {0, .2, 0 }, 1e12, 10 * time_evolution::dt, .5 * M_PI);
-    time_evolution te(ntfet, sg);
-    te.solve();
-    te.save();
+//    signal sg = sine_signal(3998 * time_evolution::dt, {0, 0, .5}, {0, .2, 0 }, 1e12, 10 * time_evolution::dt, .5 * M_PI);
+//    time_evolution te(ntfet, sg);
+//    te.solve();
+//    te.save();
 //    vec s(sg.V.size());
 //    vec g(sg.V.size());
 //    vec d(sg.V.size());
@@ -99,11 +99,11 @@ int main() {
 //    plot_ldos(ntfet, sn.phi);
 //    plot_ldos(ptfet, sp.phi);
 
-//    inverter i(nfet, pfet, 1e-16);
-//    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.2, 0.5}, {0.0, 0.3, 0.5}});
-//    i.solve(sg);
-//    i.save();
-//    return 0;
+    inverter i(nfet, pfet, 1e-16);
+    signal sg = linear_signal(5e-11, {10 * time_evolution::dt, 110 * time_evolution::dt}, {{0.0, 0.2, 0.5}, {0.0, 0.3, 0.5}});
+    i.solve(sg);
+    i.save();
+    return 0;
 
 //    steady_state ss_n(nfet, voltage{0.0, 0.0, 0.4});
 //    steady_state ss_p(pfet, voltage{0.4, 0.01, 0.3838383838383838383838383838383838});
