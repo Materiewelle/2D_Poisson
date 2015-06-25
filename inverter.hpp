@@ -154,7 +154,7 @@ void inverter::save() {
 
     // make a plot of V_out and save it as a png
     gnuplot gp;
-    gp << "set terminal png rounded color enhanced font 'arial,12'\n";
+    gp << "set terminal png\n";
     gp << "set title 'Inverter output voltage'\n";
     gp << "set xlabel 't / ps'\n";
     gp << "set ylabel 'V_{out} / V'\n";

@@ -72,7 +72,7 @@ static const std::string rwth_plt =
     "set style line 444 lc '#9C9E9F' lt 1 lw 2\n"
     "set border 3 ls 444\n"
     "set tics nomirror\n"
-    "set terminal wxt\n"
+//    "set terminal wxt\n"
     "set style line 1 lc rgb RWTH_Blau lt 1 lw 2\n"
     "set style line 2 lc rgb RWTH_Rot lt 1 lw 2\n"
     "set style line 3 lc rgb RWTH_Violett lt 1 lw 2\n"
