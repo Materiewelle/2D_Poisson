@@ -51,7 +51,7 @@ int main(int argc, char ** argv) {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    cout << "saving results in " << save_folder() << endl;
+    cout << "saving results in " << save_folder(argv[2]) << endl;
 
     omp_set_num_threads(stoi(argv[1]));
 
@@ -85,18 +85,9 @@ int main(int argc, char ** argv) {
     }
 
     signal sg = sine_signal(2 * T + dry, {0, V0_g, V0_d}, {0, A_g, A_d}, f, dry, ph);
-//    time_evolution te(ntfet, sg);
-//    te.solve();
-//    te.save();
+    time_evolution te(ntfet, sg);
+    te.solve();
+    te.save();
 
-    vec s(sg.V.size());
-    vec g(sg.V.size());
-    vec d(sg.V.size());
-    for (unsigned i = 0; i < sg.V.size(); ++i) {
-        s[i] = sg.V[i].s;
-        g[i] = sg.V[i].g;
-        d[i] = sg.V[i].d;
-    }
-    plot(s,g,d);
     return 0;
 }

@@ -30,11 +30,11 @@ static inline std::string get_login_name() {
     return buf;
 }
 
-static inline const std::string & save_folder() {
+static inline const std::string & save_folder(const std::string & ext) {
     static std::string folder;
 
     if (folder.empty()) {
-        folder = std::string(std::getenv("HOME")) + "/" + now();
+        folder = std::string(std::getenv("HOME")) + "/" + now() + "_" + ext;
     }
 
     return folder;
