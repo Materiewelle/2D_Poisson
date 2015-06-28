@@ -51,7 +51,7 @@ int main(int argc, char ** argv) {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-    cout << "saving results in " << save_folder() << endl;
+    cout << "saving results in " << save_folder(argv[2]) << "GHz" << endl;
 
     omp_set_num_threads(stoi(argv[1]));
 
