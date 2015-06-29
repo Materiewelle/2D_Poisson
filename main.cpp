@@ -5,7 +5,6 @@
 #include <iostream>
 #include <omp.h>
 #include <xmmintrin.h>
-#include <fstream>
 
 #define CHARGE_DENSITY_HPP_BODY
 #define WAVE_PACKET_HPP_BODY
@@ -51,15 +50,14 @@ int main(int argc, char ** argv) {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
-<<<<<<< HEAD
-    cout << "saving results in " << save_folder(argv[2]) << endl;
-=======
-    cout << "saving results in " << save_folder(argv[2]) << "GHz" << endl;
->>>>>>> ea60d608f1e68fa154146bb2445170469bc0a693
-
     omp_set_num_threads(stoi(argv[1]));
 
-    device ntfet("ntfet", ntfet_model, tfet_geometry);
+    //device ntfet("ntfet", ntfet_model, tfet_geometry);
+    device nfet("nfet", nfet_model, fet_geometry);
+
+    stringstream ext("");
+    ext << "_"  << nfet.name << "_" << ((stoi(argv[3]) == 1) ? "gate" : "drain") << "_" << argv[2] << "GHz";
+    cout << "saving results in " << save_folder(ext.str()) << endl;
 
     double f = stod(argv[2]) * 1e9;
     double T = 1 / f;
@@ -88,8 +86,8 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    signal sg = sine_signal(2 * T + dry, {0, V0_g, V0_d}, {0, A_g, A_d}, f, dry, ph);
-    time_evolution te(ntfet, sg);
+    signal sg = sine_signal(T + dry, {0, V0_g, V0_d}, {0, A_g, A_d}, f, dry, ph);
+    time_evolution te(nfet, sg);
     te.solve();
     te.save();
 

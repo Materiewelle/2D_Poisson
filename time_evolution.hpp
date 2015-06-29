@@ -21,7 +21,7 @@ public:
     static constexpr double dphi_threshold = 1e-9;
     static constexpr int max_iterations = 25;
     static constexpr int memory_cutoff = 2000;
-    static constexpr double dt = 5e-16;                     // timestep
+    static constexpr double dt = 1e-15;                     // timestep
     static const double g; // debug doesn't work otherwise
 
     unsigned m;
