@@ -88,6 +88,7 @@ int main(int argc, char ** argv) {
 
     signal sg = sine_signal(T + dry, {0, V0_g, V0_d}, {0, A_g, A_d}, f, dry, ph);
     time_evolution te(nfet, sg);
+    cout << "performing time-evolution with " << sg.N_t << " steps...";
     te.solve();
     te.save();
 
