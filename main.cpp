@@ -52,11 +52,11 @@ int main(int argc, char ** argv) {
 
     omp_set_num_threads(stoi(argv[1]));
 
-    //device ntfet("ntfet", ntfet_model, tfet_geometry);
-    device nfet("nfet", nfet_model, fet_geometry);
+    device dev("ntfet", ntfet_model, tfet_geometry);
+    //device nfet("nfet", nfet_model, fet_geometry);
 
     stringstream ext("");
-    ext << "_"  << nfet.name << "_" << ((stoi(argv[3]) == 1) ? "gate" : "drain") << "_" << argv[2] << "GHz";
+    ext << "_"  << dev.name << "_" << ((stoi(argv[3]) == 1) ? "gate" : "drain") << "_" << argv[2] << "GHz";
     cout << "saving results in " << save_folder(ext.str()) << endl;
 
     double f = stod(argv[2]) * 1e9;
@@ -87,7 +87,7 @@ int main(int argc, char ** argv) {
     }
 
     signal sg = sine_signal(T + dry, {0, V0_g, V0_d}, {0, A_g, A_d}, f, dry, ph);
-    time_evolution te(nfet, sg);
+    time_evolution te(dev, sg);
     te.solve();
     te.save();
 
